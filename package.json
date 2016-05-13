@@ -1,0 +1,24 @@
+{
+  "name": "ocf-test-suite",
+  "version": "0.0.1",
+  "description": "OCF JS API Implementation Test Suite",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabrielschulhof/ocf-test-suite.git"
+  },
+  "keywords": [
+    "OCF",
+    "OIC",
+    "testsuite"
+  ],
+  "author": "Gabriel Schulhof <gabriel.schulhof@intel.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/gabrielschulhof/ocf-test-suite/issues"
+  },
+  "homepage": "https://github.com/gabrielschulhof/ocf-test-suite#readme"
+}
