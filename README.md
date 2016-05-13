@@ -41,10 +41,9 @@ where ```options``` is a hash wherein the following properties are recognized:
 <dd>An optional array containing the list of tests to run. By default all tests will be run.</dd>
 
 <dt><code>environment</code></dt>
-<dd>A hash containing environment key value pairs, similar to [process.env][].</dd>
+<dd>A hash containing environment key value pairs, similar to <a href="https://nodejs.org/api/process.html#process_process_env">process.env</a>.</dd>
 
 </dl>
 
 
 [OCF JS API]: https://github.com/solettaproject/soletta/blob/v1_beta19/doc/js-spec/oic.md
-[process.env]: https://nodejs.org/api/process.html#process_process_env
