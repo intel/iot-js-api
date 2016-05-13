@@ -35,7 +35,7 @@ var QUnit,
 
 // Spawn a single child and process its stdout.
 function spawnOne( assert, options ) {
-	var commandLine = [ options.path, uuid.v4(), options.clientLocation,
+	var commandLine = [ options.path, options.uuid, options.clientLocation,
 		options.serverLocation
 	];
 	var theChild = childProcess.spawn( "node", commandLine, {
@@ -136,6 +136,7 @@ _.each( options.tests, function( item ) {
 			.test( path.basename( item ).replace( /\.js$/, "" ), function( assert ) {
 				var theChild,
 					spawnOptions = {
+						uuid: uuid.v4(),
 						name: "Test",
 						path: item,
 						clientLocation: options.clientLocation,
@@ -183,6 +184,7 @@ _.each( options.tests, function( item ) {
 			childrenAssertionsReported = 0,
 
 			spawnOptions = {
+				uuid: uuid.v4(),
 				clientLocation: options.clientLocation,
 				serverLocation: options.serverLocation,
 				environment: options.environment,
