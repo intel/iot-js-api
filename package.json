@@ -20,5 +20,12 @@
   "bugs": {
     "url": "https://github.com/gabrielschulhof/ocf-test-suite/issues"
   },
-  "homepage": "https://github.com/gabrielschulhof/ocf-test-suite#readme"
+  "homepage": "https://github.com/gabrielschulhof/ocf-test-suite#readme",
+  "devDependencies": {
+    "async": "^2.0.0-rc.4",
+    "glob": "^7.0.3",
+    "lodash": "^4.12.0",
+    "qunitjs": "^2.0.0-rc1",
+    "uuid": "^2.0.2"
+  }
 }
