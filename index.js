@@ -39,7 +39,8 @@ function spawnOne( assert, options ) {
 		options.serverLocation
 	];
 	var theChild = childProcess.spawn( "node", commandLine, {
-		stdio: [ process.stdin, "pipe", process.stderr ]
+		stdio: [ process.stdin, "pipe", process.stderr ],
+		env: _.extend( {}, process.env, options.environment )
 	} );
 
 	theChild.commandLine = [ "node" ].concat( commandLine ).join( " " );
@@ -118,6 +119,7 @@ options.callbacks = options.callbacks || defaultCallbacks;
 if ( options.location ) {
 	options.clientLocation = options.location;
 	options.serverLocation = options.location;
+	options.environment = options.environment || {};
 } else if ( !( options.clientLocation && options.serverLocation ) ) {
 	throw new Error( "Both clientLocation and serverLocation must be specified" );
 }
@@ -138,6 +140,7 @@ _.each( options.tests, function( item ) {
 						path: item,
 						clientLocation: options.clientLocation,
 						serverLocation: options.serverLocation,
+						environment: options.environment,
 						teardown: function() {
 							if ( theChild ) {
 								theChild.kill( "SIGTERM" );
@@ -182,6 +185,7 @@ _.each( options.tests, function( item ) {
 			spawnOptions = {
 				clientLocation: options.clientLocation,
 				serverLocation: options.serverLocation,
+				environment: options.environment,
 				teardown: function( error, sourceProcess ) {
 					var index,
 						signal = error ? "SIGTERM" : "SIGINT",
