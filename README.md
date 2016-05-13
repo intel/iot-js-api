@@ -4,7 +4,21 @@ This suite provides tests for the [OCF JS API][].
 ## Usage:
 
 ```JS
-require( "ocf-test-suite" )( options );
+// Load the test suite
+var ocfTestSuite = require( "ocf-test-suite" );
+
+// At your option you may modify the set of default logging callbacks before you run the suite.
+ocfTestSuite.defaultCallbacks.log = ( function( originalLog ) {
+	return function() {
+
+		// Do something and then chain up to the original log() function
+		console.log( "The test suite has just made an assertion" );
+		return originalLog.apply( this, arguments );
+	}
+} )( ocfTestSuite.defaultCallbacks.log );
+
+// Run the test suite
+ocfTestSuite( options );
 ```
 
 where ```options``` is a hash wherein the following properties are recognized:
@@ -21,7 +35,7 @@ where ```options``` is a hash wherein the following properties are recognized:
 <dd>A string which will be passed to <code>require()</code> in order to load the OCF device that will serve as the server.</dd>
 
 <dt><code>callbacks</code></dt>
-<dd>An optional hash containing callbacks to call upon test events. The names and semantics of the callbacks are the same as http://api.qunitjs.com/category/callbacks/. Information will be nicely formatted and printed to standard ouput by default.</dd>
+<dd>An optional hash containing callbacks to call upon test events. The names and semantics of the callbacks are the same as http://api.qunitjs.com/category/callbacks/. The callbacks will be called in the context of the <code>QUnit</code> object. Information will be nicely formatted and printed to standard ouput by default.</dd>
 
 <dt><code>tests</code></dt>
 <dd>An optional array containing the list of tests to run. By default all tests will be run.</dd>
