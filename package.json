@@ -24,6 +24,11 @@
   "devDependencies": {
     "async": "^2.0.0-rc.4",
     "glob": "^7.0.3",
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.11.3",
+    "grunt-jscs": "^2.1.0",
+    "load-grunt-config": "^0.17.2",
+    "load-grunt-tasks": "^3.2.0",
     "lodash": "^4.12.0",
     "qunitjs": "^2.0.0-rc1",
     "uuid": "^2.0.2"

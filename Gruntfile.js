@@ -1,3 +1,4 @@
+//
 // Copyright 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,19 +12,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
+module.exports = function( grunt ) {
+"use strict";
 
-var utils = require( "../lib/assert-to-console" );
-var serverLocation = process.argv[ 4 ];
-var theError = null;
+var path = require( "path" );
 
-console.log( JSON.stringify( { assertionCount: 1 } ) );
+require( "load-grunt-config" )( grunt, {
+	configPath: [
+		path.join( __dirname, "build", "tasks", "options" ),
+		path.join( __dirname, "build", "tasks" )
+	],
+	init: true
+} );
 
-try {
-	require( serverLocation )( "server" );
-} catch ( anError ) {
-	theError = anError;
-}
+require( "load-grunt-tasks" )( grunt );
 
-utils.assert( "deepEqual", theError, null, "Server stack started successfully" );
-
-process.exit( 0 );
+};

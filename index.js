@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-debugger;
 var async = require( "async" ),
 	glob = require( "glob" ),
 	_ = require( "lodash" ),
@@ -22,7 +21,7 @@ var async = require( "async" ),
 	uuid = require( "uuid" ),
 	defaultCallbacks = require( "./lib/callbacks" );
 
-module.exports = _.extend( function OcfTestSuite( options ) {
+var testSuite = _.extend( function OcfTestSuite( options ) {
 
 var QUnit,
 	runningProcesses = [],
@@ -119,11 +118,14 @@ options.callbacks = options.callbacks || defaultCallbacks;
 if ( options.location ) {
 	options.clientLocation = options.location;
 	options.serverLocation = options.location;
-	options.environment = options.environment || {};
 } else if ( !( options.clientLocation && options.serverLocation ) ) {
 	throw new Error( "Both clientLocation and serverLocation must be specified" );
 }
-options.tests = ( ( options.tests && Array.isArray( options.tests ) ) ? process.tests :
+options.environment = options.environment || {};
+options.tests = ( ( options.tests && Array.isArray( options.tests ) ) ?
+	_.map( options.tests, function( item ) {
+		return path.join( __dirname, "tests", item );
+	} ) :
 	( glob.sync( path.join( __dirname, "tests", "*" ) ) ) );
 
 _.each( options.tests, function( item ) {
@@ -258,3 +260,5 @@ process.on( "exit", function() {
 } );
 
 }, { defaultCallbacks: defaultCallbacks } );
+
+module.exports = testSuite;

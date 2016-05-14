@@ -12,18 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var utils = require( "../lib/assert-to-console" );
-var serverLocation = process.argv[ 4 ];
-var theError = null;
+module.exports = function( grunt ) {
 
-console.log( JSON.stringify( { assertionCount: 1 } ) );
+grunt.registerTask( "default", [ "jshint", "jscs" ] );
 
-try {
-	require( serverLocation )( "server" );
-} catch ( anError ) {
-	theError = anError;
-}
-
-utils.assert( "deepEqual", theError, null, "Server stack started successfully" );
-
-process.exit( 0 );
+};

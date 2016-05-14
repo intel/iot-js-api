@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var _ = require( "lodash" );
 var utils = require( "../../lib/assert-to-console" );
 var uuid = process.argv[ 2 ];
 var clientLocation = process.argv[ 3 ];

@@ -12,18 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var utils = require( "../lib/assert-to-console" );
-var serverLocation = process.argv[ 4 ];
-var theError = null;
-
-console.log( JSON.stringify( { assertionCount: 1 } ) );
-
-try {
-	require( serverLocation )( "server" );
-} catch ( anError ) {
-	theError = anError;
-}
-
-utils.assert( "deepEqual", theError, null, "Server stack started successfully" );
-
-process.exit( 0 );
+module.exports = {
+	options: {
+		"boss": true,
+		"curly": true,
+		"eqeqeq": true,
+		"eqnull": true,
+		"expr": true,
+		"immed": true,
+		"jquery": true,
+		"noarg": true,
+		"quotmark": "double",
+		"trailing": true,
+		"undef": true,
+		"unused": true,
+		"esnext": true,
+		"latedef": true,
+		"newcap": true,
+		"sub": true,
+		"browser": true,
+		"globals": {
+			"define": false,
+			"require": false,
+			"requirejs": false
+		},
+		"node": true
+	},
+	files: {
+		src: require( "../../js-files" )
+	}
+};
