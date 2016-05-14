@@ -1,5 +1,12 @@
-# OCF Test Suite
+# ocf-test-suite
+
+## Description
 This suite provides tests for the [OCF JS API][].
+
+## Build status
+<a href="https://travis-ci.org/gabrielschulhof/ocf-test-suite">
+	<img alt="Build Status" src="https://travis-ci.org/gabrielschulhof/ocf-test-suite.svg?branch=master"></img>
+</a>
 
 ## Usage:
 
