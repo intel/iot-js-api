@@ -245,7 +245,7 @@ _.each( options.tests, function( item ) {
 						assert.expect( totalAssertions );
 					}
 				}
-			}, ( "preamble" in options ? { preamble: preamble } : {} ) );
+			}, ( "preamble" in options ? { preamble: options.preamble } : {} ) );
 
 		// We run the server first, because the server has to be there before the clients
 		// can run. OTOH, the clients may initiate the termination of the test via a non-error
