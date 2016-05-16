@@ -19,7 +19,7 @@ var uuid = process.argv[ 2 ];
 
 console.log( JSON.stringify( { assertionCount: 4 } ) );
 
-ocf.registerResource( {
+ocf.register( {
 	id: { path: "/a/" + uuid },
 	resourceTypes: [ "core.light" ],
 	interfaces: [ "oic.if.baseline" ],
@@ -27,24 +27,24 @@ ocf.registerResource( {
 	properties: { someValue: 0 }
 } ).then( function registerValidResourceSuccess( resource ) {
 	utils.assert( "ok", true, "Valid resource: registration successful" );
-	return ocf.unregisterResource( resource );
+	return ocf.unregister( resource );
 }, function registerValidResourceError( error ) {
 	utils.assertError( "Valid resource registration", error );
 } ).then( function unregisterValidResourceSuccess() {
 	utils.assert( "ok", true, "Valid resource: unregistration successful" );
-	return ocf.registerResource( {} );
+	return ocf.register( {} );
 }, function unregisterValidResourceError( error ) {
 	utils.assertError( "Valid resource unregistration", error );
 } ).then( function registerEmptyResourceSuccess() {
 	utils.assert( "ok", false, "Empty resource: registration successful" );
-	return ocf.registerResource( { id: {} } );
+	return ocf.register( { id: {} } );
 }, function registerEmptyResourceError( error ) {
 	utils.assert( "strictEqual", "" + error, "Error: No ID found",
 		"Empty resource: registration failed with expected error message" );
-	return ocf.registerResource( { id: {} } );
-} ).then( function registerResourceWithoutPathSuccess() {
+	return ocf.register( { id: {} } );
+} ).then( function registerWithoutPathSuccess() {
 	utils.assert( "ok", false, "Resource without path registration successful" );
-}, function registerResourceWithoutPathError( error ) {
+}, function registerWithoutPathError( error ) {
 	utils.assert( "strictEqual", "" + error, "Error: Constructing OicResource: malformed id",
 		"Resource without path registration failed with expected error message" );
 } ).then( process.exit, process.exit );

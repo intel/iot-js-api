@@ -19,7 +19,7 @@ var ocf = require( serverLocation )( "server" );
 
 console.log( JSON.stringify( { assertionCount: 2 } ) );
 
-ocf.registerResource( {
+ocf.register( {
 	id: { path: "/a/" + uuid },
 	resourceTypes: [ "core.light" ],
 	interfaces: [ "oic.if.baseline" ],
@@ -30,13 +30,13 @@ ocf.registerResource( {
 		utils.assert( "ok", true, "Server: resource registered successfully" );
 
 		process.on( "SIGINT", function() {
-			ocf.unregisterResource( resource ).then(
+			ocf.unregister( resource ).then(
 				function() {
 					utils.assert( "ok", true, "Server: resource unregistered successfully" );
 					process.exit( 0 );
 				},
 				function( error ) {
-					utils.assertError( "Server: unregisterResource()", error );
+					utils.assertError( "Server: unregister()", error );
 					process.exit( 0 );
 				} );
 		} );
@@ -44,5 +44,5 @@ ocf.registerResource( {
 		console.log( JSON.stringify( { ready: true } ) );
 	},
 	function( error ) {
-		utils.assertError( "Server: registerResource()", error );
+		utils.assertError( "Server: register()", error );
 	} );
