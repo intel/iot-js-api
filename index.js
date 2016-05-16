@@ -146,7 +146,7 @@ _.each( options.tests, function( item ) {
 						environment: options.environment,
 						teardown: function() {
 							if ( theChild ) {
-								theChild.kill( "SIGTERM" );
+								theChild.kill( "SIGKILL" );
 							}
 						},
 						maybeQuit: assert.async(),
@@ -192,7 +192,7 @@ _.each( options.tests, function( item ) {
 				environment: options.environment,
 				teardown: function( error, sourceProcess ) {
 					var index,
-						signal = error ? "SIGTERM" : "SIGINT",
+						signal = "SIGKILL",
 
 						// When killing child processes in a loop we have to copy the array
 						// because it may become modified by the incoming notifications that a

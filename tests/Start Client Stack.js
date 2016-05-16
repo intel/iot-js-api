@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var utils = require( "../lib/assert-to-console" );
-var clientLocation = process.argv[ 3 ];
 var theError = null;
 
-console.log( JSON.stringify( { assertionCount: 1 } ) );
-
 try {
-	require( clientLocation )( "client" );
+	require( process.argv[ 3 ] )( "client" );
 } catch ( anError ) {
 	theError = anError;
 }
 
-utils.assert( "deepEqual", theError, null, "Client stack started successfully" );
+console.log( JSON.stringify( { assertionCount: 1 } ) );
+
+console.log( JSON.stringify( {
+	assertion: "deepEqual",
+	arguments: [ theError, null, "Client stack started successfully" ]
+} ) );
 
 process.exit( 0 );

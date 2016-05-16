@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var utils = require( "../lib/assert-to-console" );
-var serverLocation = process.argv[ 4 ];
-var ocf = require( serverLocation )( "server" );
+var ocf = require( process.argv[ 4 ] )( "server" );
+
 var uuid = process.argv[ 2 ];
 
 console.log( JSON.stringify( { assertionCount: 4 } ) );
@@ -26,26 +25,41 @@ ocf.register( {
 	discoverable: true,
 	properties: { someValue: 0 }
 } ).then( function registerValidResourceSuccess( resource ) {
-	utils.assert( "ok", true, "Valid resource: registration successful" );
+	console.log( JSON.stringify( { assertion: "ok",
+		arguments: [ true, "Valid resource: registration successful" ]
+	} ) );
 	return ocf.unregister( resource );
 }, function registerValidResourceError( error ) {
-	utils.assertError( "Valid resource registration", error );
+	console.log( JSON.stringify( { assertion: "strictEqual",
+		arguments: [ ( "" + error ), "", "Valid resource registration: Unexpected error" ]
+	} ) );
 } ).then( function unregisterValidResourceSuccess() {
-	utils.assert( "ok", true, "Valid resource: unregistration successful" );
+	console.log( JSON.stringify( { assertion: "ok",
+		arguments: [ true, "Valid resource: unregistration successful" ]
+	} ) );
 	return ocf.register( {} );
 }, function unregisterValidResourceError( error ) {
-	utils.assertError( "Valid resource unregistration", error );
+	console.log( JSON.stringify( { assertion: "strictEqual",
+		arguments: [ ( "" + error ), "", "Valid resource unregistration: Unexpected error" ]
+	} ) );
 } ).then( function registerEmptyResourceSuccess() {
-	utils.assert( "ok", false, "Empty resource: registration successful" );
+	console.log( JSON.stringify( { assertion: "ok",
+		arguments: [ false, "Empty resource: registration successful" ]
+	} ) );
 	return ocf.register( { id: {} } );
 }, function registerEmptyResourceError( error ) {
-	utils.assert( "strictEqual", "" + error, "Error: No ID found",
-		"Empty resource: registration failed with expected error message" );
+	console.log( JSON.stringify( { assertion: "strictEqual",
+		arguments: [ "" + error, "Error: No ID found",
+			"Empty resource: registration failed with expected error message" ]
+	} ) );
 	return ocf.register( { id: {} } );
 } ).then( function registerWithoutPathSuccess() {
-	utils.assert( "ok", false, "Resource without path registration successful" );
+	console.log( JSON.stringify( { assertion: "ok",
+		arguments: [ false, "Resource without path registration successful" ]
+	} ) );
 }, function registerWithoutPathError( error ) {
-	utils.assert( "strictEqual", "" + error, "Error: Constructing OicResource: malformed id",
-		"Resource without path registration failed with expected error message" );
+	console.log( JSON.stringify( { assertion: "strictEqual",
+		arguments: [ "" + error, "Error: Constructing OicResource: malformed id",
+			"Resource without path registration failed with expected error message" ]
+	} ) );
 } ).then( process.exit, process.exit );
-

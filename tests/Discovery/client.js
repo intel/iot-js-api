@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var utils = require( "../../lib/assert-to-console" );
+var ocf = require( process.argv[ 3 ] )( "client" );
+
 var uuid = process.argv[ 2 ];
-var clientLocation = process.argv[ 3 ];
-var ocf = require( clientLocation )( "client" );
 
 console.log( JSON.stringify( { assertionCount: 1 } ) );
 
@@ -38,10 +37,14 @@ new Promise( function( fulfill, reject ) {
 	ocf.findResources().catch( teardown );
 } ).then(
 	function() {
-		utils.assert( "ok", true, "Client: Resource found" );
+		console.log( JSON.stringify( { assertion: "ok",
+			arguments: [ true, "Client: Resource found" ]
+		} ) );
 		console.log( JSON.stringify( { killPeer: true } ) );
 		process.exit( 0 );
 	},
 	function( error ) {
-		utils.assertError( "Client", error );
+		console.log( JSON.stringify( { assertion: "strictEqual",
+			arguments: [ ( "" + error ), "", "Client: Unexpected error" ]
+		} ) );
 	} );
