@@ -22,6 +22,10 @@ try {
 
 console.log( JSON.stringify( { assertionCount: 1 } ) );
 
+if ( theError ) {
+	theError = { message: ( "" + theError ) };
+}
+
 console.log( JSON.stringify( {
 	assertion: "deepEqual",
 	arguments: [ theError, null, "Server stack started successfully" ]

@@ -32,5 +32,8 @@
     "lodash": "^4.12.0",
     "qunitjs": "^2.0.0-rc1",
     "uuid": "^2.0.2"
+  },
+  "dependencies": {
+    "tmp": "0.0.28"
   }
 }

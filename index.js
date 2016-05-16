@@ -15,6 +15,7 @@
 var async = require( "async" ),
 	glob = require( "glob" ),
 	_ = require( "lodash" ),
+	tmp = require( "tmp" ),
 	childProcess = require( "child_process" ),
 	fs = require( "fs" ),
 	path = require( "path" ),
@@ -34,15 +35,27 @@ var QUnit,
 
 // Spawn a single child and process its stdout.
 function spawnOne( assert, options ) {
+	var temporary;
 	var commandLine = [ options.path, options.uuid, options.clientLocation,
 		options.serverLocation
 	];
-	var theChild = childProcess.spawn( "node", commandLine, {
+	var theChild;
+
+	if ( "preamble" in options ) {
+		var temporary = tmp.fileSync();
+
+		fs.writeSync( temporary.fd, options.preamble( options.uuid ) );
+		fs.writeSync( temporary.fd, fs.readFileSync( options.path ).toString() );
+		commandLine[ 0 ] = temporary.name;
+	}
+
+	theChild = childProcess.spawn( options.interpreter, commandLine, {
 		stdio: [ process.stdin, "pipe", process.stderr ],
 		env: _.extend( {}, process.env, options.environment )
 	} );
 
-	theChild.commandLine = [ "node" ].concat( commandLine ).join( " " );
+	theChild.commandLine = [ options.interpreter ].concat( commandLine ).join( " " );
+
 	runningProcesses.push( theChild );
 
 	theChild
@@ -57,6 +70,9 @@ function spawnOne( assert, options ) {
 			var childIndex = runningProcesses.indexOf( theChild );
 			if ( childIndex >= 0 ) {
 				runningProcesses.splice( childIndex, 1 );
+			}
+			if ( temporary ) {
+				temporary.removeCallback();
 			}
 			options.maybeQuit( theChild );
 		} );
@@ -121,6 +137,7 @@ if ( options.location ) {
 } else if ( !( options.clientLocation && options.serverLocation ) ) {
 	throw new Error( "Both clientLocation and serverLocation must be specified" );
 }
+options.interpreter = options.interpreter || "node";
 options.environment = options.environment || {};
 options.tests = ( ( options.tests && Array.isArray( options.tests ) ) ?
 	_.map( options.tests, function( item ) {
@@ -137,13 +154,14 @@ _.each( options.tests, function( item ) {
 		getQUnit( options.callbacks )
 			.test( path.basename( item ).replace( /\.js$/, "" ), function( assert ) {
 				var theChild,
-					spawnOptions = {
+					spawnOptions = _.extend( {
 						uuid: uuid.v4(),
 						name: "Test",
 						path: item,
 						clientLocation: options.clientLocation,
 						serverLocation: options.serverLocation,
 						environment: options.environment,
+						interpreter: options.interpreter,
 						teardown: function() {
 							if ( theChild ) {
 								theChild.kill( "SIGKILL" );
@@ -151,7 +169,7 @@ _.each( options.tests, function( item ) {
 						},
 						maybeQuit: assert.async(),
 						reportAssertions: _.bind( assert.expect, assert )
-					};
+					}, ( "preamble" in options ? { preamble: options.preamble } : {} ) );
 				theChild = spawnOne( assert, spawnOptions );
 			} );
 		return;
@@ -185,11 +203,12 @@ _.each( options.tests, function( item ) {
 			totalAssertions = 0,
 			childrenAssertionsReported = 0,
 
-			spawnOptions = {
+			spawnOptions = _.extend( {
 				uuid: uuid.v4(),
 				clientLocation: options.clientLocation,
 				serverLocation: options.serverLocation,
 				environment: options.environment,
+				interpreter: options.interpreter,
 				teardown: function( error, sourceProcess ) {
 					var index,
 						signal = "SIGKILL",
@@ -226,7 +245,7 @@ _.each( options.tests, function( item ) {
 						assert.expect( totalAssertions );
 					}
 				}
-			};
+			}, ( "preamble" in options ? { preamble: preamble } : {} ) );
 
 		// We run the server first, because the server has to be there before the clients
 		// can run. OTOH, the clients may initiate the termination of the test via a non-error
