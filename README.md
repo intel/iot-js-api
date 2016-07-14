@@ -1,18 +1,16 @@
-# ocf-test-suite
-
 ## Description
 This suite provides tests for the [OCF JS API][].
 
 ## Build status
-<a href="https://travis-ci.org/gabrielschulhof/ocf-test-suite">
-	<img alt="Build Status" src="https://travis-ci.org/gabrielschulhof/ocf-test-suite.svg?branch=master"></img>
+<a href="https://travis-ci.org/gabrielschulhof/iot-js-api-test-suite">
+	<img alt="Build Status" src="https://travis-ci.org/gabrielschulhof/iot-js-api-test-suite.svg?branch=master"></img>
 </a>
 
 ## Usage:
 
 ```JS
 // Load the test suite
-var ocfTestSuite = require( "ocf-test-suite" );
+var ocfTestSuite = require( "iot-js-api-test-suite" );
 
 // At your option you may modify the set of default logging callbacks before you run the suite.
 ocfTestSuite.defaultCallbacks.log = ( function( originalLog ) {
