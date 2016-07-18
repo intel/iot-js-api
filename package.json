@@ -1,5 +1,5 @@
 {
-  "name": "ocf-test-suite",
+  "name": "iot-js-api-test-suite",
   "version": "0.0.1",
   "description": "OCF JS API Implementation Test Suite",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gabrielschulhof/ocf-test-suite.git"
+    "url": "git+https://github.com/01org/iot-js-api-test-suite.git"
   },
   "keywords": [
     "OCF",
@@ -18,9 +18,9 @@
   "author": "Gabriel Schulhof <gabriel.schulhof@intel.com>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/gabrielschulhof/ocf-test-suite/issues"
+    "url": "https://github.com/01org/iot-js-api-test-suite/issues"
   },
-  "homepage": "https://github.com/gabrielschulhof/ocf-test-suite#readme",
+  "homepage": "https://github.com/01org/iot-js-api-test-suite#readme",
   "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-contrib-jshint": "^0.11.3",
