@@ -22,6 +22,8 @@ console.log( JSON.stringify( { assertionCount: 3 } ) );
 // have found the correct device
 var device = ocf.device;
 device.name = uuid;
+device.coreSpecVersion = "something.1.0.0";
+device.dataModels = [ "somethingelse.1.0.0" ];
 ocf.device = device;
 
 ocf.register( {
