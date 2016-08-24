@@ -24,27 +24,20 @@ Resources can be accessed remotely, and can notify subscribers with data and sta
 The devices support installable software modules called *applications*. This API is exposed on an OCF device and enables writing the applications that implement resources and business logic.
 
 ## API entry point
+The API object is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be exposed as a property of a global object.
 
 ```javascript
-var ocf = require('ocf');
+let module = 'ocf';  // use your own implementations' name
+var ocf = require(module);
 ```
 
-When ```require``` is successful, it MUST return an object with the following read-only properties:
-- `client` is an object that implements the [OCF Client API](./ocf-client-api.md) and the [OCF Discovery API](./ocf-discovery-api.md).
+When `require` is successful, it MUST return an object with the following read-only properties:
+- `client` is an object that implements the [OCF Client API](./ocf-client-api.md).
 - `server` is an object that implements the [OCF Server API](./ocf-server-api.md)
 - `device` is an [`OcfDevice`](#ocfdevice) object that represents properties of the current device
 - `platform` is an [`OcfPlatform`](#ocfplatform) object that represents properties of the platform that hosts the current device.
 
-Optionally, the API objects may be required separately:
-
-```javascript
-var ocf = require('ocf');
-
-var client = require('ocf')('client');  // same as ocf.client
-var server = require('ocf')('server');  // same as ocf.server
-```
-
-The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality, thereby enables remote access to resources in the network. Also, it enables listening to presence notifications in the OCF network. Also, it implements discovery for platforms, devices and resources in the OCF network.
+The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality, enabling remote access to resources in the network. Also, it enables listening to presence notifications in the OCF network. Also, it implements discovery for platforms, devices and resources in the OCF network.
 
 The Server API implements functionality to serve CRUDN requests in a device. Also, it provides means to register and unregister resources, to notify resource changes, and to enable and disable presence functionality on the device.
 
@@ -80,11 +73,25 @@ Exposes information about the OCF platform that hosts the current device.
 | `firmwareVersion` | string  | no  | `undefined` | Firmware version |
 | `supportURL` | string  | no  | `undefined` | Product support web page |
 
+
 Notes
 -----
 <a name="ocfpromise"></a>
-This API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects).
+### Promises
+The API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects). In constrained implementations, at least the following [`Promise`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) methods MUST be implemented:
+- the [`Promise` constructor](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-constructor)
+- the [`then(onFulfilled, onRejected)`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise.prototype.then) method
+- the [`catch(onRejected)`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise.prototype.catch) method.
 
+<a name="events"></a>
+### Events
+The API uses Node.js style [events](https://nodejs.org/api/events.html#events_events) with the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface. In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
+- the [`on(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener) method
+- the [`addListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener) method, as an alias to the `on()` method
+- the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
+- the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
+
+### OCF related notes
 Code using this API is deployed to a device, which exposes one or more resources. In this version of the API it is assumed that the execution context of the code is separated for each device.
 
 **Device identification** is UUID.
@@ -93,5 +100,7 @@ Code using this API is deployed to a device, which exposes one or more resources
 
 **Device discovery** uses endpoint discovery: multicast request "GET /oic/res" to "All CoAP nodes" (```224.0.1.187``` for IPv4 and ```FF0X::FD``` for IPv6, port 5683). The response lists devices and their resources (at least URI, resource type, interfaces, and media types).
 
+OCF defines special resources on each device, for implementing device discovery, resource discovery, platform discovery, presence, etc. API implementations should encapsulate handling these special resources and the hardcoded/fixed URIs.
 
-OCF defines special resources on each device, for implementing device discovery, resource discovery, platform discovery, etc. Platform is discoverable by the means of a resource with a fixed URI ```/oic/p```. Similarly, device discovery is supported by a resource with the well known fixed URI of ```/oic/d```, and resources with ```/oic/res```. This API encapsulates these special resources and the hardcoded/fixed URIs by explicit function names and parameters.
+This version of the API supports the OCF Core Specification version 1.0 (final) and 1.1.0 (draft).
+This version does not support OCF resource *links*, *scenes*, *rules* and *scripts*.

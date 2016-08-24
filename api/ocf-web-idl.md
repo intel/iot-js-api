@@ -11,9 +11,8 @@ As such, the `EventHandler<typelist>` notation denotes an event that accepts lis
 ## OCF API entry point
 
 ```javascript
-enum OcfRole { "all", "client", "server", "discovery" };
 
-[Constructor(optional OcfRole role = "all")]
+[Constructor()]
 interface OCF {
   readonly attribute OcfDevice device;  // getter for local device info
   readonly attribute OcfPlatform platform;  // getter for local platform info
@@ -44,32 +43,34 @@ interface OcfPlatform {
   readonly attribute DOMString firmwareVersion;
   readonly attribute USVString supportUrl;
 };
-
 ```
 
-## OCF Discovery API
+## OCF Client API
 ```javascript
 [NoInterfaceObject]
-interface OcfDiscovery: EventEmitter {
-  // get device info of a given remote device
-  // id is either a device UUID or a URL (host:port)
-  Promise<OcfDevice> getDeviceInfo(USVString id);
+interface OcfClient {
+  Promise<OcfDevice> getDeviceInfo(USVString deviceId);
+  Promise<OcfPlatform> getPlatformInfo(USVString deviceId);
 
-  // get platform info of a given remote device
-  Promise<OcfPlatform> getPlatformInfo(USVString id);
-
-  //fire 'resourcefound' for each resource found
   Promise<void> findResources(optional OcfDiscoveryOptions options);
-
-  // fire a 'devicefound' event for each found
   Promise<void> findDevices();
+  Promise<void> findPlatforms();
 
-  // multicast platform discovery
-  Promise<void> findPlatforms();  // fire a 'platformfound' event for each found
+  Promise<OcfResource> create(OcfResourceId target, OcfResourceInit resource);
+  Promise<OcfResource> retrieve(OcfResourceId id, optional Dictionary options);
+  Promise<void> update(OcfResource resource);  // partial dictionary
+  Promise<void> delete(OcfResourceId id);
 
-  attribute EventHandler<OcfResource> onresourcefound;
-  attribute EventHandler<OcfDevice> ondevicefound;
+  Promise<void> observe(USVString deviceId, USVString resourcePath);
+  Promise<void> unobserve(USVString deviceId, USVString resourcePath);
+
   attribute EventHandler<OcfPlatform> onplatformfound;
+  attribute EventHandler<OcfDevice> ondevicefound;
+  attribute EventHandler<OcfDevice> ondevicechanged;
+  attribute EventHandler<OcfDevice> ondevicelost;
+  attribute EventHandler<OcfResource> onresourcefound;
+  attribute EventHandler<OcfResource> onresourcechanged;
+  attribute EventHandler<OcfResource> onresourcelost;
   attribute EventHandler<Error> onerror;
 };
 
@@ -78,24 +79,6 @@ dictionary OcfDiscoveryOptions {
   DOMString resourceType;  // if provided, include this in the discovery request
   USVString resourcePath;  // if provided, filter the results locally
 };
-
-```
-
-## OCF Client API
-```javascript
-[NoInterfaceObject]
-interface OcfClient {
-  Promise<OcfResource> create(OcfResourceId target, OcfResourceInit resource);
-  Promise<OcfResource> retrieve(OcfResourceId id, optional Dictionary options);
-  Promise<void> update(OcfResource resource);  // partial dictionary
-  Promise<void> delete(OcfResourceId id);
-
-  readonly attribute EventHandler<OcfDevice> ondeviceadded;
-  readonly attribute EventHandler<OcfDevice> ondevicechanged;
-  readonly attribute EventHandler<OcfDevice> ondevicelost;
-};
-
-OcfClient implements OcfDiscovery;
 
 dictionary OcfResourceId {
   USVString deviceId;  // UUID
@@ -125,7 +108,6 @@ interface OcfResource {
   readonly attribute boolean discoverable;
   readonly attribute boolean observable;
   readonly attribute boolean slow;
-  readonly attribute sequence<OcfResourceId> links;  // for resource hierarchies
   readonly attribute OcfResourceRepresentation properties;
 };
 
@@ -157,7 +139,7 @@ interface OcfServer: EventEmitter {
   Promise<void> disablePresence();
 
   // Reply to a given request
-  Promise<void> reply(OcfRequest request, Error error, optional OicResource? resource);
+  Promise<void> respond(OcfRequest request, Error? result, optional OicResource? resource);
 };
 
 [NoInterfaceObject]

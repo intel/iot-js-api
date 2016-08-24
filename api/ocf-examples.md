@@ -4,7 +4,7 @@ OCF Web API Examples
 ### Getting device configuration
 
 ```javascript
-var ocf = require('ocf')();
+var ocf = require('ocf');
 
 if (ocf.device.uuid) {  // configuration is valid
   // start server
@@ -15,7 +15,7 @@ if (ocf.device.uuid) {  // configuration is valid
 
 ### OIC Client controlling a remote red LED.
 ```javascript
-let client = require('ocf')('client');
+let client = ocf.client;
 
 // Discover a remote red light, start observing it, and make sure it's not too bright.
 var red = null;
@@ -50,9 +50,11 @@ function redHandler(red) {
 ### OIC Server exposing a local blue LED.
 
 ```javascript
-let server = require('ocf')('server');
+let server = ocf.server;
 
 var lightResource = null;
+var lightResourceObserved = false;
+
 function startServer() {
   // register the specific resources handled by this solution
   // which are not exposed by the device firmware
@@ -67,7 +69,6 @@ function startServer() {
     console.log("Local resource " + res.id.path + " has been registered.");
     lightResource = res;
     server.on("update", onLightUpdate);
-    server.on("observe", onLightObserve);
     server.on("delete", onLightDelete);
     server.on("retrieve", onLightRetrieve);
     server.on("create", onLightCreate);
@@ -77,14 +78,15 @@ function startServer() {
   });
 };
 
-function onLightRetrieve(request) {
+function onLightRetrieve(request, observe) {
   if (request.target.id.path === lightResource.id.path) {
-    server.reply(request, null, lightResource)
+    lightResourceObserved = observe;
+    server.respond(request, null, lightResource)
     .catch( (err) => {
         console.log("Error sending retrieve response.");
     });
   } else {
-    server.decline(request, new Event("NotFoundError"));
+    server.respond(request, new Event("NotFoundError"));
     .catch( (err) => {
           console.log("Error sending retrieve error response.");
       });
@@ -102,17 +104,12 @@ function onLightUpdate(request) {
   }
 
   // do the notifications manually
-  server.notify(lightResource)
-    .then( () => { console.log("Update notification sent.");})
-    .catch( (err) => {
+  if (lightResourceObserved) {
+    server.notify(lightResource)
+      .then( () => { console.log("Update notification sent.");})
+      .catch( (err) => {
         console.log("No observers or error sending: " + err.name);
-    });
-};
-
-function onLightObserve(sourceId, targetId) {
-  console.log("Resource id" + targetId + " observed by " + sourceId + ".");
-  if (targetId.path === lightResource.id.path) {
-    // add `sourceId` to the list of resources monitoring `targetId`
+      });
   }
 };
 
@@ -121,14 +118,14 @@ function onLightDelete(request) {
   console.log("Running the delete hook.");
   // clean up local state
   // notification about deletion is automatic
-  server.reply(request)
+  server.respond(request)
   .catch( (err) => {
       console.log("Error sending delete response.");
   });
 };
 
 function onLightCreate(request) {
-  server.decline(request, new Error("NotSupportedError"));
+  server.respond(request, new Error("NotSupportedError"));
 }
 
 ```
