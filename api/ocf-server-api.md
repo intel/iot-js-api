@@ -23,6 +23,22 @@ When a device is changed or shut down, the implementation should update presence
 The `options` property is mandatory for `create` and `update`, and optional for the rest.
 The `options` property is an object that contains resource specific properties and values, usually described in the [RAML](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource. It comes from the query portion of the request URI.
 
+<a name="ocfresourceinit"></a>
+### 1.2. The `OcfResourceInit` object
+Exposes the properties of an OCF resource that are allowed to be set when creating a resource.
+All properties are read-write.
+
+| Property        | Type    | Optional | Default value | Represents |
+| ---             | ---     | ---      | ---           | ---     |
+| `resourceTypes` | array of strings | no    | `[]` | List of OCF resource types |
+| `interfaces`    | array of strings | no    | `[]` | List of supported interfaces |
+| `mediaTypes`    | array of strings | no    | `[]` | List of supported Internet media types |
+| `discoverable`  | boolean | no    | `true` | Whether the resource is discoverable |
+| `observable`    | boolean | no    | `true` | Whether the resource is discoverable |
+| `secure`        | boolean | no    | `true` | Whether the resource is secure |
+| `slow`          | boolean | yes   | `false` | Whether the resource is constrained |
+| `properties`    | object | yes    | `{}` | List of resource properties according to the data model |
+
 ## 2. Events
 The requests are dispatched using events. The Server API supports the following events:
 
@@ -71,14 +87,14 @@ server.on('create', function(request) {
 ##### 2.2. The `retrieve` event
 Fired when a client asks for a resource to be retrieved on the device. The event callback receives two arguments:
 - An [`OcfRequest`](#ocfrequest) object `request` that can be used to respond to the request.
-- A boolean `observe` flag.
+- A boolean `observe` flag to tell if the client wants to also observe the resource for changes.
 
-The value of the `source` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource requesting the operation.
-The value of the `target` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource to be retrieved.
+The value of the `source` property `request` is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource requesting the operation.
+The value of the `target` property of `request` is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource to be retrieved.
 
 When the `observe` argument is `true`, then implementations SHOULD set up change notifications for the resource, and send a retrieve response with the resource representation every time the resource is changed.
 
-When the `observe` argument is `true`, then implementations SHOULD reset change notifications for the resource.
+When the `observe` argument is `false`, then implementations SHOULD reset change notifications for the resource.
 
 ```javascript
 var server = require('ocf').server;
