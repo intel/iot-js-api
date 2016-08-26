@@ -8,7 +8,7 @@ The Server API object does not expose own properties, only events and methods.
 
 When a device is constructed, the implementation should announce presence, together with the resources it contains.
 
-When a device is changed or shut down, the implementation should update presence information. Clients can subscibe to presence information in the [OCF Client API](./ocf-client-api.md).
+When a device is changed or shut down, the implementation should update presence information. Clients can subscibe to presence information in the [OCF Client API](./client.md).
 
 ## 1. Helper objects
 <a name="ocfrequest"></a>
@@ -16,8 +16,8 @@ When a device is changed or shut down, the implementation should update presence
 #### `OcfRequest` Properties
 | Property  | Type              | Optional | Default value | Represents |
 | ---       | ---               | ---      | ---           | ---        |
-| `source`  | [`OcfResourceId`](./ocf-client-api.md/#ocfresourceid)  | no  | `undefined` | Id of the requesting resource |
-| `target`  |  [`OcfResourceId`](./ocf-client-api.md/#ocfresourceid) | no  | `undefined` | Id of the request handling resource |
+| `source`  | [`OcfResourceId`](./client.md/#ocfresourceid)  | no  | `undefined` | Id of the requesting resource |
+| `target`  |  [`OcfResourceId`](./client.md/#ocfresourceid) | no  | `undefined` | Id of the request handling resource |
 | `options` | object               | it depends | `undefined` | Additional properties |
 
 The `options` property is mandatory for `create` and `update`, and optional for the rest.
@@ -54,8 +54,8 @@ Note that the OCF retrieve request contains the `observe` flag, which tells whet
 <a name="oncreate"></a>
 ##### 2.1. The `create` event
 Fired when a client asks for a resource to be created on the device. The event callback receives as argument an [`OcfRequest`](#ocfrequest) object that can be used to respond to the request.
-The value of the `source` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource requesting the operation.
-The value of the `target` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource responsible to create the requested resource.
+The value of the `source` property of the request is the [OcfResourceId](./client.md/#ocfresourceid) of the resource requesting the operation.
+The value of the `target` property of the request is the [OcfResourceId](./client.md/#ocfresourceid) of the resource responsible to create the requested resource.
 The value of the `options` property of the request should be an object that contains at least the following properties of the resource to be created:
 
 | Property       | Type   | Optional | Default value | Represents            |
@@ -89,8 +89,8 @@ Fired when a client asks for a resource to be retrieved on the device. The event
 - An [`OcfRequest`](#ocfrequest) object `request` that can be used to respond to the request.
 - A boolean `observe` flag to tell if the client wants to also observe the resource for changes.
 
-The value of the `source` property `request` is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource requesting the operation.
-The value of the `target` property of `request` is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource to be retrieved.
+The value of the `source` property `request` is the [OcfResourceId](./client.md/#ocfresourceid) of the resource requesting the operation.
+The value of the `target` property of `request` is the [OcfResourceId](./client.md/#ocfresourceid) of the resource to be retrieved.
 
 When the `observe` argument is `true`, then implementations SHOULD set up change notifications for the resource, and send a retrieve response with the resource representation every time the resource is changed.
 
@@ -117,8 +117,8 @@ server.on('retrieve', function(request, observe) {
 <a name="onupdate"></a>
 ##### 2.3. The `update` event
 Fired when a client asks for a resource to be updated on the device with one or more properties. The event callback receives as argument an [`OcfRequest`](#ocfrequest) object that can be used for the response.
-The value of the `source` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource requesting the operation.
-The value of the `target` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource to be updated.
+The value of the `source` property of the request is the [OcfResourceId](./client.md/#ocfresourceid) of the resource requesting the operation.
+The value of the `target` property of the request is the [OcfResourceId](./client.md/#ocfresourceid) of the resource to be updated.
 The `options` property of the request should be an object that contains the resource properties that should be updated, according to the data model of the given resource.
 
 When the resource is updated, all observers should be notified, and the updated resource representation should be sent back in the response.
@@ -141,8 +141,8 @@ server.on('update', function(request) {
 <a name="ondelete"></a>
 ##### 2.4. The `delete` event
 Fired when a client asks for a resource to be deleted on the device. The event callback receives as argument an [`OcfRequest`](#ocfrequest) object that can be used in the response.
-The value of the `source` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource requesting the operation.
-The value of the `target` property of the request is the [OcfResourceId](./ocf-client-api.md/#ocfresourceid) of the resource to be deleted.
+The value of the `source` property of the request is the [OcfResourceId](./client.md/#ocfresourceid) of the resource requesting the operation.
+The value of the `target` property of the request is the [OcfResourceId](./client.md/#ocfresourceid) of the resource to be deleted.
 The `options` property of the request is not used.
 ```javascript
 var server = require('ocf').server;
@@ -160,9 +160,9 @@ server.on('delete', function(request) {
 ## 3. Methods
 <a name="register"></a>
 ##### 3.1. `register(resourceInit)` method
-- Registers the provided [`resourceInit`](./ocf-client-api.md/#ocfresourceinit) object as a resource in the OCF network, obtains a resource id for it, and then resolves with an [OcfResource](./ocf-client-api.md/#ocfresource) object.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
-- The `resourceInit` argument is an [OcfResourceInit](./ocf-client-api.md/#ocfresourceinit) object. It should contain at least the following properties (other resource properties may also be specified):
+- Registers the provided [`resourceInit`](./client.md/#ocfresourceinit) object as a resource in the OCF network, obtains a resource id for it, and then resolves with an [OcfResource](./client.md/#ocfresource) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object.
+- The `resourceInit` argument is an [OcfResourceInit](./client.md/#ocfresourceinit) object. It should contain at least the following properties (other resource properties may also be specified):
 
 | Property       | Type   | Optional | Default value | Represents        |
 | ---            | ---    | ---      | ---           | ---               |
@@ -172,19 +172,19 @@ server.on('delete', function(request) {
 See the [example](#exampleoncreate) for the `create` event.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to register the given `resourceInit` structure, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise` with an [`OcfResource`](./ocf-client-api.md/#ocfresource) object created from the response.
+- When the answer is received, resolve `promise` with an [`OcfResource`](./client.md/#ocfresource) object created from the response.
 
 
 <a name="unregister"></a>
 ##### 3.2. `unregister(resourceId)`
 - Unregisters the given resource id from the OCF network.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
-- The `resourceId` argument is an [OcfResourceId](./ocf-client-api.md/#ocfresourceid) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object.
+- The `resourceId` argument is an [OcfResourceId](./client.md/#ocfresourceid) object.
 
 ```javascript
 let server = require('ocf').server;
@@ -197,7 +197,7 @@ server.unregister(resource)
   };
 ```
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to unregister the given `resourceId`, and wait for the answer.
@@ -207,13 +207,13 @@ The method runs the following steps:
 <a name="notify"></a>
 ##### 3.3. `notify(resource)`
 - Notifies the observers of `resource` with the current resource representation.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
-- The `resource` argument is an [OcfResource](./ocf-client-api.md/#ocfresource) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object.
+- The `resource` argument is an [OcfResource](./client.md/#ocfresource) object.
 
 See the [example](#exampleonupdate) for the `update` event.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to unregister the given `resourceId`, and wait for the answer.
@@ -223,11 +223,11 @@ The method runs the following steps:
 <a name="enablepresence"></a>
 ##### 3.4. `enablePresence(ttl)`
 - Enables presence for the current device, with an optional time to live argument.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object.
 - The `ttl` argument is optional. It is a number representing the time to live of the request in seconds.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to enable presence for the current device, and wait for the answer.
@@ -237,10 +237,10 @@ The method runs the following steps:
 <a name="disablepresence"></a>
 ##### 3.5. `disablePresence()`
 - Disables presence for the current device.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to disable presence for the current device, and wait for the answer.
@@ -251,7 +251,7 @@ The method runs the following steps:
 <a name="respond"></a>
 ##### 3.6. `respond(request, result, data)`
 - Sends a response to a given [`OcfRequest`](#ocfrequest).
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object that resolves when the response is successfully sent, otherwise rejects.
+- Returns a [`Promise`](./README.md/#ocfpromise) object that resolves when the response is successfully sent, otherwise rejects.
 - The `request` argument is mandatory, and it should be the `OcfRequest` object which is being responded to.
 - The `result` arguments is mandatory, it should be `null` in case of success, and should be an instance of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) in case of error.
 - The `data` argument is optional and used with requests that return data, such as `create` and `update`.
@@ -259,7 +259,7 @@ The method runs the following steps:
 The method is typically used from request event handlers, and internally reuses the request information (type, requestId, source, target) in order to construct a response message.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Construct a response message to `request`, reusing the properties of `request`.

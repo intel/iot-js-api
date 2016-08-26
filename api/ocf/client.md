@@ -49,7 +49,7 @@ Identifies an OCF resource by the UUID of the device that hosts the resource, an
 <a name="ocfresource"></a>
 ### 1.2. The `OcfResource` object
 #### `OcfResource` properties
-`OcfResource` has all the properties of [`OcfResourceInit`](./ocf-server-api.md#ocfresourceinit), and in addition it has an `id` property:
+`OcfResource` has all the properties of [`OcfResourceInit`](./server.md#ocfresourceinit), and in addition it has an `id` property:
 
 | Property   | Type    | Optional | Default value | Represents |
 | ---        | ---     | ---      | ---           | ---     |
@@ -74,15 +74,15 @@ The Client API supports the following events:
 
 | Event name        | Event callback argument |
 | --------------    | ----------------------- |
-| *platformfound*   | [`OcfPlatform`](./ocf-api.md/#ocfplatform) object |
-| *devicefound*     | [`OcfDevice`](./ocf-api.md/#ocfdevice) object |
-| *devicelost*      | [`OcfDevice`](./ocf-api.md/#ocfdevice) object |
+| *platformfound*   | [`OcfPlatform`](./README.md/#ocfplatform) object |
+| *devicefound*     | [`OcfDevice`](./README.md/#ocfdevice) object |
+| *devicelost*      | [`OcfDevice`](./README.md/#ocfdevice) object |
 | *resourcefound*   | [`OcfResource`](#ocfresource) object |
 | *error*           | [`Error`](#ocferror) object |
 
 <a name="onplatformfound"></a>
 ##### 2.3. The `platformfound` event
-Fired when a platform is discovered. The event callback receives as argument an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object.
+Fired when a platform is discovered. The event callback receives as argument an [`OcfPlatform`](./README.md/#ocfplatform) object.
 ```javascript
 client.addListener('platformfound', function(platform) {
   console.log("Platform found with id: " + platform.id);
@@ -91,7 +91,7 @@ client.addListener('platformfound', function(platform) {
 
 <a name="ondevicefound"></a>
 ##### 2.2. The `devicefound` event
-Fired when a device is discovered or when a device appears on the network as a result of enabling its presence. The event callback receives as argument an [`OcfDevice`](./ocf-api.md/#ocfdevice) object.
+Fired when a device is discovered or when a device appears on the network as a result of enabling its presence. The event callback receives as argument an [`OcfDevice`](./README.md/#ocfdevice) object.
 ```javascript
 client.addListener('devicefound', function(device) {
   console.log("Device found with id: " + device.uuid);
@@ -100,7 +100,7 @@ client.addListener('devicefound', function(device) {
 
 <a name="ondevicelost"></a>
 ##### 2.3. The `devicelost` event
-Fired when a device is lost. The event callback receives as argument an [`OcfDevice`](#./ocf-api.md/#ocfdevice) object.
+Fired when a device is lost. The event callback receives as argument an [`OcfDevice`](#./README.md/#ocfdevice) object.
 ```javascript
 client.on('devicelost', function(device) {
   console.log("Device disappeared: " + device.uuid);
@@ -136,59 +136,59 @@ client.on('error', function(error) {
 <a name="getplatforminfo"></a>
 ##### 3.1. The `getPlatformInfo(deviceId)` method
 Fetches a remote platform information.  The `deviceId` argument is a string that contains an OCF device UUID. The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - Send a direct discovery request `GET /oic/p` with the given id (which can be either a device UUID or a device URL, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise` with an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object created from the response.
+- When the answer is received, resolve `promise` with an [`OcfPlatform`](./README.md/#ocfplatform) object created from the response.
 
 <a name="getdeviceinfo"></a>
 ##### 3.2. The `getDeviceInfo(deviceId)` method
 Fetches a remote device information. The `deviceId` argument is a string that contains an OCF device UUID. The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a direct discovery request `GET /oic/d` with the given `deviceId`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise` with an [`OcfDevice`](./ocf-api.md/#ocfdevice) object created from the response.
+- When the answer is received, resolve `promise` with an [`OcfDevice`](./README.md/#ocfdevice) object created from the response.
 
 <a name="findplatforms"></a>
 ##### 3.3. The `findPlatforms(listener)` method
 - Initiates a platform discovery network operation.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object that resolves with an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object.
-- The `listener` argument is optional, and is an event listener for the ['platformfound'](#onplatformfound) event that received as argument an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object that resolves with an [`OcfPlatform`](./README.md/#ocfplatform) object.
+- The `listener` argument is optional, and is an event listener for the ['platformfound'](#onplatformfound) event that received as argument an [`OcfPlatform`](./README.md/#ocfplatform) object.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a multicast request for retrieving `/oic/p` and wait for the answer.
 - If the sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
 - If the `listener` argument is specified, add it as a listener to the ['platformfound'](#onplatformfound) event.
-- When a platform is discovered, fire a `platformfound` event that contains a property named `platform`, whose value is an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object.
+- When a platform is discovered, fire a `platformfound` event that contains a property named `platform`, whose value is an [`OcfPlatform`](./README.md/#ocfplatform) object.
 
 <a name="finddevices"></a>
 ##### 3.4. The `findDevices(listener)` method
 - Initiates a device discovery network operation.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object that resolves with an [`OcfDevice`](./ocf-api.md/#ocfdevice) object.
-- The `listener` argument is optional, and is an event listener for the ['devicefound'](#ondevicefound) event that receives as argument an [`OcfDevice`](./ocf-api.md/#ocfdevice) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object that resolves with an [`OcfDevice`](./README.md/#ocfdevice) object.
+- The `listener` argument is optional, and is an event listener for the ['devicefound'](#ondevicefound) event that receives as argument an [`OcfDevice`](./README.md/#ocfdevice) object.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `SecurityError`.
 - If the functionality is not supported, reject `promise` with `NotSupportedError`.
 - Send a multicast request for retrieving `/oic/d` and wait for the answer.
 - If the sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
 - If the `listener` argument is specified, add it as a listener to the ['devicefound'](#ondevicefound) event.
-- When a device is discovered, fire a `devicefound` event that contains a property named `device`, whose value is [`OcfDevice`](./ocf-api.md/#ocfdevice) object.
+- When a device is discovered, fire a `devicefound` event that contains a property named `device`, whose value is [`OcfDevice`](./README.md/#ocfdevice) object.
 
 <a name="findresources"></a>
 ##### 3.5. The `findResources(options, listener)` method
 - Initiates a resource discovery network operation.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object that resolves with an [`OcfResource`](#ocfresource) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object that resolves with an [`OcfResource`](#ocfresource) object.
 - The `options` parameter is optional, and its value is an object that contains one or more of the following properties:
 
 | Property       | Type   | Optional | Default value | Represents        |
@@ -197,10 +197,10 @@ The method runs the following steps:
 | `resourceType` | string | yes      | `undefined`   | OCF resource type |
 | `resourcePath` | string | yes      | `undefined`   | OCF resource path |
 
-- The `listener` argument is optional, and is an event listener for the ['resourcefound'](#onresourcefound) event that receives as argument an [`OcfResource`](./ocf-api.md/#ocfresource) object.
+- The `listener` argument is optional, and is an event listener for the ['resourcefound'](#onresourcefound) event that receives as argument an [`OcfResource`](./README.md/#ocfresource) object.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `SecurityError`.
 - If the functionality is not supported, reject `promise` with `NotSupportedError`.
 - Configure an OCF resource discovery request as follows:
@@ -216,7 +216,7 @@ The method runs the following steps:
 <a name="create"></a>
 ##### 4.1. The `create(target, resourceInit)` method
 - Creates a remote resource on a given device.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object which resolves with an [OcfResource](#ocfresource) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object which resolves with an [OcfResource](#ocfresource) object.
 - The `target` argument is an [OcfResourceId](#ocfresourceid) object that contains a device UUID and a resource path. It identifies the resource that is responsible for creating the requested resource.
 - The `resourceInit` argument is an [OcfResourceInit](#ocfresourceinit) object. It should contain at least the following properties (other resource properties may also be specified).
 
@@ -228,7 +228,7 @@ The method runs the following steps:
 The method sends a request to the device specified in `target` and the device's `createresource` event handler takes care of creating the resource and replying with the created resource, or error.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to create the resource described by `resourceInit` to the device specified by `target.deviceId` and the handler resource on the device specified by `target.resourcePath`. Wait for the answer.
@@ -237,7 +237,7 @@ The method runs the following steps:
 <a name="retrieve"></a>
 ##### 4.2. The `retrieve(resourceId, options, listener)` method
 - Retrieves a resource based on resource id by sending a request to the device specified in `resourceId.deviceId`. The device's `retrieveresource` event handler takes care of fetching the resource representation and replying with the created resource, or with an error.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object which resolves with an [OcfResource](#ocfresource) object.
+- Returns a [`Promise`](./README.md/#ocfpromise) object which resolves with an [OcfResource](#ocfresource) object.
 - The `resourceId` argument is an [OcfResourceId](#ocfresourceid) object that contains a device UUID and a resource path.
 - The `options` argument is optional, and it is an object whose properties represent the ```REST``` query parameters passed along with the `GET` request as a JSON-serializable dictionary. Implementations SHOULD validate this client input to fit OCF requirements. The semantics of the parameters are application specific (e.g. requesting a resource representation in metric or imperial units). Similarly, the properties of an OIC resource representation are application specific and are represented as a JSON-serializable dictionary.
 - The `listener` argument is optional, and is an event listener for the `OcfResource` ['update'](#onresourceupdate) event.
@@ -245,7 +245,7 @@ The method runs the following steps:
 In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that request (and get a retrieve responses with a resource representation for each resource change).
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - If the `listener` argument is specified, add it as a listener to the `OcfResource` ['update'](#onresourceupdate) event, and set the `observe` flag to `true`.
@@ -260,11 +260,11 @@ The method runs the following steps:
 <a name="update"></a>
 ##### 4.3. The `update(resource)` method
 - Updates a resource in the network by sending a request to the device specified by `resource.id.deviceId`. The device's `updateresource` event handler takes care of updating the resource and replying with the created resource, or error. The resource identified by `resource.id` is updated so that every properties present in `resource` other than `resource.id` is updated with the value specified in `resource`.
-- Returns: a [`Promise`](./ocf-api.md/#ocfpromise) object which resolves with an [OcfResource](#ocfresource) object.
+- Returns: a [`Promise`](./README.md/#ocfpromise) object which resolves with an [OcfResource](#ocfresource) object.
 - The `resource` argument is an [OcfResource](#ocfresource) object.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to update the resource specified by `resource` with the properties present in `resource, and wait for the answer.
@@ -274,11 +274,11 @@ The method runs the following steps:
 <a name="delete"></a>
 ##### 4.4. The `delete(resourceId)` method
 - Deletes a resource from the network by sending a request to the device specified in `resourceId.deviceId`. The device's `deleteresource` event handler takes care of deleting the resource and reporting success or error.
-- Returns: a [`Promise`](./ocf-api.md/#ocfpromise) object.
+- Returns: a [`Promise`](./README.md/#ocfpromise) object.
 - The `resourceId` argument is an [OcfResourceId](#ocfresourceid) object that contains a device UUID and a resource path that identifies the resource to be deleted.
 
 The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Return a [`Promise`](./README.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to delete the resource specified by `resourceId`, and wait for the answer.

@@ -3,10 +3,10 @@ OCF Web API
 
 * [Introduction](#introduction)
 * [OCF API object](#api-entry-point)
-  - [OCF Client API](./ocf-client-api.md)
-  - [OCF Server API](./ocf-server-api.md)
-* [Web IDL](./ocf-web-idl.md)
-* [Examples](./ocf-examples.md)
+  - [OCF Client API](./client.md)
+  - [OCF Server API](./server.md)
+* [Web IDL](./webidl.md)
+* [Examples](./examples.md)
 
 Introduction
 ------------
@@ -34,8 +34,8 @@ var ocf = require(module);
 ```
 
 When `require` is successful, it MUST return an object with the following read-only properties:
-- `client` is an object that implements the [OCF Client API](./ocf-client-api.md).
-- `server` is an object that implements the [OCF Server API](./ocf-server-api.md)
+- `client` is an object that implements the [OCF Client API](./client.md).
+- `server` is an object that implements the [OCF Server API](./server.md)
 - `device` is an [`OcfDevice`](#ocfdevice) object that represents properties of the current device
 - `platform` is an [`OcfPlatform`](#ocfplatform) object that represents properties of the platform that hosts the current device.
 
