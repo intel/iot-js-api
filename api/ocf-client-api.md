@@ -16,7 +16,7 @@ Client requests may fail in the OCF network for various reasons. The `OcfError` 
 | `deviceId`     | string | yes      | `undefined`   | UUID of the device |
 | `resourcePath` | string | yes      | `undefined`   | URI path of the resource |
 
-- The `kind` property is a string that can take the following values: `"presence"`, `"observe"`.
+- The `kind` property is a string that can take the following values: `"discovery"`, `"presence"`, `"observe"`.
 - The `deviceId` property is a string that represents the device UUID causing the error. The value `null` means the local device, and the value `undefined` means the error source device is not available.
 - The `resourcePath` property is a string that represents the resource path of the resource causing the error. If `deviceId` is `undefined`, then the value of `resourcePath` should be also set to `undefined`.
 - The `message` property is inherited from `Error`.
@@ -55,6 +55,20 @@ Identifies an OCF resource by the UUID of the device that hosts the resource, an
 | ---        | ---     | ---      | ---           | ---     |
 | `id` | [`OcfResourceId`](#ocfresourceid) | no    | `undefined` | Resource identifier |
 
+#### `OcfResource` events
+`OcfResource` supports the following events:
+
+| Event name | Event callback argument |
+| -----------| ----------------------- |
+| *update*   | [`OcfResource`](#ocfresource) object |
+| *delete*   | [`OcfResource`](#ocfresource) object |
+
+<a name="onresourceupdate"></a>
+The `OcfResource` *update* event is fired when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives an object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
+
+<a name="onresourcelost"></a>
+The `OcfResource` *delete* event is fired when the `*devicelost*` event is fired for the device that contains the resource, or when the implementation gets notified about the resource being deleted or unregistered from the OCF network.
+
 ## 2. Events
 The Client API supports the following events:
 
@@ -62,11 +76,8 @@ The Client API supports the following events:
 | --------------    | ----------------------- |
 | *platformfound*   | [`OcfPlatform`](./ocf-api.md/#ocfplatform) object |
 | *devicefound*     | [`OcfDevice`](./ocf-api.md/#ocfdevice) object |
-| *devicechanged*   | [`OcfDevice`](./ocf-api.md/#ocfdevice) object |
 | *devicelost*      | [`OcfDevice`](./ocf-api.md/#ocfdevice) object |
 | *resourcefound*   | [`OcfResource`](#ocfresource) object |
-| *resourcechanged* | [`OcfResource`](#ocfresource) object |
-| *resourcelost*    | [`OcfResource`](#ocfresource) object |
 | *error*           | [`Error`](#ocferror) object |
 
 <a name="onplatformfound"></a>
@@ -87,15 +98,6 @@ client.addListener('devicefound', function(device) {
 });
 ```
 
-<a name="ondevicechanged"></a>
-##### 2.2. The `devicechanged` event
-Fired when a device changes. The event callback receives as argument an [`OcfDevice`](#./ocf-api.md/#ocfdevice) object.
-```javascript
-client.on('devicechanged', function(device) {
-  console.log("Device changed: " + device.uuid);
-});
-```
-
 <a name="ondevicelost"></a>
 ##### 2.3. The `devicelost` event
 Fired when a device is lost. The event callback receives as argument an [`OcfDevice`](#./ocf-api.md/#ocfdevice) object.
@@ -104,6 +106,11 @@ client.on('devicelost', function(device) {
   console.log("Device disappeared: " + device.uuid);
 });
 ```
+
+When the first listener is added to the `*ondevicefound*` or the `*ondevicelost*` event, implementations SHOULD enable listening to OCF presence notifications.
+
+When the last listener is removed from the `*ondevicefound*` and the `*ondevicelost*` event, implementations SHOULD disable listening to OCF presence notifications.
+
 <a name="onresourcefound"></a>
 ##### 2.1. The `resourcefound` event
 Fired when a resource is discovered. The event callback receives as argument an [`OcfResource`](#ocfresource) object.
@@ -112,20 +119,6 @@ client.on('resourcefound', function(resource) {
   console.log("Resource found with path: " + resource.id.path);
 });
 ```
-
-<a name="onresourcechanged"></a>
-##### 2.3. The `resourcechanged` event
-Fired when an observed resource has changed. The event callback receives as argument an [`OcfResource`](#ocfresource) object that contains at least the `id` property and the changed properties.
-
-```javascript
-client.on('resourcechanged', function(resource) {
-  console.log("Device disappeared: " + device.uuid);
-});
-```
-
-<a name="onresourcelost"></a>
-#####  The `onresourcelost` event
-Fired when the resource is noticed to be lost, either by losing the device that owns the resource, or by receiving a resource delete notification. The event call is invoked with the relevant [`OcfResource`](#ocfresource) object.
 
 <a name="onerror"></a>
 ##### 2.4. The `error` event
@@ -161,29 +154,39 @@ Fetches a remote device information. The `deviceId` argument is a string that co
 - When the answer is received, resolve `promise` with an [`OcfDevice`](./ocf-api.md/#ocfdevice) object created from the response.
 
 <a name="findplatforms"></a>
-##### 3.3. The `findPlatforms()` method
-Initiates a platform discovery network operation. It takes no arguments and it runs the following steps:
+##### 3.3. The `findPlatforms(listener)` method
+- Initiates a platform discovery network operation.
+- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object that resolves with an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object.
+- The `listener` argument is optional, and is an event listener for the ['platformfound'](#onplatformfound) event that received as argument an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object.
+
+The method runs the following steps:
 - Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a multicast request for retrieving `/oic/p` and wait for the answer.
 - If the sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
+- If the `listener` argument is specified, add it as a listener to the ['platformfound'](#onplatformfound) event.
 - When a platform is discovered, fire a `platformfound` event that contains a property named `platform`, whose value is an [`OcfPlatform`](./ocf-api.md/#ocfplatform) object.
 
 <a name="finddevices"></a>
-##### 3.4. The `findDevices()` method
-Initiates a device discovery network operation. It takes no arguments and it runs the following steps:
+##### 3.4. The `findDevices(listener)` method
+- Initiates a device discovery network operation.
+- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object that resolves with an [`OcfDevice`](./ocf-api.md/#ocfdevice) object.
+- The `listener` argument is optional, and is an event listener for the ['devicefound'](#ondevicefound) event that receives as argument an [`OcfDevice`](./ocf-api.md/#ocfdevice) object.
+
+The method runs the following steps:
 - Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `SecurityError`.
 - If the functionality is not supported, reject `promise` with `NotSupportedError`.
 - Send a multicast request for retrieving `/oic/d` and wait for the answer.
 - If the sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
+- If the `listener` argument is specified, add it as a listener to the ['devicefound'](#ondevicefound) event.
 - When a device is discovered, fire a `devicefound` event that contains a property named `device`, whose value is [`OcfDevice`](./ocf-api.md/#ocfdevice) object.
 
 <a name="findresources"></a>
-##### 3.5. The `findResources(options)` method
+##### 3.5. The `findResources(options, listener)` method
 - Initiates a resource discovery network operation.
 - Returns a [`Promise`](./ocf-api.md/#ocfpromise) object that resolves with an [`OcfResource`](#ocfresource) object.
 - The `options` parameter is optional, and its value is an object that contains one or more of the following properties:
@@ -193,6 +196,8 @@ Initiates a device discovery network operation. It takes no arguments and it run
 | `deviceId`     | string | yes      | `undefined`   | OCF device UUID   |
 | `resourceType` | string | yes      | `undefined`   | OCF resource type |
 | `resourcePath` | string | yes      | `undefined`   | OCF resource path |
+
+- The `listener` argument is optional, and is an event listener for the ['resourcefound'](#onresourcefound) event that receives as argument an [`OcfResource`](./ocf-api.md/#ocfresource) object.
 
 The method runs the following steps:
 - Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -204,6 +209,7 @@ The method runs the following steps:
   - If `options.resourcePath` is specified, filter results locally.
 - If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
+- If the `listener` argument is specified, add it as a listener to the ['resourcefound'](#resourcefound) event.
 - When a resource is discovered, fire a `resourcefound` event that contains a property named `resource`, whose value is an [`OcfResource`](#ocfresource) object.
 
 ## 4. CRUDN Methods
@@ -229,20 +235,27 @@ The method runs the following steps:
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="retrieve"></a>
-##### 4.2. The `retrieve(resourceId, options)` method
+##### 4.2. The `retrieve(resourceId, options, listener)` method
 - Retrieves a resource based on resource id by sending a request to the device specified in `resourceId.deviceId`. The device's `retrieveresource` event handler takes care of fetching the resource representation and replying with the created resource, or with an error.
 - Returns a [`Promise`](./ocf-api.md/#ocfpromise) object which resolves with an [OcfResource](#ocfresource) object.
 - The `resourceId` argument is an [OcfResourceId](#ocfresourceid) object that contains a device UUID and a resource path.
 - The `options` argument is optional, and it is an object whose properties represent the ```REST``` query parameters passed along with the `GET` request as a JSON-serializable dictionary. Implementations SHOULD validate this client input to fit OCF requirements. The semantics of the parameters are application specific (e.g. requesting a resource representation in metric or imperial units). Similarly, the properties of an OIC resource representation are application specific and are represented as a JSON-serializable dictionary.
+- The `listener` argument is optional, and is an event listener for the `OcfResource` ['update'](#onresourceupdate) event.
 
-In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that request (and get a retrieve responses with a resource representation for each resource change). This API uses the `retrieve()` method only for a single retrieve operation, without observing.
+In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that request (and get a retrieve responses with a resource representation for each resource change).
 
 The method runs the following steps:
 - Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Send a request to retrieve the resource specified by `resourceId` with the `observe` flag unset, and wait for the answer.
-- If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
+- If the `listener` argument is specified, add it as a listener to the `OcfResource` ['update'](#onresourceupdate) event, and set the `observe` flag to `true`.
+- Let `resource` be the resource identified by `resourceId`.
+- Otherwise, if `listener` is not specified, set `observe` to `false`. If previously `resource` has been observed, then stop firing `OcfResource` [`update`](#onresourceupdate) event on the resource.
+- Send a request to retrieve the resource specified by `resourceId` with the `observe` flag set as in the steps above, and wait for the answer.
+- If there is an error during the request, reject `promise` with that error.
+- If `observe` is `false`, resolve `promise` with `resource` updated from the retrieve response.
+- Otherwise, if `observe` is `true, for each OCF retrieve response received while `resource` being observed, update `resource` with the new values, and fire the `OcfResource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed.
+- If there are OCF protocol errors during observe, fire an [`error`](#onerror) event with a new [`OcfError`](#ocferror) object `error` with `error.kind` is set to `"observe"`, `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.path`.
 
 <a name="update"></a>
 ##### 4.3. The `update(resource)` method
@@ -270,73 +283,3 @@ The method runs the following steps:
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to delete the resource specified by `resourceId`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
-
-<a name="observe"></a>
-##### 4.5. The `observe(resourceId)` method
-- Starts observing a device or resource for change or deletion.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
-- The `resourceId` argument provides a [OcfResourceId](#ocfresourceid) object to identify the resource to be observed.
-
-The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- If the `deviceId` is `null` or `undefined`, request presence notifications on any device.
-- If the `resourceId` argument is `null` or `undefined`, then reject `promise` with `"TypeMismatchError"`.
-- Send an OCF retrieve request to get the resource identified by `resourceId` with the `observe` flag set.
-- If there is an error during the request, reject `promise` with that error and terminate these steps.
-- Otherwise, discard the retrieve response.
-- Set an internal slot marking the resource being observed so that for each OCF retrieve response received while the resource being observed, fire the [`resourcechanged`](#onresourcechanged) event.
-- If there are OCF protocol errors for observe, fire an [`error`](#onerror) event with a new [`OcfError`](#ocferror) object `error` for which `error.kind` is set to `"observe"`, `error.deviceId` is set to `resourceId.deviceId` and `resourcePath` is set to `resourceId.path`.
-- Resolve `promise`.
-
-<a name="unobserve"></a>
-##### 4.6. The `unobserve(resourceId)` method
-- Stops observing a device or resource for change or deletion.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
-- The `resourceId` argument provides a [OcfResourceId](#ocfresourceid) object to identify the resource to be unobserved.
-
-The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- If the `deviceId` is `null` or `undefined`, request presence notifications on any device.
-- If the `resourceId` argument is `null` or `undefined`, reject `promise` with `"TypeMismatchError"`.
-- If the resource identified by `resourceId` is not being observed, `promise` with '"InvalidModificationError"'.
-- Send an OCF retrieve request to get the resource identified by `resourceId` with the `observe` flag unset.
-- If there is an error during the request, reject `promise` with that error and terminate these steps.
-- Otherwise, discard the retrieve response.
-- Release the internal slot marking the resource being observed, so that further OCF retrieve response received do not trigger firing the [`resourcechanged`](#onresourcechanged) event any more.
-- Resolve `promise`.
-
-<a name="subscribe"></a>
-##### 4.5. The `subscribe(deviceId)` method
-- Subscribes to presence notification for a given device or all devices in the OCF network.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
-- The `deviceId` string argument is optional, and provides a device UUID.
-
-The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- If the `deviceId` is `null` or `undefined`, request presence notifications on any device.
-- Otherwise request OCF presence notifications for `deviceId`.
-- If there is an error during the requests, reject `promise` with that error, and terminate these steps.
-- Otherwise, for every presence change notification fire the [`devicechanged`](#ondevicechanged) event, and for every delete notification fire the [`devicelost`](#ondevicelost) event. Do not fire [`resourcelost`](#onresourcelost) events for each observed resource of that device, that is used only for explicitly deleted or unregistered resources.
-- If there are OCF protocol errors for presence, fire an [`error`](#onerror) event with a new [`OcfError`](#ocferror) object `error` for which `error.kind` is set to `"presence"`, `error.deviceId` is set to `deviceId` and `resourcePath` is set to `null`.
-- Resolve `promise`.
-
-<a name="unsubscribe"></a>
-##### 4.6. The `unsubscribe(deviceId)` method
-- Unsubscribe from presence notification for a given device or all devices in the OCF network.
-- Returns a [`Promise`](./ocf-api.md/#ocfpromise) object.
-- The `deviceId` string argument is optional, and provides a device UUID.
-
-The method runs the following steps:
-- Return a [`Promise`](./ocf-api.md/#ocfpromise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- If the `deviceId` is `null` or `undefined`, stop watching presence notifications on all devices.
-- Otherwise request to stop watching presence notifications for `deviceId`.
-- If there is an error during the requests, reject `promise` with that error, and terminate these steps.
-- Resolve `promise`.

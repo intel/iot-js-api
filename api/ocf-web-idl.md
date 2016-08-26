@@ -52,27 +52,28 @@ interface OcfClient {
   Promise<OcfDevice> getDeviceInfo(USVString deviceId);
   Promise<OcfPlatform> getPlatformInfo(USVString deviceId);
 
-  Promise<void> findResources(optional OcfDiscoveryOptions options);
-  Promise<void> findDevices();
-  Promise<void> findPlatforms();
+  Promise<void> findResources(optional OcfDiscoveryOptions options,
+                              optional ResourceCallback listener);
+  Promise<void> findDevices(optional DeviceCallback listener);
+  Promise<void> findPlatforms(optional PlatformCallback listener);
 
   Promise<OcfResource> create(OcfResourceId target, OcfResourceInit resource);
-  Promise<OcfResource> retrieve(OcfResourceId id, optional Dictionary options);
+  Promise<OcfResource> retrieve(OcfResourceId id,
+                                optional Dictionary options,
+                                optional ResourceCallback listener);
   Promise<void> update(OcfResource resource);  // partial dictionary
   Promise<void> delete(OcfResourceId id);
 
-  Promise<void> observe(USVString deviceId, USVString resourcePath);
-  Promise<void> unobserve(USVString deviceId, USVString resourcePath);
-
   attribute EventHandler<OcfPlatform> onplatformfound;
   attribute EventHandler<OcfDevice> ondevicefound;
-  attribute EventHandler<OcfDevice> ondevicechanged;
   attribute EventHandler<OcfDevice> ondevicelost;
   attribute EventHandler<OcfResource> onresourcefound;
-  attribute EventHandler<OcfResource> onresourcechanged;
-  attribute EventHandler<OcfResource> onresourcelost;
   attribute EventHandler<Error> onerror;
 };
+
+callback ResourceCallback = void (OcfResource resource);
+callback DeviceCallback = void (OcfDevice device);
+callback PlatformCallback = void (OcfPlatform platform);
 
 dictionary OcfDiscoveryOptions {
   USVString deviceId;      // if provided, make direct discovery
@@ -99,7 +100,7 @@ dictionary OcfResourceInit {
 };
 
 [NoInterfaceObject]
-interface OcfResource {
+interface OcfResource: EventEmitter {
   // gets the properties of OcfResourceInit, all read-only
   readonly attribute ResourceId id;
   readonly attribute sequence<DOMString> resourceTypes;
@@ -109,6 +110,9 @@ interface OcfResource {
   readonly attribute boolean observable;
   readonly attribute boolean slow;
   readonly attribute OcfResourceRepresentation properties;
+
+  attribute EventHandler onupdate;
+  attribute EventHandler ondelete;
 };
 
 ```

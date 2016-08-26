@@ -21,21 +21,18 @@ let client = ocf.client;
 var red = null;
 
 function startDiscovery() {
-  client.onresourcefound = function(resource) {
+  client.findResources({ resourceType: “ocf.r.light” }, function(resource) {
     if(resource && resource.id.path === "/light/ambience/red") {
       red = resource;
       red.on('update', redHandler);
-    }
-  }
-
-  client.findResources({ resourceType: “ocf.r.light” })
+    })
     .then( () => { console.log("Resource discovery started.");})
     .catch((e) => {
       console.log("Error finding resources: " + e.message);
     });
 };
 
-function redHandler(red) {
+function redHandler(changedProperties) {
   console.log("Update received on " + red.id);
   console.log("Running local business logic to determine further actions...");
   if (red.properties.dimmer > 0.5) {

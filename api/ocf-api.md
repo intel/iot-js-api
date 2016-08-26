@@ -3,6 +3,8 @@ OCF Web API
 
 * [Introduction](#introduction)
 * [OCF API object](#api-entry-point)
+  - [OCF Client API](./ocf-client-api.md)
+  - [OCF Server API](./ocf-server-api.md)
 * [Web IDL](./ocf-web-idl.md)
 * [Examples](./ocf-examples.md)
 
