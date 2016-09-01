@@ -21,24 +21,24 @@ let client = ocf.client;
 let red = null;
 
 function startDiscovery() {
-  client.findResources({ resourceType: "ocf.r.light" }, resource => {
-    if (resource && resource.id.path === "/light/ambience/red") {
+  client.findResources({ resourceType: "ocf.r.light" }, function(resource) {
+    if (resource && resource.resourcePath === "/light/ambience/red") {
       red = resource;
       red.on('update', redLightUpdated);
     })
-    .then(() => { console.log("Resource discovery started."); })
-    .catch(e => { console.log(`Error finding resources: ${e.message}`); });
+    .then(function() { console.log("Resource discovery started."); })
+    .catch(function(e) { console.log("Error finding resources: " + e.message); });
 };
 
 function redLightUpdated(changedProperties) {
-  console.log(`Update received on ${red.id}`);
-  console.log("Running local business logic to determine further actions...");
+  console.log("Update received on " + red.resourcePath);
 
   if (red.properties.dimmer > 0.5) {
     // do something, e.g. limit output
-    client.update({ id: red.id, red.properties.dimmer: 0.5 })
-      .then(() => { console.log("Changed red light dimmer"); })
-      .catch(e => { console.log("Error changing red light"); });
+    red.properties.dimmer = 0.5;
+    client.update(red)
+      .then(function() { console.log("Changed red light dimmer"); })
+      .catch(function(e) { console.log("Error changing red light"); });
   }
 };
 ```
@@ -49,76 +49,91 @@ function redLightUpdated(changedProperties) {
 let server = ocf.server;
 
 let lightResource = null;
-let lightResourceObserved = false;
+let listenerCount = 0;
 
 function startServer() {
   // register the specific resources handled by this solution
   // which are not exposed by the device firmware
   server.registerResource({
-    id: { deviceId: ocf.device.uuid; path: "/light/ambience/blue" },
+    deviceId: ocf.device.uuid,
+    resourcePath: "/light/ambience/blue/1",
     resourceTypes: [ "light" ],
     interfaces: [ "/oic/if/rw" ],
     discoverable: true,
     observable: true,
     properties: { color: "blue", dimmer: 0.2 }
-  }).then(res => {
-    console.log(`Local resource ${res.id.path} has been registered.`);
-
+  }).then(function(res) {
+    console.log("Local resource " + res.resourcePath + " has been registered.");
     lightResource = res;
-    server.on("update", lightUpdated);
-    server.on("delete", lightDeleted);
-    server.on("retrieve", lightRetrieved);
-    server.on("create", lightCreatde);
+    server.on("update", lightUpdateHandler);
+    server.on("delete", lightDeleteHandler);
+    server.on("retrieve", lightRetrieveHandler);
+    server.on("create", lightCreatoHandler);
     }
-  }).catch((error) => {
-    console.log(`Error creating resource ${error.resource.id.path} : ${error.message}`);
+  }).catch(function(error) {
+    console.log("Error creating resource " + error.resourcePath + ": " + error.message);
   });
 };
 
-function lightRetrieved(request, observe) {
-  if (request.target.id.path === lightResource.id.path) {
-    lightResourceObserved = observe;
+function lightRetrieveHandler(request, observe) {
+  if (request.target.resourcePath === lightResource.resourcePath) {
+    listenerCount += observe ? 1 : -1;
+
     server.respond(request, null, lightResource)
-    .catch(err => {
+    .catch(function(err) {
       console.log("Error sending retrieve response.");
     });
   } else {
-    server.respond(request, new Event("NotFoundError"));
-    .catch(err => {
+    server.respond(request, new Error("NotFoundError"));
+    .catch(function(err) {
       console.log("Error sending retrieve error response.");
     });
   }
 };
 
-function lightUpdated(request) {
+function lightUpdateHandler(request) {
   // the implementation has by now updated this resource (lightResource)
   // this is a hook to update the business logic
-  console.log(`Resource ${request.target} updated. Running the update hook.`);
+  console.log("Resource " + request.target.resourcePath + " updated.");
 
-  for (p of request.options) {
-    if (lightResource[p] != request.options[p])
-      lightResource[p] = request.options[p];
+  for (p of request.resource.properties) {
+    if (lightResource.properties[p] != request.resource.properties[p])
+      lightResource.properties[p] = request.resource.properties[p];
   }
 
-  // do the notifications manually
-  if (lightResourceObserved) {
-    server.notify(lightResource)
-      .then(() => { console.log("Update notification sent."); })
-      .catch(err => { console.log(`No observers or error sending: ${err.name}`); });
-  }
+  // Notify other listeners about the change.
+  server.notify(lightResource)
+      .then(function() { console.log("Update notification sent."); })
+      .catch(function(err) { console.log("Error sending notifications: " + err.message); });
 };
 
-function lightDeleted(request) {
-  console.log(`Resource ${request.target} has been requested to be deleted.`);
-  console.log("Running the delete hook.");
+function lightDeleteHandler(request) {
+  console.log("Deleting resource " + request.target.resourcePath);
 
   // clean up local state; notification about deletion is automatic
   server.respond(request)
-  .catch(err => { console.log("Error sending delete response."); });
+  .catch(function(err) { console.log("Error sending delete response."); });
 };
 
-function lightCreated(request) {
-  server.respond(request, new Error("NotSupportedError"));
-}
+function lightCreateHandler(request) {
+  if (request.resource.resourcePath !== "/light/ambience/blue/1") {
+      server.respond(request, new TypeError("create"), res);
+      return;
+  }
+
+  console.log("Creating resource " + request.resource.resourcePath +
+              " at " + request.target.resourcePath);
+
+  // Process the resource creation using a local call.
+  let res = _createResource(request.target.resourcePath, request.resource);
+
+  // Register the new local resource, then respond to the create request.
+  server.register(res)
+    .then(function(resource) {
+      server.respond(request, null, resource);
+    }).catch(function(error) {
+      server.respond(request, error, res);
+    });
+};
 
 ```

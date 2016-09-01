@@ -10,7 +10,9 @@ OCF Web API
 
 Introduction
 ------------
-This document presents a JavaScript API for [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications).
+This document presents a JavaScript API for [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.0 (final) and 1.1.0 (draft).
+
+Since implementations may run on constrained hardware, examples use [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/).
 
 The OCF specifies
   - the Core Framework for OCF core architecture, interfaces, protocols and services to enable OCF profiles implementation for IoT usages
@@ -43,7 +45,7 @@ The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) funct
 
 The Server API implements functionality to serve CRUDN requests in a device. Also, it provides means to register and unregister resources, to notify resource changes, and to enable and disable presence functionality on the device.
 
-## Helper objects
+## Structures
 
 <a name="ocfdevice"></a>
 ### The `OcfDevice` object
@@ -75,9 +77,44 @@ Exposes information about the OCF platform that hosts the current device.
 | `firmwareVersion` | string  | no  | `undefined` | Firmware version |
 | `supportURL` | string  | no  | `undefined` | Product support web page |
 
+<a name="ocferror"></a>
+### Error handling
 
-Notes
------
+Errors during OCF network operations are exposed via `onerror` events and `Promise` rejections.
+
+OCF errors are represented as augmented [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects with added properties. The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling OCF issues:
+- `OcfDiscoveryError`
+- `OcfObserveError`
+- `OcfPresenceError`.
+
+All these errors are instances of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) and contain the following additional properties:
+
+| Property       | Type   | Optional | Default value | Represents |
+| ---            | ---    | ---      | ---           | ---     |
+| `deviceId`     | string | yes      | `undefined`   | UUID of the device |
+| `resourcePath` | string | yes      | `undefined`   | URI path of the resource |
+
+- The `deviceId` property is a string that represents the device UUID causing the error. The value `null` means the local device, and the value `undefined` means the error source device is not available.
+- The `resourcePath` property is a string that represents the resource path of the [resource](./client.md/#resource) causing the error. If `deviceId` is `undefined`, then the value of `resourcePath` should be also set to `undefined`.
+- The `message` property is inherited from `Error`.
+
+The constructor of `OcfDiscoveryError`, `OcfObserveError` and `OcfPresenceError` take the following parameters:
+- the `message` parameter is a string representing an error message, like with `Error`
+- the `deviceId` parameter instantiates the `deviceId` property
+- the `resourcePath` parameter instantiates `the resourcePath`.
+
+If `deviceId` is defined, and `resourcePath` is `undefined` or `null`, it means the error is device specific without being specific to the resource (such as device presence related errors).
+
+```javascript
+let message = "OCF error";
+let deviceId = "0685B960-736F-46F7-BEC0-9E6CBD61ADC1";
+let resourcePath = "/myroom/a/light/1";
+var err = new OcfObserveError(message, deviceId, resourcePath);
+// use `err` in a server response
+```
+
+Implementations SHOULD handle the `uncaughtException` event on the process object.
+
 <a name="ocfpromise"></a>
 ### Promises
 The API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects). In constrained implementations, at least the following [`Promise`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) methods MUST be implemented:
@@ -93,7 +130,7 @@ The API uses Node.js style [events](https://nodejs.org/api/events.html#events_ev
 - the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
 - the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
 
-### OCF related notes
+## Notes
 Code using this API is deployed to a device, which exposes one or more resources. In this version of the API it is assumed that the execution context of the code is separated for each device.
 
 **Device identification** is UUID.
@@ -104,5 +141,4 @@ Code using this API is deployed to a device, which exposes one or more resources
 
 OCF defines special resources on each device, for implementing device discovery, resource discovery, platform discovery, presence, etc. API implementations should encapsulate handling these special resources and the hardcoded/fixed URIs.
 
-This version of the API supports the OCF Core Specification version 1.0 (final) and 1.1.0 (draft).
-This version does not support OCF resource *links*, *scenes*, *rules* and *scripts*.
+This version of the API supports the OCF Core Specification version 1.0 (final) and 1.1.0 (draft), except that it not yet support OCF resource *links*, *scenes*, *rules* and *scripts*.
