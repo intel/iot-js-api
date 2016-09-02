@@ -10,7 +10,7 @@ OCF Web API
 
 Introduction
 ------------
-This document presents a JavaScript API for [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.0 (final) and 1.1.0 (draft).
+This document presents a JavaScript API for the [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.0 (final) and 1.1.0 (draft).
 
 Since implementations may run on constrained hardware, examples use [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/).
 
@@ -41,9 +41,12 @@ When `require` is successful, it MUST return an object with the following read-o
 - `device` is an [`OcfDevice`](#ocfdevice) object that represents properties of the current device
 - `platform` is an [`OcfPlatform`](#ocfplatform) object that represents properties of the platform that hosts the current device.
 
-The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality, enabling remote access to resources in the network. Also, it enables listening to presence notifications in the OCF network. Also, it implements discovery for platforms, devices and resources in the OCF network.
+The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality,
+  * enabling remote access to resources in the network,
+  * enabling listening to presence notifications in the OCF network. and
+  * implementing discovery for platforms, devices and resources in the OCF network.
 
-The Server API implements functionality to serve CRUDN requests in a device. Also, it provides means to register and unregister resources, to notify resource changes, and to enable and disable presence functionality on the device.
+The Server API implements the functionality to serve CRUDN requests in a device. It also provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
 
 ## Structures
 
@@ -95,10 +98,10 @@ All these errors are instances of [`Error`](https://nodejs.org/api/errors.html#e
 | `resourcePath` | string | yes      | `undefined`   | URI path of the resource |
 
 - The `deviceId` property is a string that represents the device UUID causing the error. The value `null` means the local device, and the value `undefined` means the error source device is not available.
-- The `resourcePath` property is a string that represents the resource path of the [resource](./client.md/#resource) causing the error. If `deviceId` is `undefined`, then the value of `resourcePath` should be also set to `undefined`.
+- The `resourcePath` property is a string that represents the resource path of the [resource](./client.md/#resource) causing the error. If `deviceId` is `undefined`, then the value of `resourcePath` should also be set to `undefined`.
 - The `message` property is inherited from `Error`.
 
-The constructor of `OcfDiscoveryError`, `OcfObserveError` and `OcfPresenceError` take the following parameters:
+The constructor of `OcfDiscoveryError`, `OcfObserveError` and `OcfPresenceError` takes the following parameters:
 - the `message` parameter is a string representing an error message, like with `Error`
 - the `deviceId` parameter instantiates the `deviceId` property
 - the `resourcePath` parameter instantiates `the resourcePath`.
@@ -124,14 +127,14 @@ The API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-prom
 
 <a name="events"></a>
 ### Events
-The API uses Node.js style [events](https://nodejs.org/api/events.html#events_events) with the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface. In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
+The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events) with the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface. In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
 - the [`on(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener) method
 - the [`addListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener) method, as an alias to the `on()` method
 - the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
 - the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
 
 ## Notes
-Code using this API is deployed to a device, which exposes one or more resources. In this version of the API it is assumed that the execution context of the code is separated for each device.
+Code using this API is deployed to a device which exposes one or more resources. In this version of the API it is assumed that the execution context of the code is separated for each device.
 
 **Device identification** is UUID.
 
@@ -141,4 +144,4 @@ Code using this API is deployed to a device, which exposes one or more resources
 
 OCF defines special resources on each device, for implementing device discovery, resource discovery, platform discovery, presence, etc. API implementations should encapsulate handling these special resources and the hardcoded/fixed URIs.
 
-This version of the API supports the OCF Core Specification version 1.0 (final) and 1.1.0 (draft), except that it not yet support OCF resource *links*, *scenes*, *rules* and *scripts*.
+This version of the API supports the OCF Core Specification version 1.0 (final) and 1.1.0 (draft), except that it doesn not yet support OCF resource *links*, *scenes*, *rules* and *scripts*.
