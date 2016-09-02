@@ -13,12 +13,12 @@ Identifies an OCF resource by the UUID of the device that hosts the resource, an
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---     |
 | `deviceId` | string | no       | `undefined`   | UUID of the device |
-| `path`     | string | no       | `undefined`   | URI path of the resource |
+| `resourcePath` | string | no       | `undefined`   | URI path of the resource |
 
 <a name="resource"></a>
 ### 1.2. The `Resource` object
 #### `Resource` properties
-`Resource` has all the properties of [`ResourceInit`](./server.md#resourceinit), and in addition it has an `id` property:
+`Resource` extends `ResourceId`, it has all the properties of [`ResourceInit`](./server.md#resourceinit), and in addition it has events.
 
 | Property   | Type    | Optional | Default value | Represents |
 | ---        | ---     | ---      | ---           | ---     |

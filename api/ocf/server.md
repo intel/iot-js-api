@@ -32,6 +32,7 @@ Used for creating and registering resources, exposes the properties of an OCF re
 
 | Property        | Type    | Optional | Default value | Represents |
 | ---             | ---     | ---      | ---           | ---     |
+| `resourcePath`  | string  | no       | `undefined`   | URI path of the resource |
 | `resourceTypes` | array of strings | no    | `[]` | List of OCF resource types |
 | `interfaces`    | array of strings | no    | `[]` | List of supported interfaces |
 | `mediaTypes`    | array of strings | no    | `[]` | List of supported Internet media types |
