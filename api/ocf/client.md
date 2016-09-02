@@ -197,7 +197,7 @@ The method runs the following steps:
 | `resourcePath` | string | no       | `undefined`   | OCF resource URI path |
 | `resourceType` | string | no       | `undefined`   | OCF resource type     |
 
-The method sends a request to the device specified in `target` and the device's `create` event handler takes care of creating the resource and replying with the created resource, or error.
+The method sends a request to the device specified in `target` and the device's `create` event handler takes care of creating the resource and replying with the created resource, or with an error.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -209,12 +209,12 @@ The method runs the following steps:
 <a name="retrieve"></a>
 ##### 4.2. The `retrieve(resourceId, options, listener)` method
 - Retrieves a resource based on resource id by sending a request to the device specified in `resourceId.deviceId`. The device's [`retrieve`](./server.md/#onretrieve) event handler takes care of fetching the resource representation and replying with the created resource, or with an error.
-- Returns a [`Promise`](./README.md/#promise) object which resolves with an [Resource](#resource) object.
-- The `resourceId` argument is an [ResourceId](#resourceid) object that contains a device UUID and a resource path.
-- The `options` argument is optional, and it is an object whose properties represent the `REST` query parameters passed along with the `GET` request as a JSON-serializable dictionary. Implementations SHOULD validate this client input to fit OCF requirements. The semantics of the parameters are application specific (e.g. requesting a resource representation in metric or imperial units). Similarly, the properties of an OIC resource representation are application specific and are represented as a JSON-serializable dictionary.
+- Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
+- The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path.
+- The `options` argument is optional, and it is an object whose properties represent the `REST` query parameters passed along with the `GET` request as a JSON-serializable dictionary. Implementations SHOULD validate this client input to fit OCF requirements. The semantics of the parameters are application-specific (e.g. requesting a resource representation in metric or imperial units). Similarly, the properties of an OIC resource representation are application-specific and are represented as a JSON-serializable dictionary.
 - The `listener` argument is optional, and is an event listener for the `Resource` [`update`](#onresourceupdate) event.
 
-In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that request (and get a retrieve responses with a resource representation for each resource change).
+In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that request (and get a retrieve response with a resource representation for each resource change).
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -232,15 +232,15 @@ The method runs the following steps:
 
 <a name="update"></a>
 ##### 4.3. The `update(resource)` method
-- Updates a resource in the network by sending a request to the device specified by `resource.id.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the created resource, or error. The resource identified by `resource.id` is updated so that every properties present in `resource` other than `resource.id` is updated with the value specified in `resource`.
-- Returns: a [`Promise`](./README.md/#promise) object which resolves with an [Resource](#resource) object.
-- The `resource` argument is an [Resource](#resource) object.
+- Updates a resource in the network by sending a request to the device specified by `resource.id.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource.id` is updated so that every property present in `resource` other than `resource.id` is updated with the value specified in `resource`.
+- Returns: a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
+- The `resource` argument is a [Resource](#resource) object.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Send a request to update the resource specified by `resource` with the properties present in `resource, and wait for the answer.
+- Send a request to update the resource specified by `resource` with the properties present in `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 
@@ -248,7 +248,7 @@ The method runs the following steps:
 ##### 4.4. The `delete(resourceId)` method
 - Deletes a resource from the network by sending a request to the device specified in `resourceId.deviceId`. The device's [`delete`](./server.md/#ondelete) event handler takes care of deleting the resource and reporting success or error.
 - Returns: a [`Promise`](./README.md/#promise) object.
-- The `resourceId` argument is an [ResourceId](#resourceid) object that contains a device UUID and a resource path that identifies the resource to be deleted.
+- The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path that identifies the resource to be deleted.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
