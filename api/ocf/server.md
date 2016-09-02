@@ -2,11 +2,9 @@ OCF Server API
 ==============
 The Server API implements functionality to serve CRUDN requests in a device. A device that implements the Server API may provide special resources to handle CRUDN requests.
 
- The Server API provides means to register and unregister resources, to notify resource changes, and to enable and disable presence functionality on the device.
+The Server API provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
 
-The Server API object does not expose own properties, only events and methods.
-
-When a device is constructed, the implementation should announce presence, together with the resources it contains.
+The Server API object does not expose its own properties, only events and methods.
 
 When a device is changed or shut down, the implementation should update presence information. Clients can subscribe to presence information using the [OCF Client API](./client.md).
 
@@ -24,7 +22,7 @@ Describes an object that is passed to server event listeners.
 
 The `id` property in a request is a string that identifies the request in the response.
 
-The `data` property in a request is an object that contains data that depends on the request type (create, retrieve, update, delete) and is described with the corresponding requests.
+The `data` property in a request is an object that contains data that depends on the request type (create, retrieve, update, delete) and is described in this document with the corresponding request.
 
 <a name="resourceinit"></a>
 ### 1.2. The `ResourceInit` dictionary
@@ -41,7 +39,7 @@ Used for creating and registering resources, exposes the properties of an OCF re
 | `slow`          | boolean | yes   | `false` | Whether the resource is constrained |
 | `properties`    | object | yes    | `{}` | Resource representation properties as described in the data model |
 
- The `properties` property is a resource representation that contains resource specific properties and values usually described in the [RAML data model](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource.
+ The `properties` property is a resource representation that contains resource-specific properties and values usually described in the [RAML data model](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource.
 
 ## 2. Events
 The requests are dispatched using events. The Server API supports the following events:
@@ -116,7 +114,7 @@ The value of the `data` property of `request` is `undefined`.
 
 When the `observe` argument is `true`, then implementations SHOULD set up change notifications for the resource, and send a retrieve response with the resource representation every time the resource is changed.
 
-When the `observe` argument is `false`, then implementations SHOULD reset change notifications for the resource.
+When the `observe` argument is `false`, then implementations SHOULD reset those change notifications for the resource which are sent to the client identified by the `source` property.
 
 ```javascript
 var server = require('ocf').server;
@@ -200,7 +198,7 @@ The method runs the following steps:
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to register the given `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise` with an [`Resource`](./client.md/#resource) object created from the response.
+- When the answer is received, resolve `promise` with a [`Resource`](./client.md/#resource) object created from the response.
 
 <a name="unregister"></a>
 ##### 3.2. `unregister(resourceId)`
@@ -246,7 +244,7 @@ The method runs the following steps:
 
 <a name="enablepresence"></a>
 ##### 3.4. `enablePresence(timeToLive)`
-- Enables presence for the current device, with an optional time to live argument.
+- Enables presence for the current device, with an optional time-to-live argument.
 - Returns a [`Promise`](./README.md/#promise) object.
 - The `timeToLive` argument is optional. It is a number representing the time to live of the request in seconds.
 
@@ -276,8 +274,8 @@ The method runs the following steps:
 ##### 3.6. `respond(request, error, data)`
 - Sends a response to a given [`OcfRequest`](#ocfrequest).
 - Returns a [`Promise`](./README.md/#promise) object that resolves when the response is successfully sent, otherwise rejects.
-- The `request` argument is mandatory, and it should be the `OcfRequest` object which is being responded to.
-- The `error` arguments is mandatory, it should be `null` in case of success, and should be an instance of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) in case of error.
+- The `request` argument is mandatory, and should be the `OcfRequest` object for which the response is being sent.
+- The `error` argument is mandatory, and should be `null` in case of success. Otherwise it should be an instance of [`Error`](https://nodejs.org/api/errors.html#errors_class_error).
 - The `data` argument is optional and used with requests that return data, such as `create` and `update`.
 
 The method is typically used from request event handlers, and internally reuses the request information in order to construct a response message.
