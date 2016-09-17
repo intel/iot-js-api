@@ -49,7 +49,7 @@ The Client API supports the following events:
 | *devicefound*     | [`Device`](./README.md/#device) object |
 | *devicelost*      | [`Device`](./README.md/#device) object |
 | *resourcefound*   | [`Resource`](#resource) object |
-| *error*           | [`Error`](#ocferror) object |
+| *error*           | [`Error`](../README.md/#ocferror) object |
 
 <a name="onplatformfound"></a>
 ##### 2.1. The `platformfound` event

@@ -48,8 +48,8 @@ The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) funct
 
 The Server API implements the functionality to serve CRUDN requests in a device. It also provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
 
-## Structures
-
+Structures
+----------
 <a name="ocfdevice"></a>
 ### The `OcfDevice` object
 Exposes information about the OCF device that runs the current OCF stack instance.
@@ -85,7 +85,7 @@ Exposes information about the OCF platform that hosts the current device.
 
 Errors during OCF network operations are exposed via `onerror` events and `Promise` rejections.
 
-OCF errors are represented as augmented [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects with added properties. The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling OCF issues:
+OCF errors (see also [these notes](../README.md#errors)) are represented as augmented [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects with added properties. The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling OCF issues:
 - `OcfDiscoveryError`
 - `OcfObserveError`
 - `OcfPresenceError`.
@@ -118,22 +118,13 @@ var err = new OcfObserveError(message, deviceId, resourcePath);
 
 Implementations SHOULD handle the `uncaughtException` event on the process object.
 
-<a name="ocfpromise"></a>
-### Promises
-The API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects). In constrained implementations, at least the following [`Promise`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) methods MUST be implemented:
-- the [`Promise` constructor](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-constructor)
-- the [`then(onFulfilled, onRejected)`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise.prototype.then) method
-- the [`catch(onRejected)`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise.prototype.catch) method.
+Notes
+------
 
-<a name="events"></a>
-### Events
-The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events) with the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface. In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
-- the [`on(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener) method
-- the [`addListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener) method, as an alias to the `on()` method
-- the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
-- the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
+The API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) with [these notes](../README.md#promise).
 
-## Notes
+The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events) with [these notes](../README.md#events).
+
 Code using this API is deployed to a device which exposes one or more resources. In this version of the API it is assumed that the execution context of the code is separated for each device.
 
 **Device identification** is UUID.
