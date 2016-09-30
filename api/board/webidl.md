@@ -103,27 +103,13 @@ dictionary I2COptions {
 interface I2C {
   readonly attribute octet bus;
   readonly attribute I2CBusSpeed speed;
-  readonly attribute boolean busy;
 
-  Promise init(I2COptions options);
-  void requestRead(octet device,
-                                unsigned long size,
-                                optional octet register,
-                                optional repetitions = 1);
-  Promise write(octet device, (USVString or sequence<octet>) data, optional octet register);
-  Promise writeBit(octet device, boolean data);
-  void abort();  // abort all current read / write operations
+  Promise<Buffer> read(octet device, unsigned long size);
+  Promise write(octet device, Buffer data);
   void close();
-
-  attribute EventHandler<sequence<octet>> ondata;
-  attribute EventHandler onerror;
 };
 
-I2C implements EventEmitter;
-
 // SPI
-typedef (sequence<octet> or ArrayBuffer) SPIData;
-
 enum SPIMode {
 
   "mode0",  // polarity normal, phase 0, i.e. sampled on leading clock
@@ -132,48 +118,42 @@ enum SPIMode {
   "mode3"   // polarity inverse, phase 1, i.e. sampled on trailing clock
 };
 
-enum SPIDataOrder { "msb", "lsb" };
-
 dictionary SPIOptions {
   unsigned long bus = 0;
   SPIMode mode = "mode0";
   boolean msb = 1;  // 1: MSB first, 0: LSB first
-  unsigned long dataBits = 8; // 1, 2, 4, 8, 16
+  unsigned long bits = 8; // 1, 2, 4, 8, 16
   double speed = 20;  // in MHz, usually 10..66 MHz
 };
 
 [NoInterfaceObject]
 interface SPI {
   // has all the properties of SPIOptions as read-only attributes
-  Promise init(SPIOptions options);
-  Promise<SPIData> transfer(SPIData txData);
+  Promise<Buffer> transfer(octet device, Buffer txData);
   void close();
 };
 
 // UART
-enum UARTBaud { "baud-9600", "baud-19200", "baud-38400", "baud-57600", "baud-115200" };
-enum UARTDataBits { "databits-5", "databits-6", "databits-7", "databits-8" };
-enum UARTStopBits { "stopbits-1", "stopbits-2" };
 enum UARTParity { "none", "even", "odd" };
 
 dictionary UARTOptions {
   DOMString port;
-  UARTBaud baud = "115200";
-  UARTDataBits dataBits = "8";
-  UARTStopBits stopBits = "1";
+  long baud = 115200; // 9600, 19200, 38400, 57600, 115200
+  long dataBits = 8;  // 5, 6, 7, 8
+  long stopBits = 1;  // 1, 2
   UARTParity parity = "none";
   boolean flowControl = false;
 };
 
-typedef (USVString or sequence<octet> or ArrayBuffer) UARTData;
-
 [NoInterfaceObject]
-interface UARTConnection: EventTarget {
+interface UART {
   // has all the properties of UARTInit as read-only attributes
-  Promise init(UARTOptions options);
+  Promise<void> write(Buffer data);
+  void setReadRange(long minBytes, long maxBytes);
+  attribute EventHandler<Buffer> onread;
   void close();
-  Promise<void> write(UARTData data);
-  attribute EventHandler<octet> onread;
 };
+
+UART implements EventEmitter;
 
 ```

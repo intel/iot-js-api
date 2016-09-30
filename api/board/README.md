@@ -123,7 +123,7 @@ Configures I2C communication. The method runs the following steps:
 - Let `board` be the object representing this board.
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If the I2C functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the [`I2C init`](./i2c.md/#init) steps with `options` and `board` as argument and let `i2c` be the returned result.
+- Run the internal [`I2C initialization`](./i2c.md/#init) algorithm with `options` and `board` as argument and let `i2c` be the returned result.
 - If `i2c` is not `null`, resolve `promise` with the `i2c` object.
 - Otherwise reject `promise`.
 

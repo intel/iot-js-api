@@ -81,7 +81,7 @@ The `pull` property tells if the internal pulldown (string value `"pulldown"`) o
 
 <a name="init">
 ##### GPIO initialization
-This internal algorithm is used by the [`Board.gpio()`](./README.md/#gpio) method and by the constructor of the [`GPIO`](#gpio) object. Synchronously configures the GPIO pin provided by the `options` (first) argument on the board specified by the `board` (second) argument.
+This internal algorithm is used by the [`Board.gpio()`](./README.md/#gpio) method and by the constructor of the [`GPIO`](#gpio) object. Synchronously configures the GPIO pin provided by the `options` (first) argument on the board specified by the [`board`](./README.md/#board) (second) argument.
 - If `options` is a number or a string, create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`GPIO`](#gpio) properties:
   * `pin` for board pin name with the valid values defined by the board

@@ -28,11 +28,24 @@ The following well known structures MAY be implemented in a constrained version:
 
 <a name="events"></a>
 ### Events
-The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events) with the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface. In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
+The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events) by extending the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface. In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
 - the [`on(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener) method
 - the [`addListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener) method, as an alias to the `on()` method
 - the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
 - the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
+
+Additionally, for compatibility it is recommended to support the following [EventTarget](https://developer.mozilla.org/en/docs/Web/API/EventTarget) methods:
+- the [`addEventListener(eventName, listener)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) method
+- the [`removeEventListener(eventName, listener)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener) method
+- the [`dispatchEvent(event)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent) method
+- note that listeners receive an [`Event`](https://developer.mozilla.org/en-US/docs/Web/API/Event) object, following the semantics of `EventTarget`(https://developer.mozilla.org/en/docs/Web/API/EventTarget)
+- the [`Event`](https://developer.mozilla.org/en-US/docs/Web/API/Event) objects MUST contain at least the following properties:
+  * [`Event.type`](https://developer.mozilla.org/en-US/docs/Web/API/Event/type)
+  * [`Event.cancelable`](https://developer.mozilla.org/en-US/docs/Web/API/Event/cancelable), with the default value `false`
+  * [`Event.bubbles`](https://developer.mozilla.org/en-US/docs/Web/API/Event/bubbles), with the default value `false`
+  * [`Event.eventPhase`](https://developer.mozilla.org/en-US/docs/Web/API/Event/eventPhase).
+
+Optionally, it is recommended to extend the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface in the way described in [eventobserver.md](./eventobserver.md).
 
 <a name="promise"></a>
 ### Promises

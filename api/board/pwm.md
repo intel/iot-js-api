@@ -79,7 +79,7 @@ The `value` property inherited from [`Pin`](./README.md/#pin) provides a diction
 
 <a name="init">
 ##### PWM initialization
-This internal algorithm is used by the [`Board.pwm()`](./README.md/#pwm) method and by the constructor of the [`PWM`](#pwm) object. Synchronously configures the PWM pin provided by the `options` (first) argument on the board specified by the `board` (second) argument. It involves the following steps:
+This internal algorithm is used by the [`Board.pwm()`](./README.md/#pwm) method and by the constructor of the [`PWM`](#pwm) object. Synchronously configures the PWM pin provided by the `options` (first) argument on the board specified by the [`board`](./README.md/#board) (second) argument. It involves the following steps:
 - If `options` is a string or number, then create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`PWM`](#pwm) properties:
   * `pin` for board pin name with the valid values defined by the board

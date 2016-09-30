@@ -18,7 +18,7 @@ Pins (A0 - A5) can be used for analog input, and each provide 10 bits of resolut
 There are 3 LEDs on the board that can be accessed by the pin names `"LED0"`, `"LED1"`, and `"LED3"`.
 
 Other names:
-- UART on pin 0 and 1 can be accessed by the name `"uart0`".
+- UART on pin 0 and 1 can be accessed by the name `"uart0"`.
 - UART on USB can be accessed by the name `"serialUSB0"`, `"serialUSB2"`, etc.
 - I2C can be accessed by default on bus 0 (the SDA and SCL pins).
 - SPI can be accessed by default on bus 0. SPI pins on the board are:

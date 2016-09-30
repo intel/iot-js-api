@@ -76,7 +76,7 @@ The `rateLimit` property represents the minimum number of milliseconds between t
 
 <a name="init">
 ##### AIO initialization
-This internal algorithm is used by the [`Board.aio()`](./README.md/#aio) method and by the constructor of the [`AIO`](#aio) object. Synchronously configures the AIO pin provided by the `options` (first) argument on the board specified by the `board` (second) argument. It involves the following steps:
+This internal algorithm is used by the [`Board.aio()`](./README.md/#aio) method and by the constructor of the [`AIO`](#aio) object. Synchronously configures the AIO pin provided by the `options` (first) argument on the board specified by the [`board`](./README.md/#board) (second) argument. It involves the following steps:
 - If `options` is a string, create a dictionary 'init' and use the value of `options` to initialize the `init.pin` property.
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`AIO`](#aio) properties:
   * `pin` for board pin name with the valid values defined by the board
