@@ -5,11 +5,11 @@ IoT Web APIs
 Introduction
 ------------
 The following JavaScript APIs are aimed for handling Internet of Things (IoT) applications:
-* Communication APIs such as
-  - [OCF - Open Connect Foundation](./ocf/README.md)
-  - [BLE - Bluetooth Low Energy](./ble/README.md)
 * High level [Sensor APIs](./sensors/README.md) that are standardized in the [W3C Generic Sensor Working Group](https://www.w3.org/2009/dap/) and defines the [Generic Sensor API](https://www.w3.org/TR/generic-sensor/), but adapted to constrained environments. It also exposes interfaces to handle various [sensor types](https://www.w3.org/2009/dap/).
 * Low level [Board APIs](./board/README.md) provide interfaces for I/O operations supported by the board, and define pin mappings between board pin names and pin values mapped by the OS, so that developers could use board pin names in the API methods.
+* Communication APIs, such as
+  - [OCF - Open Connect Foundation](./ocf/README.md) API
+  - [BLE - Bluetooth Low Energy](./ble/README.md) API (Peripheral mode).
 
 Since implementations of these APIs will partly be running on constrained hardware, they might not support the latest [ECMAScript](http://www.ecma-international.org) versions.
 
