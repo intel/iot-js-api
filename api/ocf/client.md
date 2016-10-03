@@ -20,10 +20,6 @@ Identifies an OCF resource by the UUID of the device that hosts the resource, an
 #### `Resource` properties
 `Resource` extends `ResourceId`, it has all the properties of [`ResourceInit`](./server.md#resourceinit), and in addition it has events.
 
-| Property   | Type    | Optional | Default value | Represents |
-| ---        | ---     | ---      | ---           | ---     |
-| `id` | [`ResourceId`](#resourceid) | no    | `undefined` | Resource identifier |
-
 Client applications should not create `Resource` objects, as they are created and tracked by implementations. Client applications can create and use `ResourceId`, [`ResourceInit`](./server.md/#resourceinit) and even `Resource` objects as method arguments, but client-created `Resource` objects are not tracked by implementations and will not receive events.
 
 #### `Resource` events
@@ -49,7 +45,7 @@ The Client API supports the following events:
 | *devicefound*     | [`Device`](./README.md/#device) object |
 | *devicelost*      | [`Device`](./README.md/#device) object |
 | *resourcefound*   | [`Resource`](#resource) object |
-| *error*           | [`Error`](#ocferror) object |
+| *error*           | [`Error`](../README.md/#ocferror) object |
 
 <a name="onplatformfound"></a>
 ##### 2.1. The `platformfound` event
@@ -87,7 +83,7 @@ When the last listener is removed from the `ondevicefound` and the `ondevicelost
 Fired when a resource is discovered. The event callback receives as argument a [`Resource`](#resource) object.
 ```javascript
 client.on('resourcefound', function(resource) {
-  console.log("Resource found with path: " + resource.id.path);
+  console.log("Resource found with path: " + resource.resourcePath);
 });
 ```
 
@@ -111,7 +107,7 @@ Fetches a remote platform information object.  The `deviceId` argument is a stri
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- Send a direct discovery request `GET /oic/p` with the given id (which can be either a device UUID or a device URL, and wait for the answer.
+- Send a direct discovery request `GET /oic/p` with the given `deviceId` (which can be either a device UUID or a device URL, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise` with a [`Platform`](./README.md/#platform) object created from the response.
 
@@ -128,7 +124,7 @@ Fetches a remote device information object. The `deviceId` argument is a string 
 <a name="findplatforms"></a>
 ##### 3.3. The `findPlatforms(listener)` method
 - Initiates a platform discovery network operation.
-- Returns a [`Promise`](./README.md/#promise) object that resolves with a [`Platform`](./README.md/#platform) object.
+- Returns a [`Promise`](./README.md/#promise) object.
 - The `listener` argument is optional, and is an event listener for the [`platformfound`](#onplatformfound) event that receives as argument a [`Platform`](./README.md/#platform) object.
 
 The method runs the following steps:
@@ -144,7 +140,7 @@ The method runs the following steps:
 <a name="finddevices"></a>
 ##### 3.4. The `findDevices(listener)` method
 - Initiates a device discovery network operation.
-- Returns a [`Promise`](./README.md/#promise) object that resolves with a [`Device`](./README.md/#device) object.
+- Returns a [`Promise`](./README.md/#promise) object.
 - The `listener` argument is optional, and is an event listener for the [`devicefound`](#ondevicefound) event that receives as argument a [`Device`](./README.md/#device) object.
 
 The method runs the following steps:
@@ -160,7 +156,7 @@ The method runs the following steps:
 <a name="findresources"></a>
 ##### 3.5. The `findResources(options, listener)` method
 - Initiates a resource discovery network operation.
-- Returns a [`Promise`](./README.md/#promise) object that resolves with a [`Resource`](#resource) object.
+- Returns a [`Promise`](./README.md/#promise) object.
 - The `options` parameter is optional, and its value is an object that contains one or more of the following properties:
 
 | Property       | Type   | Optional | Default value | Represents        |
@@ -210,7 +206,7 @@ The method runs the following steps:
 ##### 4.2. The `retrieve(resourceId, options, listener)` method
 - Retrieves a resource based on resource id by sending a request to the device specified in `resourceId.deviceId`. The device's [`retrieve`](./server.md/#onretrieve) event handler takes care of fetching the resource representation and replying with the created resource, or with an error.
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
-- The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path.
+- The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path. Note that any [`Resource`](#resource) object can also be provided.
 - The `options` argument is optional, and it is an object whose properties represent the `REST` query parameters passed along with the `GET` request as a JSON-serializable dictionary. Implementations SHOULD validate this client input to fit OCF requirements. The semantics of the parameters are application-specific (e.g. requesting a resource representation in metric or imperial units). Similarly, the properties of an OIC resource representation are application-specific and are represented as a JSON-serializable dictionary.
 - The `listener` argument is optional, and is an event listener for the `Resource` [`update`](#onresourceupdate) event.
 
@@ -232,8 +228,8 @@ The method runs the following steps:
 
 <a name="update"></a>
 ##### 4.3. The `update(resource)` method
-- Updates a resource in the network by sending a request to the device specified by `resource.id.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource.id` is updated so that every property present in `resource` other than `resource.id` is updated with the value specified in `resource`.
-- Returns: a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
+- Updates a resource in the network by sending a request to the device specified by `resource.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource` is updated.
+- Returns: a [`Promise`](./README.md/#promise) object.
 - The `resource` argument is a [Resource](#resource) object.
 
 The method runs the following steps:
@@ -242,7 +238,6 @@ The method runs the following steps:
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to update the resource specified by `resource` with the properties present in `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
-
 
 <a name="delete"></a>
 ##### 4.4. The `delete(resourceId)` method
