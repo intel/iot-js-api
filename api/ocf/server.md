@@ -18,11 +18,15 @@ Describes an object that is passed to server event listeners.
 | `source`  | [`ResourceId`](./client.md/#resourceid)  | no  | `undefined` | Requesting resource |
 | `target`  |  [`ResourceId`](./client.md/#resourceid) | no  | `undefined` | Request handling resource |
 | `id`  |  string | no  | `undefined` | Id of the request |
-| `data` | object   | no | `null` | Resource id or resource or resource representation |
+| `data` | object   | no | `undefined` | Resource id or resource or resource representation |
+| `options` | object | yes | `undefined` | Dictionary containing the request options |
 
 The `id` property in a request is a string that identifies the request in the response.
 
 The `data` property in a request is an object that contains data that depends on the request type (create, retrieve, update, delete) and is described in this document with the corresponding request.
+
+<a name="requestoptions"></a>
+The `options` property is an object whose properties represent the `REST` query parameters passed along with the request as a JSON-serializable dictionary. The semantics of the parameters are application-specific (e.g. requesting a resource representation in metric or imperial units). For instance request options may be used with the [retrieve](./client.md/#retrieveoptions) request.
 
 <a name="resourceinit"></a>
 ### 1.2. The `ResourceInit` dictionary
@@ -51,6 +55,7 @@ The requests are dispatched using events. The Server API supports the following 
 | *retrieve*  | [`OcfRequest`](#ocfrequest) object |
 | *update*    | [`OcfRequest`](#ocfrequest) object |
 | *delete*    | [`OcfRequest`](#ocfrequest) object |
+| *error*     | [`Error`] object                   |
 
 Note that the OCF retrieve request contains the `observe` flag, which tells whether the client requires change notifications for the given resource. Therefore notifications are implemented using the `retrieve` event.
 
@@ -65,18 +70,18 @@ The event callback receives as argument an object that can be used as an argumen
 | `target`  |  [`ResourceId`](./client.md/#resourceid) | no  | `undefined` | Id of the request handling resource |
 | `id`  |  string | no  | `undefined` | Id of the request |
 | `data` | [`ResourceInit`](#resourceinit)  | yes | `undefined` | Initialized properties |
-| `options` | object | yes | `undefined` | List of OCF request options |
+| `options` | object | yes | `undefined` | Contains OCF request options |
 
 The value of the `source` property of the request is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
 The value of the `target` property of the request is the [ResourceId](./client.md/#resourceid) of the resource responsible to create the requested resource.
 The value of the `id` property is a string representing the unique identifier of the request.
-The value of the `options` property is an object that contains a list of properties with values created by the implementation from the REST query options of the request.
+The value of the `options` property is an object that contains a list of properties with values created by the implementation from the REST query options of the request. For instance this object may contain client hints on what measurement units should be used in the resource representation.
 The value of the `data` property of the request should be an object that contains at least the following properties of the resource to be created:
 
 | Property       | Type   | Optional | Default value | Represents            |
 | ---            | ---    | ---      | ---           | ---                   |
-| `resourcePath` | `ResourceId`](./client.md/#resourceid) | no  | `undefined`   | OCF resource path |
-| `resourceTypes` | `Resource`](./client.md/#resource) | no  | `undefined`   | List of OCF resource types supported |
+| `resourcePath` | [`ResourceId`](./client.md/#resourceid) | no  | `undefined`   | OCF resource path |
+| `resourceTypes` | [`Resource`](./client.md/#resource) | no  | `undefined`   | List of OCF resource types supported |
 
 In addition, other resource properties may also be specified, such as `interfaces`, `mediaTypes`, and `properties` for resource representation initialization.
 
@@ -92,8 +97,26 @@ server.on('create', function(request) {
   // Use a local function to create the resource.
   let res = _createResource(request.target.resourcePath, request.resource);
 
+  // Use oneiota.org RAML definitions, the request options, and sensor documentation.
+  var translate = function (resource, requestOptions) {
+      if ("oic.r.temperature" in resource.resourceTypes) {
+        switch (requestOptions.units) {
+          case "C" :
+            resource.properties.temperature = _getCelsiusFromSensor(resource);
+            break;
+          case "F":
+            resource.properties.temperature = _getFahrenheitFromSensor(resource);
+            break;
+          case "K":
+            resource.properties.temperature = _getKelvinFromSensor(resource);
+            break;
+        }
+      }
+      return resource;
+  }
+
   // Register the new resource and then respond to the request.
-  server.register(res)
+  server.register(res, translate)
     .then(function(resource) {
       server.respond(request, null, resource);
     }).catch(function(error) {
@@ -113,7 +136,8 @@ The value of the `target` property of `request` is the [ResourceId](./client.md/
 
 The value of the `data` property of `request` is `undefined`.
 
-When the `observe` argument is `true`, then implementations SHOULD set up change notifications for the resource, and send a retrieve response with the resource representation every time the resource is changed.
+
+When the `observe` argument is `true`, then implementations SHOULD set up change notifications for the resource, and send a retrieve response with the resource representation every time the resource is changed, according to the [`notify` algorithm](#notify). If the `request.options` property is defined and it is an object, then save that object in order that it can be used by the `notify()` algorithm.
 
 When the `observe` argument is `false`, then implementations SHOULD reset those change notifications for the resource which are sent to the client identified by the `source` property.
 
@@ -181,7 +205,7 @@ server.on('delete', function(request) {
 
 ## 3. Methods
 <a name="register"></a>
-##### 3.1. `register(resource)` method
+##### 3.1. `register(resource, translate)` method
 - Registers a resource in the OCF network.
 - Returns a [`Promise`](./README.md/#promise) object.
 - The `resource` argument is an object that should contain at least the following properties (other resource properties may also be specified):
@@ -191,6 +215,9 @@ server.on('delete', function(request) {
 | `resourcePath` | string | no       | `undefined`   | OCF device UUID   |
 | `resourceTypes` | array of strings | no       | `undefined`   | List of OCF resource types |
 
+<a name="translate"></a>
+- the `translate` argument is a function that is invoked by the implementation when the client requests a certain representation of the resource by the means of request options. The function takes two arguments, a `resource` object, and a dictionary that contains the request options. It returns the resource object with modified resource representation (`resource.properties`).
+
 See the [example](#exampleoncreate) for the `create` event.
 
 The method runs the following steps:
@@ -199,7 +226,9 @@ The method runs the following steps:
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to register the given `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise` with a [`Resource`](./client.md/#resource) object created from the response.
+- When the answer is received, update `resource` to be a [`Resource`](./client.md/#resource) object.
+- If `translate` is a function, associate it with `resource.resourcePath` and save it for future use by the [`notify()` algorithm](#notify).
+- Resolve `promise` with `resource`.
 
 <a name="unregister"></a>
 ##### 3.2. `unregister(resourceId)`
@@ -239,9 +268,12 @@ The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Send an OCF notification for `resource`, and wait for the answer.
-- If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise`.
+- For each client that requested observing `resource.resourceId`, do the following sub-steps:
+    * If there were request options specified with the retrieve request associated with observing the resource, and if a [translate function](#translate) has been defined for the resource during its [registration](#register), then let `resource` be the result of invoking that translate function with `resource` and the [request options dictionary](#requestoptions) that has been saved for the [observation request](#onretrieve).
+    * Send an OCF notification for `resource`, and wait for the answer.
+    * If there is an error during the request, emit an `error` event with that error.
+- When all the answers are received, resolve `promise`.
+Note that the `notify()` method always resolves. Errors on notifying individual clients are considered non-critical and should be handled by the `error` event.
 
 <a name="enablepresence"></a>
 ##### 3.4. `enablePresence(timeToLive)`
