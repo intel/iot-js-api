@@ -12,23 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var theError = null;
+var ocf = require( process.argv[ 4 ] );
 
-try {
-	require( process.argv[ 4 ] )( "server" );
-} catch ( anError ) {
-	theError = anError;
-}
+console.log( JSON.stringify( { assertionCount: 0 } ) );
 
-console.log( JSON.stringify( { assertionCount: 1 } ) );
+ocf.device.name = "test-device-" + process.argv[ 2 ];
 
-if ( theError ) {
-	theError = { message: ( "" + theError ) };
-}
-
-console.log( JSON.stringify( {
-	assertion: "deepEqual",
-	arguments: [ theError, null, "Server stack started successfully" ]
-} ) );
-
-process.exit( 0 );
+console.log( JSON.stringify( { ready: true } ) );

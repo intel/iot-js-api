@@ -12,27 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var ocf = require( process.argv[ 4 ] )( "server" );
-
-var uuid = process.argv[ 2 ];
+var server = require( process.argv[ 4 ] ).server;
 
 console.log( JSON.stringify( { assertionCount: 1 } ) );
 
-ocf.register( {
-	id: { path: "/a/" + uuid },
-	resourceTypes: [ "core.light" ],
-	interfaces: [ "oic.if.baseline" ],
-	discoverable: true,
-	properties: { someValue: 0 }
+server.register( {
+	resourcePath: "/a/" + process.argv[ 2 ],
+	resourceTypes: [ "core.light", "core.fan" ],
+	interfaces: [ "oic.if.baseline", "oic.if.custom" ],
+	discoverable: true
 } ).then(
 	function() {
-		console.log( JSON.stringify( { assertion: "ok",
-			arguments: [ true, "Server: resource registered successfully" ]
-		} ) );
+		console.log( JSON.stringify( { assertion: "ok", arguments: [
+			true, "Server: Resource registered successfully"
+		] } ) );
+
 		console.log( JSON.stringify( { ready: true } ) );
 	},
 	function( error ) {
-		console.log( JSON.stringify( { assertion: "strictEqual",
-			arguments: [ ( "" + error ), "", "Server: register(): Unexpected error" ]
-		} ) );
-	} );
+		console.log( JSON.stringify( { assertion: "ok", arguments: [
+			false, "Server: Resource registration failed: " +
+				( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+		] } ) );
+	} ).catch(
+		function( error ) {
+			console.log( JSON.stringify( {
+				teardown: true,
+				message: "Server: Fatal error: " +
+					( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+			} ) );
+		} );
