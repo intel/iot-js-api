@@ -29,13 +29,47 @@ The JS interpreter to use. The default value is `"node"`. If you choose to speci
 * the string that the client should pass to `require()` in order to load the OCF device.
 * the string that the server should pass to `require()` in order to load the OCF device.
 
-#### `lineFilter( line )`
-A function that receives a line from the output of the child process and returns it, potentially with modifications. By default, the output interpreter ignores empty lines, so if the function returns <code>""</code>, the line will be ignored. The output of the child process is expected to be a sequence of JSON objects. The test prints these objects to standard output, but if the runtime produces additional output, this will cause the test suite to throw an exception. This hook provides you with an opportunity to filter out all output lines except the ones produced by the test. For example:
+#### `lineFilter( line, fileName )`
+A function that receives a line from the output of the child process and returns it, potentially with modifications. By default, the output interpreter ignores empty lines, so if the function returns `""`, the line will be ignored. The output of the child process is expected to be a sequence of JSON objects. The test prints these objects to standard output, but if the runtime produces additional output, this will cause the test suite to throw an exception. This hook provides you with an opportunity to filter out all output lines except the ones produced by the test. For example:
 
 ```JS
 // Ignore lines that do not start with a brace.
-function ignoreNonBraceLines( line ) {
+function ignoreNonBraceLines( line /*, fileName */ ) {
 	return line.match( /^{/ ) ? line : "";
+}
+```
+
+You can also use this hook to save all output from the child process to a file, or to output it to the terminal. Since the majority of tests involve a client/server pair, the file name is provided in the second parameter so you can distinguish the output of the client from the output of the server. For example:
+```JS
+// Ignore lines that do not start with a brace, and print all lines to the terminal.
+function ignoreNonBraceLines( line, fileName ) {
+
+	// Strip carriage returns
+	line = line.replace( /\r/g, "" );
+
+	// Output the line, prefixed by the name of the test. We assume that all tests are rooted in a
+	// directory called "tests", so we match the rest of the path and use it to prefix the line we
+	// have received from the child process. This can result in output like this:
+	//
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/server.js: zjs_ocf_register_resources()
+	// Discovery - Resource/server.js: oc_main: Stack successfully initialized
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/server.js: {"assertionCount":1}
+	// Discovery - Resource/server.js: {"ready":true}
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/client.js: 
+	// Discovery - Resource/client.js: 
+	// Discovery - Resource/client.js: zjs_ocf_register_resources()
+	// Discovery - Resource/client.js: oc_main: Stack successfully initialized
+	// Discovery - Resource/client.js: 
+	// Discovery - Resource/client.js: {"assertionCount":3}
+	// ...
+	console.log( ( childPath.match( /tests[/](.*)$/ ) || [])[1] + ": " + line );
+
+	// Return an empty string if the line doesn't start with an opening brace
+	return ( line[ 0 ] === "{" ) ? line : "";
 }
 ```
 
