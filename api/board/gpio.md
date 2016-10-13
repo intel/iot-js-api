@@ -1,7 +1,7 @@
 GPIO API
 ========
 
-The GPIO API supports digital I/O pins.
+The GPIO (General Purpose Input & Output) API supports digital pins.
 
 The API object
 --------------
@@ -13,7 +13,7 @@ Implementations MAY also support an explicit constructor that runs the [`GPIO in
 
 ```javascript
 try {
-  var board = require("iot-board");
+  var board = require("iot-board-arduino101");
 
   // Configure GPIO using the board
   var gpio3 = board.gpio(3);  // GPIO input pin with default configuration.

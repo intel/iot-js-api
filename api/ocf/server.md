@@ -98,21 +98,21 @@ server.on('create', function(request) {
   let res = _createResource(request.target.resourcePath, request.resource);
 
   // Use oneiota.org RAML definitions, the request options, and sensor documentation.
-  var translate = function (resource, requestOptions) {
-      if ("oic.r.temperature" in resource.resourceTypes) {
+  var translate = function (representation, requestOptions) {
         switch (requestOptions.units) {
           case "C" :
-            resource.properties.temperature = _getCelsiusFromSensor(resource);
+            // use sensor specific code to get Celsius units
+            representation.temperature = _getCelsiusFromSensorT1();
             break;
           case "F":
-            resource.properties.temperature = _getFahrenheitFromSensor(resource);
+            representation.temperature = _getFahrenheitFromSensorT1();
             break;
           case "K":
-            resource.properties.temperature = _getKelvinFromSensor(resource);
+            representation.temperature = _getKelvinFromSensorT1();
             break;
         }
       }
-      return resource;
+      return representation;
   }
 
   // Register the new resource and then respond to the request.
@@ -216,7 +216,7 @@ server.on('delete', function(request) {
 | `resourceTypes` | array of strings | no       | `undefined`   | List of OCF resource types |
 
 <a name="translate"></a>
-- the `translate` argument is a function that is invoked by the implementation when the client requests a certain representation of the resource by the means of request options. The function takes two arguments, a `resource` object, and a dictionary that contains the request options. It returns the resource object with modified resource representation (`resource.properties`).
+- the `translate` argument is a function that is invoked by the implementation when the client requests a certain representation of the resource by the means of request options. The function takes two arguments, a resource `representation` object that comes from `resource.properties`, and a dictionary that contains the REST request options parsed into a dictionary. It returns the modified resource representation object.
 
 See the [example](#exampleoncreate) for the `create` event.
 

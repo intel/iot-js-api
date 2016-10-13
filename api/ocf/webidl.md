@@ -125,7 +125,7 @@ dictionary ResourceInit {
 
 interface OcfServer {
   Promise<Resource> register(ResourceInit resource,
-                             optional TranslateFunction translate);
+                             optional TranslateCallback translate);
   Promise<void> unregister(ResourceId resource);
 
   // handle CRUDN requests from clients
@@ -150,8 +150,9 @@ interface OcfServer {
 OCFServer implements EventEmitter;
 
 // The function that is called by implementation to select resource representation.
-callback TranslateFunction =  ResourceRepresentation (Resource resource,
-                                                      Dictionary requestOptions);
+callback TranslateCallback =
+    ResourceRepresentation (ResourceRepresentation representation,
+                            Dictionary requestOptions);
 
 // The request types below hide the request id, source, and target (this) deviceId.
 

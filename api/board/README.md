@@ -18,7 +18,7 @@ The API object
 The API entry point is a [`Board`](./#board) object that is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be constructed.
 
 ```javascript
-var board = require('iot-board');
+var board = require("iot-board-arduino101");  // example package name
 
 // Alternative
 // var board = new Board();  // provides an instance of the default board
@@ -65,9 +65,9 @@ Represents a hardware board. It contains an event handler for errors, and API me
 | [`onerror`](#onerror) | event | no | `undefined`   | event for errors |
 | [`pin()`](#getpin)| function | no | defined by implementation | get a Pin object |
 | [`pins()`](#getpins)| function | no | defined by implementation | get an array of board pin names |
-| [`aio()`](#aio)   | function | no | defined by implementation | get an AIOPin object |
+| [`aio()`](#aio)   | function | no | defined by implementation | get an AIO object |
 | [`gpio()`](#gpio) | function | no | defined by implementation | get a GPIO object |
-| [`pwm()`](#pwm)   | function | no | defined by implementation | get a PWMPin object |
+| [`pwm()`](#pwm)   | function | no | defined by implementation | get a PWM object |
 | [`i2c()`](#i2c)   | function | no | defined by implementation | request an I2C object |
 | [`spi()`](#spi)   | function | no | defined by implementation | request an SPI object |
 | [`uart()`](#uart) | function | no | defined by implementation | request an UART object |
@@ -107,13 +107,13 @@ Returns a [`GPIO`](./gpio.md/#gpio) object associated with the pin name or pin o
 
 <a name="aio"></a>
 ##### The `aio(options)` method
-Returns an [`AIOPin`](./aio.md/#aio) object associated with the pin name or pin options given in the `name` argument. It runs the following steps:
+Returns an [`AIO`](./aio.md/#aio) object associated with the pin name or pin options given in the `name` argument. It runs the following steps:
 - Let `board` be the object representing this board.
 - Run the internal [`AIO initialization`](./aio.md/#init) algorithm with `options` and `board` as argument and return its result. Rethrow any errors that occur.
 
 <a name="pwm"></a>
 ##### The `pwm(options)` method
-Returns a [`PWMPin`](./pwm.md/#pwm) object associated with the pin name or pin options given in the [`options`](./pwm.md/#pwmoptions) argument. It runs the following steps:
+Returns a [`PWM`](./pwm.md/#pwm) object associated with the pin name or pin options given in the [`options`](./pwm.md/#pwmoptions) argument. It runs the following steps:
 - Let `board` be the object representing this board.
 - Run the internal [`PWM initialization`](./pwm.md/#init) algorithm with `options` and `board` as argument and return its result. Rethrow any errors that occur.
 
