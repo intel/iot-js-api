@@ -15,8 +15,6 @@ Since implementations of these APIs will partly be running on constrained hardwa
 
 However, implementations should support at least [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/). Examples are limited to ECMAScript 5.1 with the exception of using Promises.
 
-[Zephyr.js](https://github.com/01org/zephyr.js) is one implementation of these APIs.
-
 <a name="structures"></a>
 Structures
 ----------

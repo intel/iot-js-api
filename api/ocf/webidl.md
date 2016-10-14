@@ -142,9 +142,6 @@ interface OcfServer {
   // enable/disable presence for this device
   Promise<void> enablePresence(optional unsigned long timeToLive);  // in ms
   Promise<void> disablePresence();
-
-  // Reply to a given request
-  Promise<void> respond(OcfRequest request, Error? result, optional Resource? resource);
 };
 
 OCFServer implements EventEmitter;
@@ -156,11 +153,16 @@ callback TranslateCallback =
 
 // The request types below hide the request id, source, and target (this) deviceId.
 
-dictionary OcfRequest {
-  ResourceId source;
-  ResourceId target;
-  USVString requestId;
-  ResourceId resource;
+[NoInterfaceObject]
+interface OcfRequest {
+  readonly attribute ResourceId source;
+  readonly attribute ResourceId target;
+  readonly attribute USVString requestId;
+  readonly attribute ResourceId resource;
+
+  // Reply to a given request
+  Promise<void> respond(optional Resource? resource);
+  Promise<void> error(Error error);
 }
 
 ```

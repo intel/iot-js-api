@@ -1,6 +1,29 @@
 Client API
 ==========
 
+- The [Resource](#resource) interface
+  * The [update](#onresourceupdate) event
+  * The [delete](#onresourcelost) event
+- Client events
+  * [platformfound](#onplatformfound)
+  * [devicefound](#ondevicefound)
+  * [devicelost](#ondevicelost)
+  * [resourcefound](#onresourcefound)
+  * [error](#onerror)
+- Discovery methods
+  * [getPlatformInfo(deviceId)](#getplatforminfo)
+  * [getDeviceInfo(deviceId)](#getdeviceinfo)
+  * [findPlatforms(listener)](#findplatforms)
+  * [findDevices(listener)](#finddevices)
+  * [findResources(options, listener)](#findplatforms)
+- Client methods
+  * [create(target, resourceInit)](#create)
+  * [retrieve(resourceId, options, listener)](#retrieve)
+  * [update(resource)](#update)
+  * [delete(resourceId)](#delete)
+
+Introduction
+------------
 The OCF Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality that enables remote access to resources in the network, as well as OCF discovery.
 
 The Client API object does not expose its own properties, only events and methods.
@@ -180,7 +203,8 @@ The method runs the following steps:
 - If the `listener` argument is specified, add it as a listener to the [`resourcefound`](#resourcefound) event.
 - When a resource is discovered, fire a `resourcefound` event that contains a property named `resource`, whose value is a [`Resource`](#resource) object.
 
-## 4. CRUDN Methods
+<a name="client-methods"></a>
+## 4. Client methods
 <a name="create"></a>
 ##### 4.1. The `create(target, resourceInit)` method
 - Creates a remote resource on a given device. The device's [`create`](./server.md/#oncreate) event handler takes care of dispatching the request to the resource that will handle it, and responds with the created resource, or with an error.
