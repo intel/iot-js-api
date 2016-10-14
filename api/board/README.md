@@ -25,6 +25,7 @@ var board = require("iot-board-arduino101");  // example package name
 
 console.log("Connected to board " + board.name);
 ```
+If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
 
 <a name="pin"></a>
 ### The `Pin` interface

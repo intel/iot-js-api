@@ -273,8 +273,6 @@ See the [example](#exampleoncreate) for the `create` event.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to register the given `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, update `resource` to be a [`Resource`](./client.md/#resource) object.
@@ -299,8 +297,6 @@ server.unregister(resource)
 ```
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to unregister the given `resourceId`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.
@@ -317,8 +313,6 @@ See the [example](#exampleonupdate) for the `update` event.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - For each client that requested observing `resource.resourceId`, do the following sub-steps:
     * If there were request options specified with the retrieve request associated with observing the resource, and if a [translate function](#translate) has been defined for the resource during its [registration](#register), then let `resource` be the result of invoking that translate function with `resource` and the [request options dictionary](#requestoptions) that has been saved for the [observation request](#onretrieve).
     * Send an OCF notification for `resource`, and wait for the answer.
@@ -334,8 +328,6 @@ Note that the `notify()` method always resolves. Errors on notifying individual 
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to enable presence for the current device, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.
@@ -347,8 +339,6 @@ The method runs the following steps:
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to disable presence for the current device, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.

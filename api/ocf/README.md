@@ -38,6 +38,7 @@ The API object is exposed in a platform specific manner. As an example, on Node.
 let module = 'ocf';  // use your own implementations' name
 var ocf = require(module);
 ```
+If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
 
 When `require` is successful, it MUST return an object with the following read-only properties:
 - `client` is an object that implements the [OCF Client API](./client.md).
