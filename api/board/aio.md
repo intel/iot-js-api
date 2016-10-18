@@ -52,6 +52,7 @@ Represents the properties and methods that expose AIO functionality. The `AIO` o
 | ---        | ---    | ---      | ---           | ---        |
 | `channel`  | unsigned long | yes   | `undefined` | numeric index of the analog pin |
 | `rateLimit` | unsigned long | yes   | 0 | minimum milliseconds between 'ondata' emits |
+| `precision` | unsigned long | yes | `undefined` | bit length of digital sample |
 | `read()`   | function | no | defined by implementation | asynchronous read of the pin |
 | `close()`  | function | no | defined by implementation | close the pin |
 | `onchange` | event | no       | `undefined`   | event for pin value change |
@@ -71,6 +72,8 @@ The `address` property inherited from [`Pin`](./README.md/#pin) is initialized b
 The `channel` property is initialized by implementation and provides the numeric index of the analog pin, e.g. it is 0 for pin `"A0"` and 5 for pin `"A5"`.
 
 The `rateLimit` property represents the minimum number of milliseconds between two emits of the `ondata` event. It is used as a hint from applications when initializing AIO pins, and the value is reflecting the capability of the platform (`undefined` when rate limitation is not supported).
+
+The `precision` property represents the bit length of the digital sample. It is usually 10 or 12 bits, depending on board.
 
 #### `AIO` methods
 

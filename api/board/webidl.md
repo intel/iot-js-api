@@ -60,10 +60,13 @@ dictionary AIOOptions {
 
 [Constructor( (PinName or AIOOptions) pin, optional Board board)]
 interface AIO: Pin {
-    unsigned long channel;  // analog channel
-    unsigned long rateLimit;     // rate limit for ondata
+    readonly attribute unsigned long channel;  // analog channel
+    readonly attribute unsigned long rateLimit;     // rate limit for ondata
+    readonly attribute unsigned long precision;  // 10 or 12 bits
+
     Promise<unsigned long> read();  // one-shot async read
     void close();
+
     attribute EventHandler<unsigned long> ondata;
 };
 
