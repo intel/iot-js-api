@@ -10,7 +10,7 @@ UART functionality is exposed by the [`UART`](#uart) object that can be obtained
 
 ```javascript
 try {
-  var board = require("iot-board");
+  var board = require("iot-board-arduino101");
 
   board.uart("serialUSB0").then(function(uart) {
     console.log("UART port " + uart.port);

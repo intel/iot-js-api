@@ -18,7 +18,7 @@ Implementations MAY also support an explicit constructor that runs the [`PWM ini
 
 ```javascript
 try {
-  var board = require("iot-board");
+  var board = require("iot-board-arduino101");
 
   var pwm6 = board.pwm(6);  // configure pin 6 as PWM
   // Alternatives:

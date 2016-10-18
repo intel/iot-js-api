@@ -15,7 +15,7 @@ Implementations MAY also support an explicit constructor that runs the [`AIO ini
 
 ```javascript
 try {
-  var board = require("iot-board");
+  var board = require("iot-board-arduino101");
 
   // Configure AIO using the board
   var aio1 = board.aio("A1");
