@@ -16,7 +16,7 @@ interface BluetoothPeripheralDevice {
     boolean removeService(BluetoothUUID uuid, optional boolean recursive = false);
 
     void enable();
-    // void disable();
+    void disable();
 
     Promise<AdvertisingOptions> startAdvertising(Advertisement advertisement,
                                            optional AdvertisingOptions options);

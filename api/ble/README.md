@@ -25,7 +25,7 @@ IoT Bluetooth Smart API
     - [error](#oncherror)
   * `BluetoothCharacteristic methods
     - [startNotifications()](#startnotifications)
-    - [startNotifications()](#stopnotifications)
+    - [stopNotifications()](#stopnotifications)
 - [The `BluetoothCharacteristicRequest` interface](#characteristicrequest)
   * `BluetoothCharacteristicRequest` methods
     - [respond(data)](#respond)
@@ -37,7 +37,7 @@ This API exposes Bluetooth Smart functionality for Bluetooth Smart Peripheral (B
 
 A Bluetooth Smart Peripheral (BSP) device supports the following functionality:
 - Host a [GATT (Generic Attribute Profile)](https://www.bluetooth.com/specifications/gatt) server that exposes a hierarchy of [`Service`](#service), [`Characteristic`](#characteristic) and [`Descriptor`](#descriptor) objects.
-- Broadcast (advertise) information (e.g. services) using advertisment packets. Advertisement or Scan Response data packet is a 31 byte payload used to advertise the device's capabilities and connection parameters.
+- Broadcast (advertise) information (e.g. services) using advertisement packets. Advertisement or Scan Response data packet is a 31 byte payload used to advertise the device's capabilities and connection parameters.
 - Accept connections from Bluetooth Smart devices in Central mode that can access its services exposed through the GAP, the [Generic Access Profile](https://www.bluetooth.org/en-us/specification/assigned-numbers/generic-access-profile). A device has only one
 instance of the GAP service in the GATT server. The GAP service is a GATT
 based service with the service UUID as «GAP Service» defined in the
@@ -47,7 +47,7 @@ The [W3C Web Bluetooth](https://webbluetoothcg.github.io/web-bluetooth) API expo
 
 ### Use cases
 
-This API is used by applications that implement a Bluetooth Peripheral device and expose sensorial data via Bluetooth.
+This API is used by applications that implement a Bluetooth Peripheral device and expose sensor data via Bluetooth.
 - Applications define the Bluetooth Smart services, characteristics and descriptors, then registers them with the implementation.
 - Applications can build Bluetooth advertisement packets, then start (and stop) advertising.
 - For the defined characteristics, applications should register event listeners for handling requests coming from clients. The event listeners receive the request, and should reply to them with appropriate data, or error code.
@@ -58,9 +58,9 @@ The API object
 The API entry point is a [`BluetoothPeripheralDevice`](./#bpd) object that is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be constructed.
 
 ```javascript
-var bpd = require('bluetooth-peripheral');
+var btdevice = require('bluetooth-peripheral');
 ```
-If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
+If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If the underlying platform doesn't allow using the functionality, `require` should throw `SecurityError`.
 
 <a name="bpd">
 ### The `BluetoothPeripheralDevice` interface
@@ -71,24 +71,24 @@ This object is created returned by `require`. It has the following read-only pro
 | address   | String | no | `undefined` | Bluetooth Device Address |
 | addressType | String enum | no | `undefined` | Bluetooth Device Address Type |
 | name      | String | yes | `undefined` | the Bluetooth Device Name in scan responses |
-| enabled   | boolean | no | false | whether Bluetooth and this device is enabled |
-| services  | array of Service objects | no | [] | Primary services on this device |
+| enabled   | boolean | no | false | whether Bluetooth is enabled |
+| services  | array of Service objects | no | [] | Primary services on the device |
 
 <a name="bd_addr">
-The `address` property is a 48 bit value (BD_ADDR) identifying a Bluetooth Smart device. On the UI level the Bluetooth address MUST be represented as 12 hexadecimal characters, possibly divided into sub-parts separated by ‘:’ (e.g., ‘000C3E3A4B69’ or ‘00:0C:3E:3A:4B:69’). On the UI level any number MUST have the most significant bit on left ordering.
+The `address` property is a 48 bit value (BD_ADDR) identifying a Bluetooth Smart device. On the UI level, the Bluetooth address MUST be represented as 12 hexadecimal characters, possibly divided into sub-parts separated by ‘:’ (e.g., ‘000C3E3A4B69’ or ‘00:0C:3E:3A:4B:69’). On the UI level, any number MUST have the most significant bit on left ordering.
 
 <a name="bd_addr_type">
-The `addressType` property can take the following values: `"public"`, `"static-random"`, `"private-resolvable"`, `"private"`.
+The `addressType` property can take the following values: `"public"`, `"static-random"`, `"private-resolvable"`, and `"private"`.
 
 <a name="bd_name">
 The `name` property represents the Bluetooth device name that a Bluetooth device
-exposes to remote devices. It and can be up to 248 bytes encoded in UTF-8, therefore on the UI level it may be restricted to as few as 62 characters if codepoints outside the range U+0000 to U+007F are used. A device cannot expect that a general remote device is able to handle more than the first 40 characters of the Bluetooth device name. If a remote device has limited display capabilities, it may use only the first 20 characters.
+exposes to remote devices. It is up to 248 bytes encoded as UTF-8, therefore on the UI level it may be restricted to as few as 62 characters if codepoints outside the range U+0000 to U+007F are used. A device cannot expect that a general remote device is able to handle more than the first 40 characters of the Bluetooth device name. If a remote device has limited display capabilities, it may use only the first 20 characters.
 
 <a name="bd_enabled">
-The `enabled` property MUST be set to `true` if the Bluetooth Smart and the device is enabled, and otherwise to `false`.
+The `enabled` property MUST be set to `true` if the Bluetooth Smart functionality is enabled on the device, and otherwise to `false`.
 
 <a name="bd_services">
-The `services` property is a read-only array (sequence) of [`BluetoothService`](#service) objects that represents the primary GATT services on this device. A primary service is visible at device root level, and it may contain other services.
+The `services` property is a read-only array (sequence) of [`BluetoothService`](#service) objects that represents the primary GATT services on the device. A primary service is visible at device root level, and it may contain other services.
 
 #### `BluetoothPeripheralDevice` events
 
@@ -100,16 +100,16 @@ The `services` property is a read-only array (sequence) of [`BluetoothService`](
 | *error*           | Error                   |
 
 <a name="onenabledchange"></a>
-The `enabledchange` event is emitted when the [`enabled`](#bd_enabled) property is changed. Listeners should check the value of the `enabled` property.
+The `enabledchange` event is emitted when the [`enabled`](#bd_enabled) property is changed. Event listeners should check the value of the `enabled` property.
 
 <a name="onconnect"></a>
-The `connect` event is emitted when a Bluetooth Smart device in Central mode (client) is connected. Listeners are invoked with the client's [Bluetooth Device Address](#bd_addr) as a string argument.
+The `connect` event is emitted when a Bluetooth Smart device in Central mode (client) is connected. Event listeners are invoked with the client's [Bluetooth Device Address](#bd_addr) as a string argument.
 
 <a name="ondisconnect"></a>
-The `disconnect` event is emitted when a connected client device is disconnected. Listeners are invoked with the client's [Bluetooth Device Address](#bd_addr) as a string argument.
+The `disconnect` event is emitted when a connected client device is disconnected. Event listeners are invoked with the client's [Bluetooth Device Address](#bd_addr) as a string argument.
 
 <a name="onerror"></a>
-The `error` event is emitted when a Bluetooth error needs to be reported to the application. Listeners are invoked with an [`Error`](https://nodejs.org/api/errors.html#errors_class_error) object as argument.
+The `error` event is emitted when a Bluetooth error needs to be reported to the application. Event listeners are invoked with an [`Error`](https://nodejs.org/api/errors.html#errors_class_error) object as argument.
 
 #### `BluetoothPeripheralDevice` methods
 
@@ -146,16 +146,16 @@ Advertisement packet data can be of the following types:  string (e.g. flags), d
 The `startadvertising()` method runs the following steps:
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If `options.connectable` is not `true`, then set `options.connectable` to `false`.
-- If `options.minInterval` is `undefined`, set `options.minInterval` to a platform default value. Otherwise, if it is a number, and it is smaller than 100 or bigger than 32000, reject `promise` with `TypeError`. Otherwise set `options.minInterval` to that value rounded down to the nearest value dividable by 100.
-- If `options.maxInterval` is `undefined`, set `options.maxInterval` to a platform default value. Otherwise, if it is a number, and it is smaller than 100 or bigger than 32000, reject `promise` with `TypeError`. Otherwise set `options.maxInterval` to that value rounded down to the nearest value dividable by 100.
+- If `options.minInterval` is `undefined`, set `options.minInterval` to a platform default value. Otherwise, if it is a number, and it is smaller than 100 or bigger than 32000, reject `promise` with `TypeError`. Otherwise, set `options.minInterval` to that value rounded down to the nearest value dividable by 100.
+- If `options.maxInterval` is `undefined`, set `options.maxInterval` to a platform default value. Otherwise, if it is a number, and it is smaller than 100 or bigger than 32000, reject `promise` with `TypeError`. Otherwise, set `options.maxInterval` to that value rounded down to the nearest value dividable by 100.
 - If `advertisement` is not an object, reject `promise` with `TypeError`.
 - If `advertisement.scanResponse` is an object and `advertisement.scanResponse.name` is a string or `advertisement.scanResponse.date` is a [`Buffer`](../README.md/#buffer) object, then let `scanResponse` be `advertisement.scanResponse`.
 - If `advertisement.data` is a [`Buffer`](../README.md/#buffer) object, let `buffer` take that value.
-- Otherwise let `buffer` be an empty `Buffer`, and use the properties of `advertisement` (when defined) to prepare `buffer` based on the following properties of `advertisement`. The algorithm on how to prepare `buffer` is described in the Bluetooth specification, and the platform may have an API to support that.
+- Otherwise, let `buffer` be an empty `Buffer`, and use the properties of `advertisement` (when defined) to prepare `buffer` based on the following properties of `advertisement`. The algorithm on how to prepare `buffer` is described in the Bluetooth specification, and the platform may have an API to support that.
   * `uuids` is an array of Bluetooth UUID strings representing services; if specified, implementations SHOULD add them to the advertisement packet `buffer` compliant to the Bluetooth specification.
-  * `serviceData` is an object with two properties, a UUID string `uuid` and a `Buffer` object `data`. Implementations should add `uuid` and `data` to `buffer`, if there is sufficient space in the advertisement packet. If there is no space, skip to the next step.
-  * `manufacturerData` is an object with two properties, a number `manufacturerId` and a `Buffer` data. Implementations should add `manufacturerId` and `data` to `buffer`, if there is sufficient space in the advertisement packet. If there is no space, skip to the next step.
-  * `deviceClass` is a number. If specified, implementations should add it to `buffer`, if there is sufficient space in the advertisement packet. If there is no space, skip to the next step.
+  * `serviceData` is an object with two properties, a UUID string `uuid` and a `Buffer` object `data`. Implementations should add `uuid` and `data` to `buffer`, if there is sufficient space in the advertisement packet. If there is not sufficient space, skip to the next step.
+  * `manufacturerData` is an object with two properties, a number `manufacturerId` and a `Buffer` data. Implementations should add `manufacturerId` and `data` to `buffer`, if there is sufficient space in the advertisement packet. If there is not sufficient space, skip to the next step.
+  * `deviceClass` is a number. If specified, implementations should add it to `buffer`, if there is sufficient space in the advertisement packet. If there is not sufficient space, skip to the next step.
   * `includeTxPower` is a boolean value. If `true`, then implementations should add the transmit power to the advertisement packet, if there is space. If not, skip to the next step.
 - Request the underlying platform to start sending the prepared advertisement packet `buffer` with the options specified in `options`. If the request fails, reject `promise` with an `Error` object `error` that has `error.message` set to `"BluetoothStartAdvertisement"`.
 - If the implementation can read the advertisement options used by the platform for this advertisement, set `options.minInterval` and `options.maxInterval` to the actual values used by the platform.
@@ -249,7 +249,7 @@ The `subscribe` event is emitted when the device receives a request for unsubscr
 ...
 
 <a name="oncherror"></a>
-The `error` event is emitted when a Bluetooth error concerning operations with Characteristics needs to be reported to the application. Listeners are invoked with an [`Error`](https://nodejs.org/api/errors.html#errors_class_error) object as argument.
+The `error` event is emitted when a Bluetooth error concerning operations with Characteristics needs to be reported to the application. Event listeners are invoked with an [`Error`](https://nodejs.org/api/errors.html#errors_class_error) object as argument.
 
 #### `BluetoothCharacteristic` methods
 
