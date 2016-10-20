@@ -1,6 +1,29 @@
 Client API
 ==========
 
+- The [Resource](#resource) interface
+  * The [update](#onresourceupdate) event
+  * The [delete](#onresourcelost) event
+- Client events
+  * [platformfound](#onplatformfound)
+  * [devicefound](#ondevicefound)
+  * [devicelost](#ondevicelost)
+  * [resourcefound](#onresourcefound)
+  * [error](#onerror)
+- Discovery methods
+  * [getPlatformInfo(deviceId)](#getplatforminfo)
+  * [getDeviceInfo(deviceId)](#getdeviceinfo)
+  * [findPlatforms(listener)](#findplatforms)
+  * [findDevices(listener)](#finddevices)
+  * [findResources(options, listener)](#findplatforms)
+- Client methods
+  * [create(target, resourceInit)](#create)
+  * [retrieve(resourceId, options, listener)](#retrieve)
+  * [update(resource)](#update)
+  * [delete(resourceId)](#delete)
+
+Introduction
+------------
 The OCF Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality that enables remote access to resources in the network, as well as OCF discovery.
 
 The Client API object does not expose its own properties, only events and methods.
@@ -105,8 +128,6 @@ client.on('error', function(error) {
 ##### 3.1. The `getPlatformInfo(deviceId)` method
 Fetches a remote platform information object.  The `deviceId` argument is a string that contains an OCF device UUID. The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
 - Send a direct discovery request `GET /oic/p` with the given `deviceId` (which can be either a device UUID or a device URL, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise` with a [`Platform`](./README.md/#platform) object created from the response.
@@ -115,8 +136,6 @@ Fetches a remote platform information object.  The `deviceId` argument is a stri
 ##### 3.2. The `getDeviceInfo(deviceId)` method
 Fetches a remote device information object. The `deviceId` argument is a string that contains an OCF device UUID. The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a direct discovery request `GET /oic/d` with the given `deviceId`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise` with a [`Device`](./README.md/#device) object created from the response.
@@ -129,8 +148,6 @@ Fetches a remote device information object. The `deviceId` argument is a string 
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a multicast request for retrieving `/oic/p` and wait for the answer.
 - If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
@@ -145,8 +162,6 @@ The method runs the following steps:
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `SecurityError`.
-- If the functionality is not supported, reject `promise` with `NotSupportedError`.
 - Send a multicast request for retrieving `/oic/d` and wait for the answer.
 - If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
@@ -169,8 +184,6 @@ The method runs the following steps:
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `SecurityError`.
-- If the functionality is not supported, reject `promise` with `NotSupportedError`.
 - Configure an OCF resource discovery request as follows:
   - If `options.deviceId` is specified, make a direct discovery request to that device
   - If `options.resourceType` is specified, include it as the `rt` parameter in a new endpoint multicast discovery request `GET /oic/res` to "All CoAP nodes" (`224.0.1.187` for IPv4 and `FF0X::FD` for IPv6, port `5683`).
@@ -180,7 +193,8 @@ The method runs the following steps:
 - If the `listener` argument is specified, add it as a listener to the [`resourcefound`](#resourcefound) event.
 - When a resource is discovered, fire a `resourcefound` event that contains a property named `resource`, whose value is a [`Resource`](#resource) object.
 
-## 4. CRUDN Methods
+<a name="client-methods"></a>
+## 4. Client methods
 <a name="create"></a>
 ##### 4.1. The `create(target, resourceInit)` method
 - Creates a remote resource on a given device. The device's [`create`](./server.md/#oncreate) event handler takes care of dispatching the request to the resource that will handle it, and responds with the created resource, or with an error.
@@ -197,8 +211,6 @@ The method sends a request to the device specified in `target` and the device's 
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to create the resource described by `resourceInit` to the device specified by `target.deviceId` and the handler resource on the device specified by `target.resourcePath`. Wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
@@ -214,8 +226,6 @@ In the OCF retrieve request it is possible to set an `observe` flag if the clien
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Let `observe` be `null`.
 - If the `listener` argument is specified, add it as a listener to the `Resource` [`update`](#onresourceupdate) event, and set `observe` to `true`.
 - Let `resource` be the resource identified by `resourceId`.
@@ -234,8 +244,6 @@ The method runs the following steps:
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to update the resource specified by `resource` with the properties present in `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
@@ -247,7 +255,5 @@ The method runs the following steps:
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to delete the resource specified by `resourceId`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.

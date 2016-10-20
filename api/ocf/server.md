@@ -1,5 +1,24 @@
 OCF Server API
 ==============
+
+- Helper structures
+  * The [OcfRequest](#ocfrequest) interface
+  * The [ResourceInit](#resourceinit) dictionary
+- Server events
+  * [`create`](#oncreate)
+  * [`retrieve`](#onretrieve)
+  * [`update`](#onupdate)
+  * [`delete`](#ondelete)
+  * [`error`](#onerror)
+- Server methods
+  * [register(resource, translateFunction)](#register)
+  * [unregister(resourceId)](#unregister)
+  * [notify(resource)](#notify)
+  * [enablePresence(timeToLive)](#enable)
+  * [disablePresence()](#disable)
+
+Introduction
+------------
 The Server API implements functionality to serve CRUDN requests in a device. A device that implements the Server API may provide special resources to handle CRUDN requests.
 
 The Server API provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
@@ -8,9 +27,10 @@ The Server API object does not expose its own properties, only events and method
 
 When a device is changed or shut down, the implementation should update presence information. Clients can subscribe to presence information using the [OCF Client API](./client.md).
 
-## 1. Structures
+1. Structures
+-------------
 <a name="ocfrequest"></a>
-### 1.1. The `OcfRequest` dictionary
+### 1.1. The `OcfRequest` interface
 Describes an object that is passed to server event listeners.
 
 | Property  | Type              | Optional | Default value | Represents |
@@ -27,6 +47,34 @@ The `data` property in a request is an object that contains data that depends on
 
 <a name="requestoptions"></a>
 The `options` property is an object whose properties represent the `REST` query parameters passed along with the request as a JSON-serializable dictionary. The semantics of the parameters are application-specific (e.g. requesting a resource representation in metric or imperial units). For instance request options may be used with the [retrieve](./client.md/#retrieveoptions) request.
+
+#### `OcfRequest` methods
+<a name="respond"></a>
+##### `respond(data)`
+- Sends a response to this request.
+- The `data` argument is optional and used with requests such as `create` and `update`.
+
+The method is typically used from request event handlers, and internally reuses the request information in order to construct a response message.
+
+The method runs the following steps:
+- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Construct a response message to `request`, reusing the properties of `request`.
+- If `data` is not `null`, then include it in the response message (when the protocol message format supports that).
+- Send the response back to the sender.
+- If there is an error during sending the response, reject `promise` with that error, otherwise resolve `promise`.
+
+##### `error(error)`
+- Sends an error response to this request.
+- The `error` argument is an `Error` object.
+
+The method is typically used from request event handlers, and internally reuses the request information in order to construct a response message.
+
+The method runs the following steps:
+- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Construct a response message to `request`, reusing the properties of `request`.
+- If `error` is not `null` and an instance of `Error`, then mark the error in the response message (the error may be application specific). Otherwise, mark a generic error in the response message.
+- Send the response back to the sender.
+- If there is an error during sending the response, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="resourceinit"></a>
 ### 1.2. The `ResourceInit` dictionary
@@ -46,7 +94,8 @@ Used for creating and registering resources, exposes the properties of an OCF re
 
  The `properties` property is a resource representation that contains resource-specific properties and values usually described in the [RAML data model](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource.
 
-## 2. Events
+2. Events
+---------
 The requests are dispatched using events. The Server API supports the following events:
 
 | Event name  | Event callback argument            |
@@ -98,21 +147,21 @@ server.on('create', function(request) {
   let res = _createResource(request.target.resourcePath, request.resource);
 
   // Use oneiota.org RAML definitions, the request options, and sensor documentation.
-  var translate = function (resource, requestOptions) {
-      if ("oic.r.temperature" in resource.resourceTypes) {
+  var translate = function (representation, requestOptions) {
         switch (requestOptions.units) {
           case "C" :
-            resource.properties.temperature = _getCelsiusFromSensor(resource);
+            // use sensor specific code to get Celsius units
+            representation.temperature = _getCelsiusFromSensorT1();
             break;
           case "F":
-            resource.properties.temperature = _getFahrenheitFromSensor(resource);
+            representation.temperature = _getFahrenheitFromSensorT1();
             break;
           case "K":
-            resource.properties.temperature = _getKelvinFromSensor(resource);
+            representation.temperature = _getKelvinFromSensorT1();
             break;
         }
       }
-      return resource;
+      return representation;
   }
 
   // Register the new resource and then respond to the request.
@@ -203,7 +252,9 @@ server.on('delete', function(request) {
 });
 ```
 
-## 3. Methods
+3. Methods
+-----------
+
 <a name="register"></a>
 ##### 3.1. `register(resource, translate)` method
 - Registers a resource in the OCF network.
@@ -216,14 +267,12 @@ server.on('delete', function(request) {
 | `resourceTypes` | array of strings | no       | `undefined`   | List of OCF resource types |
 
 <a name="translate"></a>
-- the `translate` argument is a function that is invoked by the implementation when the client requests a certain representation of the resource by the means of request options. The function takes two arguments, a `resource` object, and a dictionary that contains the request options. It returns the resource object with modified resource representation (`resource.properties`).
+- the `translate` argument is a function that is invoked by the implementation when the client requests a certain representation of the resource by the means of request options. The function takes two arguments, a resource `representation` object that comes from `resource.properties`, and a dictionary that contains the REST request options parsed into a dictionary. It returns the modified resource representation object.
 
 See the [example](#exampleoncreate) for the `create` event.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to register the given `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, update `resource` to be a [`Resource`](./client.md/#resource) object.
@@ -248,8 +297,6 @@ server.unregister(resource)
 ```
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to unregister the given `resourceId`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.
@@ -266,8 +313,6 @@ See the [example](#exampleonupdate) for the `update` event.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - For each client that requested observing `resource.resourceId`, do the following sub-steps:
     * If there were request options specified with the retrieve request associated with observing the resource, and if a [translate function](#translate) has been defined for the resource during its [registration](#register), then let `resource` be the result of invoking that translate function with `resource` and the [request options dictionary](#requestoptions) that has been saved for the [observation request](#onretrieve).
     * Send an OCF notification for `resource`, and wait for the answer.
@@ -283,8 +328,6 @@ Note that the `notify()` method always resolves. Errors on notifying individual 
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to enable presence for the current device, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.
@@ -296,29 +339,6 @@ The method runs the following steps:
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Send a request to disable presence for the current device, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.
-
-
-<a name="respond"></a>
-##### 3.6. `respond(request, error, data)`
-- Sends a response to a given [`OcfRequest`](#ocfrequest).
-- Returns a [`Promise`](./README.md/#promise) object that resolves when the response is successfully sent, otherwise rejects.
-- The `request` argument is mandatory, and should be the `OcfRequest` object for which the response is being sent.
-- The `error` argument is mandatory, and should be `null` in case of success. Otherwise it should be an instance of [`Error`](https://nodejs.org/api/errors.html#errors_class_error).
-- The `data` argument is optional and used with requests that return data, such as `create` and `update`.
-
-The method is typically used from request event handlers, and internally reuses the request information in order to construct a response message.
-
-The method runs the following steps:
-- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If there is no permission to use the method, reject `promise` with `"SecurityError"`.
-- If the functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Construct a response message to `request`, reusing the properties of `request`.
-- If `error` is not `null` and an instance of `Error`, then mark the error in the response message.
-- If `data` is not `null`, then include it in the response message (when the protocol message format supports that).
-- Send the response back to the sender.
-- If there is an error during sending the response, reject `promise` with that error, otherwise resolve `promise`.

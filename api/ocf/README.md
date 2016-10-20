@@ -1,10 +1,13 @@
 OCF Web API
 ===========
 
-* [Introduction](#introduction)
 * [OCF API object](#api-entry-point)
   - [OCF Client API](./client.md)
   - [OCF Server API](./server.md)
+* [Helper structures](#structures)
+  - The [OcfDevice](#ocfdevice) dictionary
+* - The [OcfPlatform](#ocfplatform) dictionary
+* - The [OcfError](#ocferror) interface
 * [Web IDL](./webidl.md)
 * [Examples](./examples.md)
 
@@ -27,13 +30,15 @@ Resources can be accessed remotely, and can notify subscribers with data and sta
 
 The devices support installable software modules called *applications*. This API is exposed on an OCF device and enables writing the applications that implement resources and business logic.
 
-## API entry point
+The API object
+--------------
 The API object is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be exposed as a property of a global object.
 
 ```javascript
 let module = 'ocf';  // use your own implementations' name
 var ocf = require(module);
 ```
+If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
 
 When `require` is successful, it MUST return an object with the following read-only properties:
 - `client` is an object that implements the [OCF Client API](./client.md).

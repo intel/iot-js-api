@@ -14,17 +14,18 @@ I2C functionality is exposed by the [`I2C`](#i2c) object that can be obtained by
 
 ```javascript
 try {
-  var board = require("iot-board");
+  var board = require("iot-board-arduino101");
+  var i2c = null;
 
-  board.i2c().then(function(i2c) {
+  board.i2c().then(function(iic) {
+    i2c = iic;
     console.log("I2C bus " + i2c.bus + " opened with bus speed " + i2c.speed);
-    i2c.write(0x02, [1, 2, 3]).then(function() {
-      i2.read(0x03, 3).then(function(buffer) {
-        // Buffer object
-        console.log("From I2C device 0x03: " + buffer.toString());
-        i2c.close();
-      });
-    });
+    return i2c.write(0x02, [1, 2, 3])
+  }).then(function() {
+    return i2c.read(0x03, 3);
+  }).then(function(buffer) {
+      console.log("From I2C device 0x03: " + buffer.toString());
+      i2c.close();
   }).catch(function(err) {
     console.log("I2C error: " + err.message);
   });

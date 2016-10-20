@@ -39,7 +39,7 @@ dictionary GPIOOptions {
     PinMode mode = "input";
     boolean activeLow = false;
     String edge = "any";  // "none", "rising", "falling", "any"
-    String pull = "none"; // "none", "pullup", "pulldown"
+    String pull = "none"; // "none", "pull-up", "pull-down"
 };
 
 [Constructor(GPIOOptions options, optional Board board)]
@@ -60,10 +60,13 @@ dictionary AIOOptions {
 
 [Constructor( (PinName or AIOOptions) pin, optional Board board)]
 interface AIO: Pin {
-    unsigned long channel;  // analog channel
-    unsigned long rateLimit;     // rate limit for ondata
+    readonly attribute unsigned long channel;  // analog channel
+    readonly attribute unsigned long rateLimit;     // rate limit for ondata
+    readonly attribute unsigned long precision;  // 10 or 12 bits
+
     Promise<unsigned long> read();  // one-shot async read
     void close();
+
     attribute EventHandler<unsigned long> ondata;
 };
 
@@ -79,30 +82,28 @@ dictionary PWMOptions {
 interface PWM: Pin {
     readonly attribute unsigned long channel;
     readonly attribute boolean reversePolarity;
-    // 'value' returns PWMData
-    void write(PWMData value);
+    // 'value' returns PWMOptions
+    void write(PWMOptions value);
     void stop();
     void close();
 };
 
-dictionary PWMData {
+dictionary PWMOptions {
   double period;
   double pulseWidth;
   double dutyCycle;
 };
 
 // I2C
-enum I2CSpeed { "10kbps", "100kbps", "400kbps", "1000kbps", "3400kbps" };
-
 dictionary I2COptions {
   octet bus;
-  I2CSpeed speed;
+  unsigned long speed;  // 10, 100, 400, 1000, 3400 kbps
 };
 
 [NoInterfaceObject]
 interface I2C {
   readonly attribute octet bus;
-  readonly attribute I2CBusSpeed speed;
+  readonly attribute unsigned long speed;
 
   Promise<Buffer> read(octet device, unsigned long size);
   Promise write(octet device, Buffer data);

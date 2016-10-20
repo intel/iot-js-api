@@ -125,7 +125,7 @@ dictionary ResourceInit {
 
 interface OcfServer {
   Promise<Resource> register(ResourceInit resource,
-                             optional TranslateFunction translate);
+                             optional TranslateCallback translate);
   Promise<void> unregister(ResourceId resource);
 
   // handle CRUDN requests from clients
@@ -142,24 +142,27 @@ interface OcfServer {
   // enable/disable presence for this device
   Promise<void> enablePresence(optional unsigned long timeToLive);  // in ms
   Promise<void> disablePresence();
-
-  // Reply to a given request
-  Promise<void> respond(OcfRequest request, Error? result, optional Resource? resource);
 };
 
 OCFServer implements EventEmitter;
 
 // The function that is called by implementation to select resource representation.
-callback TranslateFunction =  ResourceRepresentation (Resource resource,
-                                                      Dictionary requestOptions);
+callback TranslateCallback =
+    ResourceRepresentation (ResourceRepresentation representation,
+                            Dictionary requestOptions);
 
 // The request types below hide the request id, source, and target (this) deviceId.
 
-dictionary OcfRequest {
-  ResourceId source;
-  ResourceId target;
-  USVString requestId;
-  ResourceId resource;
+[NoInterfaceObject]
+interface OcfRequest {
+  readonly attribute ResourceId source;
+  readonly attribute ResourceId target;
+  readonly attribute USVString requestId;
+  readonly attribute ResourceId resource;
+
+  // Reply to a given request
+  Promise<void> respond(optional Resource? resource);
+  Promise<void> error(Error error);
 }
 
 ```

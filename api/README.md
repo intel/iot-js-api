@@ -4,23 +4,21 @@ IoT Web APIs
 <a name="introduction"></a>
 Introduction
 ------------
-The following JavaScript APIs are aimed for handling Internet of Things (IoT) applications:
-* High level [Sensor APIs](./sensors/README.md) that are standardized in the [W3C Generic Sensor Working Group](https://www.w3.org/2009/dap/) and defines the [Generic Sensor API](https://www.w3.org/TR/generic-sensor/), but adapted to constrained environments. It also exposes interfaces to handle various [sensor types](https://www.w3.org/2009/dap/).
-* Low level [Board APIs](./board/README.md) provide interfaces for I/O operations supported by the board, and define pin mappings between board pin names and pin values mapped by the OS, so that developers could use board pin names in the API methods.
-* Communication APIs, such as
-  - [OCF - Open Connect Foundation](./ocf/README.md) API
-  - [BLE - Bluetooth Low Energy](./ble/README.md) API (Peripheral mode).
+The following JavaScript APIs are aimed for handling Internet of Things (IoT) applications.
+
+* [Sensor API](./sensors/README.md): high level sensor APIs standardized in the [W3C Generic Sensor Working Group](https://www.w3.org/2009/dap/) and defines the [Generic Sensor API](https://www.w3.org/TR/generic-sensor/), but adapted to constrained environments. It also exposes interfaces to handle various [sensor types](https://www.w3.org/2009/dap/).
+* [Board API](./board/README.md): provides low level interfaces for I/O operations supported by the board, and define pin mappings between board pin names and pin values mapped by the OS, so that developers could use board pin names in the API methods.
+* [OCF - Open Connect Foundation](./ocf/README.md) API
+* [Bluetooth Smart API](./ble/README.md) API (Peripheral mode).
 
 Since implementations of these APIs will partly be running on constrained hardware, they might not support the latest [ECMAScript](http://www.ecma-international.org) versions.
 
-However, implementations should support at least [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/). Examples use this version, i.e. no string templates or arrow functions are used yet.
-
-[Zephyr.js](https://github.com/01org/zephyr.js) is one implementation of these APIs.
+However, implementations should support at least [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/). Examples are limited to ECMAScript 5.1 with the exception of using Promises.
 
 <a name="structures"></a>
 Structures
 ----------
-The following well known structures MAY be implemented in a constrained version:
+The following structures MAY be implemented in a constrained version:
   - [EventEmitter](#events)
   - [Promise](#promise)
   - [Buffer](.#buffer)

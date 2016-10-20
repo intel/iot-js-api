@@ -1,21 +1,21 @@
-Board Supportfor Arduino 101
-============================
+Board Support for Arduino 101
+=============================
 
-This page defines the values returned by the [`Board.pins()`](./README.md/#getpins) method, and describes the pin mapping for the [`Board.pin()`](./README.md/#getpin) method, from board labels that are printed on the board to operating system specific values.
+This page defines the values returned by the [`Board.pins()`](./README.md/#getpins) method and describes the pin mapping for the [`Board.pin()`](./README.md/#getpin) method, from board labels that are printed on the board to operating system specific values.
 
 The board labels are described in the [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) board documentation. Also, for each board pin, the [`supportedModes`](./README.md/#pin) property of each pin is described.
 
-The [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) board has 20 I/O pins that operate at 3.3 V and can be configured as described by the following table.
+The [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) board has 20 I/O pins that operate at 3.3V and can be configured as described by the following table.
 
 Pins 0 and 1 can be also configured to be used as UART, the port name is exposed as `uart0`.
 
-On GPIO pins (0..13) interrupts can be configured to be triggered on low value, high value, rising edge, and falling edge. Some of the GPIO pins can trigger interrupt on value *change* (pins 2, 5, 7, 8, 10, 11, 12, 13).
+On GPIO pins (0..13) interrupts can be configured to be triggered on low value, high value, rising edge and falling edge. Some of the GPIO pins can trigger interrupt on value *change* (pins 2, 5, 7, 8, 10, 11, 12, 13).
 
-Pins 3,5,6 and 9 can be used for PWM output. These pins are marked on the board by a ~ (tilde) symbol next to the pin numbers. Pin 3 corresponds to PWM channel 0, pin 9 to PWM channel 3, etc.
+Pins 3, 5, 6 and 9 can be used for PWM output. These pins are marked on the board by a ~ (tilde) symbol next to the pin numbers. Pin 3 corresponds to PWM channel 0, pin 9 to PWM channel 3, etc.
 
-Pins (A0 - A5) can be used for analog input, and each provide 10 bits of resolution (i.e. 1024 different values).
+Pins A0 to A5 can be used for analog input and each provide 10 bits of resolution (i.e. 1024 different values).
 
-There are 3 LEDs on the board that can be accessed by the pin names `"LED0"`, `"LED1"`, and `"LED3"`.
+There are 3 LEDs on the board that can be accessed by the pin names `"LED0"`, `"LED1"` and `"LED3"`.
 
 Other names:
 - UART on pin 0 and 1 can be accessed by the name `"uart0"`.
