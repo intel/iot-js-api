@@ -65,30 +65,23 @@ function startServer() {
   }).then(function(res) {
     console.log("Local resource " + res.resourcePath + " has been registered.");
     lightResource = res;
-    server.on("update", lightUpdateHandler);
-    server.on("delete", lightDeleteHandler);
-    server.on("retrieve", lightRetrieveHandler);
-    server.on("create", lightCreatoHandler);
+    server.onupdate(lightUpdateHandler);
+    server.ondelete(lightDeleteHandler);
+    server.onretrieve(lightRetrieveHandler,
+                      { resourcePath: lightResource.resourcePath });
+    server.oncreate(lightCreatoHandler);
     }
   }).catch(function(error) {
     console.log("Error creating resource " + error.resourcePath + ": " + error.message);
   });
 };
 
-function lightRetrieveHandler(request, observe) {
-  if (request.target.resourcePath === lightResource.resourcePath) {
-    listenerCount += observe ? 1 : -1;
-
-    server.respond(request, null, lightResource)
+function lightRetrieveHandler(request) {
+    listenerCount += request.observe ? 1 : -1;
+    request.respond(lightResource)
     .catch(function(err) {
       console.log("Error sending retrieve response.");
     });
-  } else {
-    server.respond(request, new Error("NotFoundError"));
-    .catch(function(err) {
-      console.log("Error sending retrieve error response.");
-    });
-  }
 };
 
 function lightUpdateHandler(request) {
@@ -96,9 +89,10 @@ function lightUpdateHandler(request) {
   // this is a hook to update the business logic
   console.log("Resource " + request.target.resourcePath + " updated.");
 
-  for (p of request.resource.properties) {
-    if (lightResource.properties[p] != request.resource.properties[p])
-      lightResource.properties[p] = request.resource.properties[p];
+  var resource = request.data;
+  for (p of resource.properties) {
+    if (lightResource.properties[p] != resource.properties[p])
+      lightResource.properties[p] = resource.properties[p];
   }
 
   // Notify other listeners about the change.
@@ -111,28 +105,30 @@ function lightDeleteHandler(request) {
   console.log("Deleting resource " + request.target.resourcePath);
 
   // clean up local state; notification about deletion is automatic
-  server.respond(request)
+  request.respond()
   .catch(function(err) { console.log("Error sending delete response."); });
 };
 
 function lightCreateHandler(request) {
-  if (request.resource.resourcePath !== "/light/ambience/blue/1") {
-      server.respond(request, new TypeError("create"), res);
+  var resourceInit = request.data;
+
+  if (resourceInit.resourcePath !== "/light/ambience/blue/1") {
+      request.respondWithError(new TypeError("create"));
       return;
   }
 
-  console.log("Creating resource " + request.resource.resourcePath +
+  console.log("Creating resource " + resourceInit.resourcePath +
               " at " + request.target.resourcePath);
 
   // Process the resource creation using a local call.
-  let res = _createResource(request.target.resourcePath, request.resource);
+  let res = _createResource(request.target.resourcePath, resourceInit);
 
   // Register the new local resource, then respond to the create request.
   server.register(res)
     .then(function(resource) {
-      server.respond(request, null, resource);
+      request.respond(resource);
     }).catch(function(error) {
-      server.respond(request, error, res);
+      request.respondWithError(error);
     });
 };
 

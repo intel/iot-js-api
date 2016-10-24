@@ -128,23 +128,30 @@ interface OcfServer {
                              optional TranslateCallback translate);
   Promise<void> unregister(ResourceId resource);
 
-  // handle CRUDN requests from clients
-  attribute EventHandler<OcfRequest> oncreate;
-  attribute EventHandler<OcfRequest> onretrieve;
-  attribute EventHandler<OcfRequest> onupdate;
-  attribute EventHandler<OcfRequest> ondelete;
+  // Register CRUDN request handlers.
+  OcfServer oncreate(RequestHandler handler, optional ServerOptions options);
+  OcfServer onretrieve(RequestHandler handler, optional ServerOptions options);
+  OcfServer onupdate(RequestHandler handler, optional ServerOptions options);
+  OcfServer ondelete(RequestHandler handler, optional ServerOptions options);
+  OcfServer onerror(ErrorCallback errorHandler);
 
-  // update notification could be done automatically in most cases,
-  // but in a few cases manual notification is needed
-  // delete notifications should be made automatic by implementations
+  // Update notification could be done automatically in most cases,
+  // but in a few cases manual notification is needed.
+  // Delete notifications should be made automatically by implementations.
   Promise<void> notify(Resource resource);
 
-  // enable/disable presence for this device
+  // Enable/disable presence for this device.
   Promise<void> enablePresence(optional unsigned long timeToLive);  // in ms
   Promise<void> disablePresence();
 };
 
-OCFServer implements EventEmitter;
+dictionary ServerOptions {
+  String[] resourceTypes;  // handle requests only for these resource types
+  String resourcePath;  // handle requests only for this resource
+};
+
+callback RequestHandler = void (Request request);
+callback ErrorCallback = void (Error error, optional Request request);
 
 // The function that is called by implementation to select resource representation.
 callback TranslateCallback =
@@ -159,10 +166,11 @@ interface OcfRequest {
   readonly attribute ResourceId target;
   readonly attribute USVString requestId;
   readonly attribute ResourceId resource;
+  readonly attribute boolean? observe;
 
   // Reply to a given request
   Promise<void> respond(optional Resource? resource);
-  Promise<void> error(Error error);
+  Promise<void> respondWithError(Error error);
 }
 
 ```

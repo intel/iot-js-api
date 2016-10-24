@@ -3,29 +3,35 @@ OCF Server API
 
 - Helper structures
   * The [OcfRequest](#ocfrequest) interface
+    - [`respond(data)`](#respond)
+    - [`respondWithError(error)`](#respondwitherror)
   * The [ResourceInit](#resourceinit) dictionary
-- Server events
-  * [`create`](#oncreate)
-  * [`retrieve`](#onretrieve)
-  * [`update`](#onupdate)
-  * [`delete`](#ondelete)
-  * [`error`](#onerror)
 - Server methods
   * [register(resource, translateFunction)](#register)
   * [unregister(resourceId)](#unregister)
+  * [oncreate(handler, options)](#oncreate)
+  * [onretrieve(handler, options)](#onretrieve)
+  * [onupdate(handler, options)](#onupdate)
+  * [ondelete(handler, options)](#ondelete)
+  * [onerror(handler, request)](#onerror)
   * [notify(resource)](#notify)
   * [enablePresence(timeToLive)](#enable)
   * [disablePresence()](#disable)
 
 Introduction
 ------------
-The Server API implements functionality to serve CRUDN requests in a device. A device that implements the Server API may provide special resources to handle CRUDN requests.
+The Server API provides the means
+- to register and unregister resources,
+- to register handlers that serve CRUDN requests in a device,
+- to notify of resource changes, and
+- to enable and disable presence functionality on the device.
 
-The Server API provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
+A device that implements the Server API may provide special resources to handle CRUDN requests. A server implementation should encapsulate and manage OCF presence. Applications can only enable or disable presence. Clients can subscribe to presence information using the [OCF Client API](./client.md).
 
-The Server API object does not expose its own properties, only events and methods.
-
-When a device is changed or shut down, the implementation should update presence information. Clients can subscribe to presence information using the [OCF Client API](./client.md).
+The Server API object does not expose its own properties, only methods for registering handlers. Events are not used for the following reasons:
+- there should be one handler per request type, therefore multiple listeners are not desired;
+- there is a need to pass options (e.g. filters) with listeners, and that is not supported by events;
+- other server APIs like [Express](http://expressjs.com/en/4x/api.html) also use callbacks with filters.
 
 1. Structures
 -------------
@@ -37,11 +43,8 @@ Describes an object that is passed to server event listeners.
 | ---       | ---               | ---      | ---           | ---        |
 | `source`  | [`ResourceId`](./client.md/#resourceid)  | no  | `undefined` | Requesting resource |
 | `target`  |  [`ResourceId`](./client.md/#resourceid) | no  | `undefined` | Request handling resource |
-| `id`  |  string | no  | `undefined` | Id of the request |
 | `data` | object   | no | `undefined` | Resource id or resource or resource representation |
 | `options` | object | yes | `undefined` | Dictionary containing the request options |
-
-The `id` property in a request is a string that identifies the request in the response.
 
 The `data` property in a request is an object that contains data that depends on the request type (create, retrieve, update, delete) and is described in this document with the corresponding request.
 
@@ -54,7 +57,7 @@ The `options` property is an object whose properties represent the `REST` query 
 - Sends a response to this request.
 - The `data` argument is optional and used with requests such as `create` and `update`.
 
-The method is typically used from request event handlers, and internally reuses the request information in order to construct a response message.
+The method is typically used from request handlers, and internally reuses the request information in order to construct a response message.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -63,11 +66,12 @@ The method runs the following steps:
 - Send the response back to the sender.
 - If there is an error during sending the response, reject `promise` with that error, otherwise resolve `promise`.
 
-##### `error(error)`
+<a name="respondwitherror"></a>
+##### `respondWithError(error)`
 - Sends an error response to this request.
 - The `error` argument is an `Error` object.
 
-The method is typically used from request event handlers, and internally reuses the request information in order to construct a response message.
+The method is typically used from request handlers, and internally reuses the request information in order to construct a response message.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -94,45 +98,45 @@ Used for creating and registering resources, exposes the properties of an OCF re
 
  The `properties` property is a resource representation that contains resource-specific properties and values usually described in the [RAML data model](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource.
 
-2. Events
----------
-The requests are dispatched using events. The Server API supports the following events:
+<a name="serveroptions"></a>
+### 1.2. The `ServerOptions` dictionary
+Used by applications to specify what requests a provided handler function is meant to serve. All properties are read-write.
 
-| Event name  | Event callback argument            |
-| ----------- | -----------------------            |
-| *create*    | [`OcfRequest`](#ocfrequest) object |
-| *retrieve*  | [`OcfRequest`](#ocfrequest) object |
-| *update*    | [`OcfRequest`](#ocfrequest) object |
-| *delete*    | [`OcfRequest`](#ocfrequest) object |
-| *error*     | [`Error`] object                   |
+| Property        | Type    | Optional | Default value | Represents |
+| ---             | ---     | ---      | ---           | ---     |
+| `resourcePath`  | string  | yes      | `undefined`   | URI path of resource |
+| `resourceTypes` | array of strings | no    | `undefined` | list of resource types |
+| `interfaces`    | array of strings | no    | `undefined` | list of interfaces |
 
-Note that the OCF retrieve request contains the `observe` flag, which tells whether the client requires change notifications for the given resource. Therefore notifications are implemented using the `retrieve` event.
+
+2. Methods
+-----------
+
+The [`oncreate(handler, options)`](#oncreate), [`onretrieve(handler, options)`](#onretrieve), [`onupdate(handler, options)`](#onupdate), [`ondelete(handler, options)`](#ondelete) and [`onerror()`](#onerror) methods register a function to handle OCF requests, and return a reference to the server object for chaining. The registered listener function replaces the previously registered listener.
+The `handler` argument is a function that accepts an [`OcfRequest`](#ocfrequest) object `request` as argument.
+The `options` argument is a [`ServerOptions`](#serveroptions) dictionary.
+
+<a name="crudn-steps"></a>
+The methods run the following common steps:
+- 1. If `options` is `undefined` and `handler` is a `Function`, save `handler` as a callback invoked for OCF create requests.
+- 2. Otherwise, if `options.resourceTypes` is a string array, then associate `handler` with each string element of the array.
+- 3. If `options.interfaces` is a string array, then associate `handler` with each string element of the array.
+- 4. If `options.resourcePath` is a string, then associate `handler` with it.
+- 5. If there is any error the implementation should run the [error steps](#errorsteps).
+- 6. Return `this`, a reference to the server object.
 
 <a name="oncreate"></a>
-##### 2.1. The `create` event
-Fired when a client asks for a resource to be created on the device.
-The event callback receives as argument an object that can be used as an argument to [respond](#respond) to the request, and has the following properties:
+##### 2.1. The `oncreate(handler, options)` method
+Registers a function to handle OCF `create resource` requests and returns a reference to the server object for chaining.
 
-| Property  | Type              | Optional | Default value | Represents |
-| ---       | ---               | ---      | ---           | ---        |
-| `source`  | [`ResourceId`](./client.md/#resourceid)  | no  | `undefined` | Id of the requesting resource |
-| `target`  |  [`ResourceId`](./client.md/#resourceid) | no  | `undefined` | Id of the request handling resource |
-| `id`  |  string | no  | `undefined` | Id of the request |
-| `data` | [`ResourceInit`](#resourceinit)  | yes | `undefined` | Initialized properties |
-| `options` | object | yes | `undefined` | Contains OCF request options |
-
-The value of the `source` property of the request is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
-The value of the `target` property of the request is the [ResourceId](./client.md/#resourceid) of the resource responsible to create the requested resource.
-The value of the `id` property is a string representing the unique identifier of the request.
-The value of the `options` property is an object that contains a list of properties with values created by the implementation from the REST query options of the request. For instance this object may contain client hints on what measurement units should be used in the resource representation.
-The value of the `data` property of the request should be an object that contains at least the following properties of the resource to be created:
-
-| Property       | Type   | Optional | Default value | Represents            |
-| ---            | ---    | ---      | ---           | ---                   |
-| `resourcePath` | [`ResourceId`](./client.md/#resourceid) | no  | `undefined`   | OCF resource path |
-| `resourceTypes` | [`Resource`](./client.md/#resource) | no  | `undefined`   | List of OCF resource types supported |
-
-In addition, other resource properties may also be specified, such as `interfaces`, `mediaTypes`, and `properties` for resource representation initialization.
+Whenever the underlying platform notifies the implementation about an OCF create request, implementations should run the following steps:
+- Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
+  * The value of `request.source` is the [ResourceId](./client.md/#resourceid) of the client resource requesting the operation.
+  * The value of `request.target` is the [ResourceId](./client.md/#resourceid) of the server resource responsible to create the requested resource.
+  * The value of `request.options` is an object that contains a list of properties with values created by the implementation from the REST query options of the request. For instance this object may contain client hints on what measurement units should be used in the resource representation.
+  * The value of `request.data` is an object that contains at least the following properties of the [resource](./client.md/#resource) to be created: `resourcePath` and `resourceTypes`. In addition, other [resource](./client.md/#resource) properties may also be specified, such as `interfaces`, `mediaTypes`, and `properties` for resource representation initialization.
+- If there is a previously saved handler associated with `request.data.resourcePath`, or any elements of `request.data.resourceTypes`, or any elements of `request.data.interfaces`, then invoke that function with `request` as argument.
+- Otherwise, if there is a generic handler, then invoke that function with `request` as argument.
 
 <a name="exampleoncreate"></a>
 ```javascript
@@ -174,34 +178,39 @@ server.on('create', function(request) {
 });
 ```
 <a name="onretrieve"></a>
-##### 2.2. The `retrieve` event
-Fired when a client asks for a resource to be retrieved on the device. The event callback receives two arguments:
-- An [`OcfRequest`](#ocfrequest) object `request` that can be used to respond to the request.
-- A boolean `observe` flag to tell if the client wants to also observe the resource for changes.
+##### 2.2. The `onretrieve(handler, options)` method
+Registers a function to handle OCF `retrieve resource` requests and returns a reference to the server object for chaining.
 
-The value of the `source` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
+Whenever the underlying platform notifies the implementation about an OCF retrieve request, implementations should run the following steps:
+- Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
+  * The value of the `source` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
+  * The value of the `target` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource to be retrieved.
+  * The value of the `data` property of `request` is `undefined`.
+  * The value of the boolean `options.observe` property of `request` tells if the client wants to also observe the resource for changes.
+- If there is a previously saved handler associated with `request.data.resourcePath`, or any elements of `request.data.resourceTypes`, or any elements of `request.data.interfaces`, then invoke that function with `request` as argument.
+- Otherwise, if there is a generic handler, then invoke that function with `request` as argument.
+- If `request.observe` is `true`, set up change notifications for the resource, and send a retrieve response with the resource representation every time the resource is changed, according to the [`notify` algorithm](#notify). If the `request.options` property is defined and it is an object, then save that object in order that it can be used by the `notify()` algorithm.
+- Otherwise, if `request.observe` is not `true`, reset change notifications for the resource which are sent to the client identified by the `source` property.
 
-The value of the `target` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource to be retrieved.
-
-The value of the `data` property of `request` is `undefined`.
-
-
-When the `observe` argument is `true`, then implementations SHOULD set up change notifications for the resource, and send a retrieve response with the resource representation every time the resource is changed, according to the [`notify` algorithm](#notify). If the `request.options` property is defined and it is an object, then save that object in order that it can be used by the `notify()` algorithm.
-
-When the `observe` argument is `false`, then implementations SHOULD reset those change notifications for the resource which are sent to the client identified by the `source` property.
 
 ```javascript
 var server = require('ocf').server;
-server.on('retrieve', function(request, observe) {
+server.onretrieve(function(request) {
   console.log("Client resource id: " + request.source);
   console.log("Target resource id, to be retrieved: " + request.target);
 
   // Retrieve resource in a device specific way.
   let res = _getResource(request.target);
   let err = res ? null : new Error('retrieving resource failed');
-  server.respond(request, err, res);
 
-  if (observe) {
+  let res = _getResource(request.target);  // private function
+  if (!res) {
+    request.respondWithError(new Error('retrieving resource failed'));
+    return;
+  }
+  request.respond(res);
+
+  if (request.observe) {
     console.log("Enabled change notifications for the resource.");
   } else {
     console.log("Disabled change notifications for the resource.");
@@ -210,13 +219,18 @@ server.on('retrieve', function(request, observe) {
 ```
 
 <a name="onupdate"></a>
-##### 2.3. The `update` event
-Fired when a client asks for a resource to be updated on the device with one or more properties. The event callback receives as argument an [`OcfRequest`](#ocfrequest) object that can be used for the response.
-The value of the `source` property of the request is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
-The value of the `target` property of the request is the [ResourceId](./client.md/#resourceid) of the resource to be updated.
-The `data` property of the request should be an object that contains the resource representation properties that should be updated, according to the data model of the given resource.
+##### 2.3. The `onupdate(handler, options)` method
+Registers a function to handle OCF `update resource` requests and returns a reference to the server object for chaining.
 
-When the resource is updated, all observers should be notified, and the updated resource representation should be sent back in the response.
+Whenever the underlying platform notifies the implementation about an OCF update request, implementations should run the following steps:
+- Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
+  * The value of the `source` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
+  * The value of the `target` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource to be updated.
+  * The `data` property of `request` should be an object that contains the *resource representation* properties that should be updated, according to the data model of the given resource.
+- If there is a previously saved handler associated with `request.target.resourcePath`, or any elements of `request.target.resourceTypes`, or any elements of `request.data.interfaces`, then invoke that function with `request` as argument.
+- Otherwise, if there is a generic handler, then invoke that function with `request` as argument.
+
+It is the responsibility of the application to call [`notify()](#notify) when the resource is updated, in order that all observers are notified, and the updated resource representation should be provided in the response.
 
 <a name="exampleonupdate"></a>
 ```javascript
@@ -225,41 +239,68 @@ server.on('update', function(request) {
   console.log("Client resource path: " + request.source.resourcePath);
   console.log("Resource path to be updated: " + request.target.resourcePath);
 
-  let res = _updateResource(request.target, request.data);
-  let err = res ? null : new Error('updating resource failed');
+  let res = _updateResource(request.target, request.data);  // private function
+  if (!res) {
+    request.respondWithError(new Error('updating resource failed'));
+    return;
+  }
+  request.respond(res);
   server.notify(res);
-  server.respond(request, err, res);
 });
 ```
 
 <a name="ondelete"></a>
-##### 2.4. The `delete` event
-Fired when a client asks for a resource to be deleted on the device. The event callback receives as argument an [`OcfRequest`](#ocfrequest) object that can be used in the response.
-The value of the `source` property of the request is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
-The value of the `target` property of the request is the [ResourceId](./client.md/#resourceid) of the resource to be deleted.
-The `data` property of the request is `undefined`.
+##### 2.4. The `ondelete(handler, options)` method
+Registers a function to handle OCF `delete resource` requests and returns a reference to the server object for chaining.
+
+Whenever the underlying platform notifies the implementation about an OCF delete request, implementations should run the following steps:
+- Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
+  * The value of the `source` property of the request is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
+  * The value of the `target` property of the request is the [ResourceId](./client.md/#resourceid) of the resource to be deleted.
+  * The rest of `request` properties are `undefined`.
+- If there is a previously saved handler associated with `request.target.resourcePath`, or any elements of `request.target.resourceTypes`, or any elements of `request.data.interfaces`, then invoke that function with `request` as argument.
+- Otherwise, if there is a generic handler, then invoke that function with `request` as argument.
 
 ```javascript
 var server = require('ocf').server;
-server.on('delete', function(request) {
+server.ondelete(function(request) {
   console.log("Client resource id: " + request.source);
   console.log("Resource to be deleted: " + request.target);
 
-  let res = _deleteResource(request.target);
-  // Presence should notify clients about the deletion of the resource
-  let err = res ? null : new Error('deleting resource failed');
-  server.respond(request, err);
+  if(_deleteResource(request.target))  // private function
+    request.respond();
+  else
+    request.respondWithError(new Error('deleting resource failed'));
 });
 ```
 
-3. Methods
------------
+<a name="onerror"></a>
+##### 2.5. The `onerror(handler, options)` method
+Registers a function to handle OCF `delete resource` requests and returns a reference to the server object for chaining.
+
+Whenever the underlying platform notifies the implementation about an error with a request, implementations should run the following steps:
+- Pass the [`OcfRequest`](#ocfrequest) object as `request` to this algorithm.
+- If there is a previously saved error handler associated with `request.target.resourcePath`, or any elements of `request.target.resourceTypes`, or any elements of `request.data.interfaces`, then invoke that function with `request` as argument.
+- Otherwise, if there is a generic error handler, then invoke that function with `request` as argument.
+
+<a name="notify"></a>
+##### 2.6. `notify(resource)`
+Notifies about resource representation change of local resource `resource` and returns a [`Promise`](./README.md/#promise) object. The `resource` argument is an [Resource](./client.md/#resource) object where `resource.properties` contains the properties updated by the application.
+
+See the [example](#exampleonupdate) for the `update` event.
+
+The method runs the following steps:
+- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- For each client that requested observing `resource.resourceId`, do the following sub-steps:
+    * If there were request options specified with the retrieve request associated with observing the resource, and if a [translate function](#translate) has been defined for the resource during its [registration](#register), then let `resource` be the result of invoking that translate function with `resource` and the [request options dictionary](#requestoptions) that has been saved for the [observation request](#onretrieve).
+    * Send an OCF notification for `resource`, and wait for the answer.
+    * If there is an error during the request, emit an `error` event with that error.
+- When all the answers are received, resolve `promise`.
+Note that the `notify()` method always resolves. Errors on notifying individual clients are considered non-critical and should be handled by the `error` event.
 
 <a name="register"></a>
-##### 3.1. `register(resource, translate)` method
-- Registers a resource in the OCF network.
-- Returns a [`Promise`](./README.md/#promise) object.
-- The `resource` argument is an object that should contain at least the following properties (other resource properties may also be specified):
+##### 2.7. The `register(resource, translate)` method
+Registers a resource in the OCF network and returns a [`Promise`](./README.md/#promise) object. The `resource` argument is an object that should contain at least the following properties (other resource properties may also be specified):
 
 | Property       | Type   | Optional | Default value | Represents        |
 | ---            | ---    | ---      | ---           | ---               |
@@ -280,10 +321,8 @@ The method runs the following steps:
 - Resolve `promise` with `resource`.
 
 <a name="unregister"></a>
-##### 3.2. `unregister(resourceId)`
-- Unregisters the given resource id from the OCF network.
-- Returns a [`Promise`](./README.md/#promise) object.
-- The `resourceId` argument is an [ResourceId](./client.md/#resourceid) object.
+##### 2.8. The `unregister(resourceId)` method
+Unregisters the given resource id from the OCF network and returns a [`Promise`](./README.md/#promise) object. The `resourceId` argument is an [ResourceId](./client.md/#resourceid) object.
 
 ```javascript
 let server = require('ocf').server;
@@ -303,28 +342,10 @@ The method runs the following steps:
 
 The OCF network should send the presence notifications to listeners.
 
-<a name="notify"></a>
-##### 3.3. `notify(resource)`
-- Notifies about resource representation change of local resource `resource`.
-- Returns a [`Promise`](./README.md/#promise) object.
-- The `resource` argument is an [Resource](./client.md/#resource) object.
-
-See the [example](#exampleonupdate) for the `update` event.
-
-The method runs the following steps:
-- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- For each client that requested observing `resource.resourceId`, do the following sub-steps:
-    * If there were request options specified with the retrieve request associated with observing the resource, and if a [translate function](#translate) has been defined for the resource during its [registration](#register), then let `resource` be the result of invoking that translate function with `resource` and the [request options dictionary](#requestoptions) that has been saved for the [observation request](#onretrieve).
-    * Send an OCF notification for `resource`, and wait for the answer.
-    * If there is an error during the request, emit an `error` event with that error.
-- When all the answers are received, resolve `promise`.
-Note that the `notify()` method always resolves. Errors on notifying individual clients are considered non-critical and should be handled by the `error` event.
-
 <a name="enablepresence"></a>
-##### 3.4. `enablePresence(timeToLive)`
-- Enables presence for the current device, with an optional time-to-live argument.
-- Returns a [`Promise`](./README.md/#promise) object.
-- The `timeToLive` argument is optional. It is a number representing the time to live of the request in seconds.
+##### 2.9. `enablePresence(timeToLive)`
+Enables presence for the current device, with an optional time-to-live argument.
+Returns a [`Promise`](./README.md/#promise) object. The `timeToLive` argument is optional. It is a number representing the time to live of the request in seconds.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -333,9 +354,8 @@ The method runs the following steps:
 - When the answer is received, resolve `promise`.
 
 <a name="disablepresence"></a>
-##### 3.5. `disablePresence()`
-- Disables presence for the current device.
-- Returns a [`Promise`](./README.md/#promise) object.
+##### 2.10. `disablePresence()`
+Disables presence for the current device and returns a [`Promise`](./README.md/#promise) object.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
