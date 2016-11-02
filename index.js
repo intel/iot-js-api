@@ -50,9 +50,7 @@ var QUnit,
 // Spawn a single child and process its stdout.
 function spawnOne( assert, options ) {
 	var temporary;
-	var commandLine = [ options.path, options.uuid, options.clientLocation,
-		options.serverLocation
-	];
+	var commandLine = [ options.path, options.uuid, options.location ];
 	var theChild;
 
 	if ( "preamble" in options ) {
@@ -145,38 +143,39 @@ function spawnOne( assert, options ) {
 }
 
 // Normalize options
-if ( options.location ) {
-	options.clientLocation = options.location;
-	options.serverLocation = options.location;
-} else if ( !( options.clientLocation && options.serverLocation ) ) {
-	throw new Error( "Both clientLocation and serverLocation must be specified" );
-}
-options.lineFilter = options.lineFilter || identityLineFilter;
-options.interpreter = options.interpreter || "node";
-options.tests = ( ( options.tests && Array.isArray( options.tests ) ) ?
-	_.map( options.tests, function( item ) {
-		return path.join( __dirname, "tests", item );
-	} ) :
-	( glob.sync( path.join( __dirname, "tests", "*" ) ) ) );
 
-_.each( options.tests, function( item ) {
+// Default options for one endpoint (client/server/single)
+var defaultEndpointOptions = {
+	location: "ocf",
+	lineFilter: identityLineFilter,
+	interpreter: "node",
+	spawn: spawn
+};
+
+var actualOptions = {
+	client: _.extend( {}, defaultEndpointOptions, options.client || {} ),
+	server: _.extend( {}, defaultEndpointOptions, options.server || {} ),
+	single: _.extend( {}, defaultEndpointOptions, options.single || {} ),
+	tests: ( ( options.tests && Array.isArray( options.tests ) ) ?
+		_.map( options.tests, function( item ) {
+			return path.join( __dirname, "tests", item );
+		} ) :
+		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) )
+};
+
+_.each( actualOptions.tests, function( item ) {
 	var clientPathIndex,
 		clientPaths = glob.sync( path.join( item, "client*.js" ) ),
 		serverPath = path.join( item, "server.js" );
 
-	if ( fs.lstatSync( item ).isFile() ) {
+	if ( fs.lstatSync( item ).isFile() && !actualOptions.single.skip ) {
 		getQUnit()
 			.test( path.basename( item ).replace( /\.js$/, "" ), function( assert ) {
 				spawnOne( assert,
-					_.extend( ( "preamble" in options ? { preamble: options.preamble } : {} ), {
+					_.extend( {}, actualOptions.single, {
 						uuid: uuid.v4(),
 						name: "Test",
 						path: item,
-						lineFilter: options.lineFilter,
-						clientLocation: options.clientLocation,
-						serverLocation: options.serverLocation,
-						interpreter: options.interpreter,
-						spawn: options.spawn || spawn,
 						teardown: function( error, sourceProcess ) {
 							sourceProcess.kill( "SIGINT" );
 						},
@@ -215,13 +214,8 @@ _.each( options.tests, function( item ) {
 			totalAssertions = 0,
 			childrenAssertionsReported = 0,
 
-			spawnOptions = _.extend( {
-				lineFilter: options.lineFilter,
+			commonOptions = {
 				uuid: uuid.v4(),
-				clientLocation: options.clientLocation,
-				serverLocation: options.serverLocation,
-				interpreter: options.interpreter,
-				spawn: options.spawn || spawn,
 				teardown: function( error ) {
 					var index,
 
@@ -254,21 +248,23 @@ _.each( options.tests, function( item ) {
 						assert.expect( totalAssertions );
 					}
 				}
-			}, ( "preamble" in options ? { preamble: options.preamble } : {} ) );
+			};
 
 		// We run the server first, because the server has to be there before the clients
 		// can run. OTOH, the clients may initiate the termination of the test via a non-error
 		// teardown request.
-		children.push( spawnOne( assert, _.extend( {}, spawnOptions, {
+		children.push( spawnOne( assert, _.extend( {}, actualOptions.server, commonOptions, {
 			name: "Server",
 			path: serverPath,
 			onReady: function() {
 				var clientIndex = 0;
 				async.eachSeries( clientPaths, function startOneChild( item, callback ) {
-					children.push( spawnOne( assert, _.extend( {}, spawnOptions, {
-						name: "Client" +
-							( clientPaths.length > 1 ? " " + ( ++clientIndex ) : "" ),
-					path: item } ) ) );
+					children.push( spawnOne( assert,
+						_.extend( {}, actualOptions.client, commonOptions, {
+							name: "Client" +
+								( clientPaths.length > 1 ? " " + ( ++clientIndex ) : "" ),
+							path: item
+						} ) ) );
 
 					// Spawn clients at least two seconds apart to avoid message uniqueness
 					// issue in iotivity: https://jira.iotivity.org/browse/IOT-724
