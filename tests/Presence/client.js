@@ -16,7 +16,7 @@
 // file name to decide which to run first ("server.js"). In the case of presence, however, the
 // client must run first, because it must catch the announcement from the server when it comes up.
 
-var ocf = require( process.argv[ 4 ] );
+var ocf = require( process.argv[ 3 ] );
 
 console.log( JSON.stringify( { assertionCount: 4 } ) );
 

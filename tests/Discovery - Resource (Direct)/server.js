@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var ocf = require( process.argv[ 4 ] );
+var ocf = require( process.argv[ 3 ] );
 
 console.log( JSON.stringify( { assertionCount: 1 } ) );
 

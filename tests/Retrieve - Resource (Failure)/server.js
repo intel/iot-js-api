@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var server = require( process.argv[ 4 ] ).server;
+var server = require( process.argv[ 3 ] ).server;
 
 console.log( JSON.stringify( { assertionCount: 0 } ) );
 
