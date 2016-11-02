@@ -65,11 +65,11 @@ function startServer() {
   }).then(function(res) {
     console.log("Local resource " + res.resourcePath + " has been registered.");
     lightResource = res;
-    server.onupdate(lightUpdateHandler);
-    server.ondelete(lightDeleteHandler);
-    server.onretrieve(lightRetrieveHandler,
-                      { resourcePath: lightResource.resourcePath });
-    server.oncreate(lightCreatoHandler);
+    lightResource
+      .onupdate(lightUpdateHandler)
+      .ondelete(lightDeleteHandler)
+      .onretrieve(lightRetrieveHandler)
+      .oncreate(lightCreateHandler);
     }
   }).catch(function(error) {
     console.log("Error creating resource " + error.resourcePath + ": " + error.message);
@@ -78,7 +78,7 @@ function startServer() {
 
 function lightRetrieveHandler(request) {
     listenerCount += request.observe ? 1 : -1;
-    request.respond(lightResource)
+    request.respond(lightResource)  // lightResource === this
     .catch(function(err) {
       console.log("Error sending retrieve response.");
     });
@@ -89,16 +89,11 @@ function lightUpdateHandler(request) {
   // this is a hook to update the business logic
   console.log("Resource " + request.target.resourcePath + " updated.");
 
-  var resource = request.data;
-  for (p of resource.properties) {
-    if (lightResource.properties[p] != resource.properties[p])
-      lightResource.properties[p] = resource.properties[p];
-  }
-
-  // Notify other listeners about the change.
-  server.notify(lightResource)
-      .then(function() { console.log("Update notification sent."); })
+  if (this.updateRepresentation(request.data.properties))
+    server.notify()
+      .then(function() { console.log("Update notifications sent."); })
       .catch(function(err) { console.log("Error sending notifications: " + err.message); });
+  }
 };
 
 function lightDeleteHandler(request) {

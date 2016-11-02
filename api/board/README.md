@@ -1,7 +1,7 @@
 Board API
 =========
 
-This API provides low level I/O operations supported by hardware boards.
+This API provides low level interfaces for I/O operations supported by the board and define pin mappings between board pin names and pin values mapped by the OS.
   - [GPIO - General Purpose I/O](./gpio.md)
   - [AIO - Analog I/O](./aio.md)
   - [PWM - Pulse Width Modulation](./pwm.md)

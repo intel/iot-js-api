@@ -111,30 +111,30 @@ interface Characteristic {
     void stopNotifications();
     readonly attribute boolean notifying;
 
-    attribute EventHandler<Request> onread;
-    attribute EventHandler<Request> onwrite;
+    void onread(RequestHandler handler);
+    void onwrite(RequestHandler handler);
+    void onsubscribe(RequestHandler handler);
+    void onunsubscribe(RequestHandler handler);
 
-    // platform may handle subscriptions automatically, without event hooks
-    attribute EventHandler<Request> onsubscribe;
-    attribute EventHandler<Request> onunsubscribe;
-
-    attribute EventHandler<Error> onerror;  // e.g. on indication fail
+    void onerror(ErrorHandler handler);  // e.g. on indication fail
 };
 
-Characteristic implements EventEmitter;
+enum GATTFlag { "read", "write", "notify" };  // Bluetooth GATT "properties"
 
-enum GATTFlag { "read", "write", "notify" };
-//
+callback RequestHandler = void (Request request);
+callback ErrorHandler = void (Error error);
 
 interface Request {
+    readonly attribute RequestType type;
     readonly attribute BluetoothDeviceAddress source;
-    readonly attribute GATTFlag operation;
     readonly attribute unsigned long offset = 0;
-    readonly attribute boolean needsResponse;
     readonly attribute Buffer? data = null;
+    readonly attribute boolean needsResponse;
 
     Promise respond(optional Buffer data);
-    Promise error(Error error);
+    Promise respondWithError(Error error);
 };
+
+enum RequestType { "read", "write", "notify", "subscribe", "unsubscribe"};
 
 ```
