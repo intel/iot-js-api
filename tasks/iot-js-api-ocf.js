@@ -12,33 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module.exports = {
-	options: {
-		"boss": true,
-		"curly": true,
-		"eqeqeq": true,
-		"eqnull": true,
-		"expr": true,
-		"immed": true,
-		"jquery": true,
-		"noarg": true,
-		"quotmark": "double",
-		"trailing": true,
-		"undef": true,
-		"unused": true,
-		"esnext": true,
-		"latedef": true,
-		"newcap": true,
-		"sub": true,
-		"browser": true,
-		"globals": {
-			"define": false,
-			"require": false,
-			"requirejs": false
-		},
-		"node": true
-	},
-	files: {
-		src: require( "../../js-files" )
-	}
+module.exports = function( grunt ) {
+
+var _ = require( "lodash" ),
+	testSuite = require( "../index" );
+	path = require( "path" );
+
+grunt.task.registerMultiTask( "iot-js-api-ocf", "Run the OCF test suite", function() {
+	var done = this.async();
+
+	testSuite.defaultCallbacks.done = ( function( originalDone ) {
+		return function( status ) {
+			if ( originalDone ) {
+				originalDone.apply( this, arguments );
+			}
+			done( status.failed === 0 );
+			testSuite.defaultCallbacks.done = originalDone;
+		};
+	} )( testSuite.defaultCallbacks.done );
+
+	testSuite( this.data );
+} );
+
 };

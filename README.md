@@ -2,59 +2,143 @@
 This suite provides tests for the [OCF JS API][].
 
 ## Build status
-<a href="https://travis-ci.org/gabrielschulhof/iot-js-api-test-suite">
-	<img alt="Build Status" src="https://travis-ci.org/gabrielschulhof/iot-js-api-test-suite.svg?branch=master"></img>
+<a href="https://travis-ci.org/01org/iot-js-api/">
+	<img alt="Build Status" src="https://travis-ci.org/01org/iot-js-api.svg?branch=ocf-new-api"></img>
 </a>
 
 ## Usage:
 
 ```JS
 // Load the test suite
-var ocfTestSuite = require( "iot-js-api-test-suite" );
-
-// At your option you may modify the set of default logging callbacks before you run the suite.
-ocfTestSuite.defaultCallbacks.log = ( function( originalLog ) {
-	return function() {
-
-		// Do something and then chain up to the original log() function
-		console.log( "The test suite has just made an assertion" );
-		return originalLog.apply( this, arguments );
-	}
-} )( ocfTestSuite.defaultCallbacks.log );
+var ocfTestSuite = require( "iot-js-api" );
 
 // Run the test suite
 ocfTestSuite( options );
 ```
 
-where ```options``` is a hash wherein the following properties are recognized:
-<dl>
+### Options
+In the above example, `options` is a hash containing four properties:  `tests`, `client`, `server`, and `single`. Briefly illustrated with default values:
+```JS
+ocfTestSuite( {
+	client: {
+		interpreter: "node",
+		lineFilter: function( line, /* fileName */ ) { return line; },
+		location: "ocf",
+		/* preamble: function not provided, meaning run the test as is */
+	},
+	server: {
+		interpreter: "node",
+		lineFilter: function( line, /* fileName */ ) { return line; },
+		location: "ocf",
+		/* preamble: function not provided, meaning run the test as is */
+	},
+	single: {
+		interpreter: "node",
+		lineFilter: function( line, /* fileName */ ) { return line; },
+		location: "ocf",
+		skip: false,
+		/* preamble: function not provided, meaning run the test as is */
+	}
+	/* tests: array not provided, meaning run all available tests */
+} );
+```
 
-<dt><code>callbacks</code></dt>
-<dd>An optional hash containing callbacks to call upon test events. The names and semantics of the callbacks are the same as http://api.qunitjs.com/category/callbacks/. The callbacks will be called in the context of the <code>QUnit</code> object. Information will be nicely formatted and printed to standard ouput by default.</dd>
+`tests` is an array listing the tests to run. If absent, all tests in the `tests/` subdirectory will be run. When specified, the `tests` option can look like this:
+```JS
+options.tests = [ "Structure - OCF.js", "Retrieve - Resource", "Structure - Device.js", "Discovery - Device" ];
+```
 
-<dt><code>clientLocation</code></dt>
-<dd>A string which will be passed to <code>require()</code> in order to load the OCF device that will serve as the client.</dd>
+The other three options are each a hash pertaining to one of the endpoints of the test. Separating the options for launching a client from those for launching a server makes it possible to test one implementation of the API against another. `single` refers to the launch options for tests that have only a single endpoint, e.g. the structural tests.
 
-<dt><code>environment</code></dt>
-<dd>A hash containing environment key value pairs, similar to <a href="https://nodejs.org/api/process.html#process_process_env">process.env</a>.</dd>
+The `single` hash may contain the property `skip` which, when set to `true`, will cause the test suite to skip all single-endpoint tests. This is useful when testing two different implementations against one another.
 
-<dt><code>interpreter</code></dt>
-<dd>String: The JS interpreter to use. The default value is <code>"node"</code>.</dd>
+Each of `client`, `server`, and `single` is a hash where the following properties are recognized:
 
-<dt><code>location</code></dt>
-<dd>A string which will be passed to <code>require()</code> in order to load the OCF device. If this option is present, the options <code>clientLocation</code> and 
-<code>serverLocation</code> will be ignored. On the other hand, if this option is absent, both <code>clientLocation</code> and <code>serverLocation</code> must be present.</dd>
+#### `interpreter`
+The JS interpreter to use. The default value is `"node"`. If you choose to specify the `spawn` option instead, then this value will be passed to the function you specify therein as its second parameter. The interpreter is invoked with the following command line arguments, in the order given:
+* the name of the test file. This will be a temporary file if the `preamble()` option is present, otherwise it will be the absolute file name of the test.
+* a UUID. This will be shared by client/server tests and helps clients find their test server counterparts on the network.
+* the string that the endpoint should pass to `require()` in order to load the OCF device.
 
-<dt><code>preamble()</code></dt>
-<dd>A function which returns a string and receives as its argument the uuid that the child process(es) in the test instance will be given. When <code>preamble()</code> is given, for each child process a temporary file is created consisting of the string returned by <code>preamble()</code> and the body of the test. This file is then launched in a child process.</dd>
+#### `lineFilter( line, fileName )`
+A function that receives a line from the output of the child process and returns it, potentially with modifications. By default, the output interpreter ignores empty lines, so if the function returns `""`, the line will be ignored. The output of the child process is expected to be a sequence of JSON objects. The test prints these objects to standard output, but if the runtime produces additional output, this will cause the test suite to throw an exception. This hook provides you with an opportunity to filter out all output lines except the ones produced by the test. For example:
 
-<dt><code>serverLocation</code></dt>
-<dd>A string which will be passed to <code>require()</code> in order to load the OCF device that will serve as the server.</dd>
+```JS
+// Ignore lines that do not start with a brace.
+function ignoreNonBraceLines( line /*, fileName */ ) {
+	return line.match( /^{/ ) ? line : "";
+}
+```
 
-<dt><code>tests</code></dt>
-<dd>An optional array containing the list of tests to run. By default all tests will be run.</dd>
+You can also use this hook to save all output from the child process to a file, or to output it to the terminal. Since the majority of tests involve a client/server pair, the file name is provided in the second parameter so you can distinguish the output of the client from the output of the server. For example:
+```JS
+// Print all lines to the terminal and ignore lines that do not start with a brace.
+function ignoreNonBraceLines( line, fileName ) {
 
-</dl>
+	// Strip carriage returns
+	line = line.replace( /\r/g, "" );
 
+	// Output the line, prefixed by the name of the test. We assume that all tests are rooted in a
+	// directory called "tests", so we match the rest of the path and use it to prefix the line we
+	// have received from the child process. This can result in output like this:
+	//
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/server.js: zjs_ocf_register_resources()
+	// Discovery - Resource/server.js: oc_main: Stack successfully initialized
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/server.js: {"assertionCount":1}
+	// Discovery - Resource/server.js: {"ready":true}
+	// Discovery - Resource/server.js: 
+	// Discovery - Resource/client.js: 
+	// Discovery - Resource/client.js: 
+	// Discovery - Resource/client.js: zjs_ocf_register_resources()
+	// Discovery - Resource/client.js: oc_main: Stack successfully initialized
+	// Discovery - Resource/client.js: 
+	// Discovery - Resource/client.js: {"assertionCount":3}
+	// ...
+	console.log( ( childPath.match( /tests[/](.*)$/ ) || [])[1] + ": " + line );
 
-[OCF JS API]: https://github.com/solettaproject/soletta/blob/v1_beta19/doc/js-spec/oic.md
+	// Return an empty string if the line doesn't start with an opening brace
+	return ( line[ 0 ] === "{" ) ? line : "";
+}
+```
+
+#### `location`
+A string which will be passed to `require()` in order to load the OCF device.
+
+#### `preamble( uuid )`
+A function which returns a string and receives as its argument the uuid that the child process(es) in the test instance will be given. When `preamble()` is given, for each child process a temporary file is created consisting of the string returned by `preamble()` followed by the body of the test. This file is then launched in a child process.
+
+The tests make two assumptions about the environment in which they run:
+
+  0. `console.log()` is a function that writes to standard output.
+  0. `process.argv[]` is an array containing the command line arguments passed by the suite. These are:
+      <dl>
+      <dt><code>process.argv[ 0 ]</code></dt><dd>The interpreter</dd>
+      <dt><code>process.argv[ 1 ]</code></dt><dd>The filename of the test</dd>
+      <dt><code>process.argv[ 2 ]</code></dt><dd>A UUID that helps a client distinguish its server counterpart from other devices that may be present on the network.</dd>
+      <dt><code>process.argv[ 3 ]</code></dt><dd>The argument the test file should pass to ```require()``` (the <code>location</code> option).</dd>
+      </dl>
+
+Thus, if the environment in which you wish to run the tests does not provide these values, you can use the `preamble()` option to prepend code to the file. For example:
+
+```JS
+	options.preamble = function( uuid ) {
+		return [
+			"var process = { argv: [",
+
+			// The tests do not make use of these parameters
+			"null, null,",
+
+			// The UUID that was passed in
+			"\"" + uuid + "\",",
+
+			// This will result in the test performing require( "ocf" ) to acquire the OCF device
+			"\"ocf\"",
+			"] };"
+		].join( "\n" ) + "\n";
+	};
+```
+
+[OCF JS API]: https://github.com/01org/iot-js-api/tree/master/api/ocf

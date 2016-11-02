@@ -12,4 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module.exports = [ "tests/**/*.js", "build/**/*.js", "Gruntfile.js" ];
+var ocf = require( process.argv[ 3 ] );
+
+console.log( JSON.stringify( { assertionCount: 0 } ) );
+
+ocf.device.name = "test-device-" + process.argv[ 2 ];
+
+ocf.platform.supportURL = "ocf://test-device-" + process.argv[ 2 ];
+
+console.log( JSON.stringify( { ready: true } ) );
