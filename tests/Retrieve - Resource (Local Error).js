@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var theError = null;
-
-try {
-	require( process.argv[ 3 ] )( "client" );
-} catch ( anError ) {
-	theError = anError;
-}
+var client = require( process.argv[ 3 ] ).client;
 
 console.log( JSON.stringify( { assertionCount: 1 } ) );
 
-if ( theError ) {
-	theError = { message: ( "" + theError ) };
-}
-
-console.log( JSON.stringify( {
-	assertion: "deepEqual",
-	arguments: [ theError, null, "Client stack started successfully" ]
-} ) );
-
-process.exit( 0 );
+client.retrieve( { resourcePath: "/a/xyzzy", deviceId: "xyzzy" } )
+	.then(
+		function() {
+			console.log( JSON.stringify( { assertion: "ok", arguments: [
+				false, "Succeeded retrieving fake resource - Welcome to the Twilight Zone™!"
+			] } ) );
+		},
+		function( error ) {
+			console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+				error.message, "Device not found", "Retrieving fake resource failed as expected"
+			] } ) );
+		} )
+	.then( function() {
+		console.log( JSON.stringify( { finished: 0 } ) );
+	} );

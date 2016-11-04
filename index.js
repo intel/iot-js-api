@@ -22,13 +22,27 @@ var async = require( "async" ),
 	uuid = require( "uuid" ),
 	defaultCallbacks = require( "./lib/callbacks" );
 
+function identityLineFilter( value ) {
+	return value;
+}
+
+function spawn( commandLine, interpreter ) {
+	return childProcess.spawn( interpreter, commandLine, {
+		stdio: [ process.stdin, "pipe", process.stderr ]
+	} );
+}
+
 var testSuite = _.extend( function OcfTestSuite( options ) {
+
+if ( !( this instanceof OcfTestSuite ) ) {
+	return new OcfTestSuite( options );
+}
 
 var QUnit,
 	runningProcesses = [],
-	getQUnit = function( callbacks ) {
+	getQUnit = function() {
 		if ( !QUnit ) {
-			QUnit = require( "./lib/setup" )( callbacks );
+			QUnit = require( "./lib/setup" );
 		}
 		return QUnit;
 	};
@@ -36,9 +50,7 @@ var QUnit,
 // Spawn a single child and process its stdout.
 function spawnOne( assert, options ) {
 	var temporary;
-	var commandLine = [ options.path, options.uuid, options.clientLocation,
-		options.serverLocation
-	];
+	var commandLine = [ options.path, options.uuid, options.location ];
 	var theChild;
 
 	if ( "preamble" in options ) {
@@ -49,24 +61,19 @@ function spawnOne( assert, options ) {
 		commandLine[ 0 ] = temporary.name;
 	}
 
-	theChild = childProcess.spawn( options.interpreter, commandLine, {
-		stdio: [ process.stdin, "pipe", process.stderr ],
-		env: _.extend( {}, process.env, options.environment )
-	} );
-
-	theChild.commandLine = [ options.interpreter ].concat( commandLine ).join( " " );
+	theChild = options.spawn( commandLine, options.interpreter );
 
 	runningProcesses.push( theChild );
 
 	theChild
 		.on( "exit", function( code, signal ) {
+			code = ( "reportedExitStatus" in theChild ) ? theChild.reportedExitStatus : code;
 			var exitCodeOK = ( code === 0 || code === null ),
 				signalOK = ( signal !== "SIGSEGV" );
 
 			assert.ok( exitCodeOK, options.name + " exited successfully (" + code + ")" );
 			assert.ok( signalOK, options.name + " did not segfault" );
-		} )
-		.on( "close", function() {
+
 			var childIndex = runningProcesses.indexOf( theChild );
 			if ( childIndex >= 0 ) {
 				runningProcesses.splice( childIndex, 1 );
@@ -81,6 +88,8 @@ function spawnOne( assert, options ) {
 	theChild.stdout.on( "data", function serverStdoutData( data ) {
 		_.each( data.toString().split( "\n" ), function( value ) {
 			var jsonObject;
+
+			value = options.lineFilter( value, options.path );
 
 			if ( !value ) {
 				return;
@@ -97,17 +106,21 @@ function spawnOne( assert, options ) {
 
 			// The child is reporting the number of assertions it will be making. We add our own
 			// two assertions ( 1.) successful exit and 2.) no segfault) to that count.
-			if ( jsonObject.assertionCount ) {
+			if ( "assertionCount" in jsonObject ) {
 				options.reportAssertions( jsonObject.assertionCount + 2 );
+
+			// The child has requested that it and its peer(s) be killed.
+			} else if ( "finished" in jsonObject ) {
+				theChild.reportedExitStatus = jsonObject.finished;
+				options.teardown( null, theChild );
+
+			} else if ( jsonObject.info ) {
+				console.log( "\x1b[46;30mi\x1b[0m " + jsonObject.message );
 
 			// The child has requested a teardown.
 			} else if ( jsonObject.teardown ) {
 				options.teardown(
 					options.name + " requested teardown: " + jsonObject.message );
-
-			// The child has requested that its peer be killed.
-			} else if ( jsonObject.killPeer ) {
-				options.teardown( null, theChild );
 
 			// The child is reporting that it is ready. Only servers do this.
 			} else if ( jsonObject.ready ) {
@@ -130,47 +143,45 @@ function spawnOne( assert, options ) {
 }
 
 // Normalize options
-options.callbacks = options.callbacks || defaultCallbacks;
-if ( options.location ) {
-	options.clientLocation = options.location;
-	options.serverLocation = options.location;
-} else if ( !( options.clientLocation && options.serverLocation ) ) {
-	throw new Error( "Both clientLocation and serverLocation must be specified" );
-}
-options.interpreter = options.interpreter || "node";
-options.environment = options.environment || {};
-options.tests = ( ( options.tests && Array.isArray( options.tests ) ) ?
-	_.map( options.tests, function( item ) {
-		return path.join( __dirname, "tests", item );
-	} ) :
-	( glob.sync( path.join( __dirname, "tests", "*" ) ) ) );
 
-_.each( options.tests, function( item ) {
+// Default options for one endpoint (client/server/single)
+var defaultEndpointOptions = {
+	location: "ocf",
+	lineFilter: identityLineFilter,
+	interpreter: "node",
+	spawn: spawn
+};
+
+var actualOptions = {
+	client: _.extend( {}, defaultEndpointOptions, options.client || {} ),
+	server: _.extend( {}, defaultEndpointOptions, options.server || {} ),
+	single: _.extend( {}, defaultEndpointOptions, options.single || {} ),
+	tests: ( ( options.tests && Array.isArray( options.tests ) ) ?
+		_.map( options.tests, function( item ) {
+			return path.join( __dirname, "tests", item );
+		} ) :
+		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) )
+};
+
+_.each( actualOptions.tests, function( item ) {
 	var clientPathIndex,
 		clientPaths = glob.sync( path.join( item, "client*.js" ) ),
 		serverPath = path.join( item, "server.js" );
 
-	if ( fs.lstatSync( item ).isFile() ) {
-		getQUnit( options.callbacks )
+	if ( fs.lstatSync( item ).isFile() && !actualOptions.single.skip ) {
+		getQUnit()
 			.test( path.basename( item ).replace( /\.js$/, "" ), function( assert ) {
-				var theChild,
-					spawnOptions = _.extend( {
+				spawnOne( assert,
+					_.extend( {}, actualOptions.single, {
 						uuid: uuid.v4(),
 						name: "Test",
 						path: item,
-						clientLocation: options.clientLocation,
-						serverLocation: options.serverLocation,
-						environment: options.environment,
-						interpreter: options.interpreter,
-						teardown: function() {
-							if ( theChild ) {
-								theChild.kill( "SIGKILL" );
-							}
+						teardown: function( error, sourceProcess ) {
+							sourceProcess.kill( "SIGINT" );
 						},
 						maybeQuit: assert.async(),
 						reportAssertions: _.bind( assert.expect, assert )
-					}, ( "preamble" in options ? { preamble: options.preamble } : {} ) );
-				theChild = spawnOne( assert, spawnOptions );
+					} ) );
 			} );
 		return;
 	}
@@ -189,7 +200,7 @@ _.each( options.tests, function( item ) {
 		throw new Error( "Cannot find server at " + serverPath );
 	}
 
-	getQUnit( options.callbacks ).test( path.basename( item ), function( assert ) {
+	getQUnit().test( path.basename( item ), function( assert ) {
 		var totalChildren = clientPaths.length + 1,
 
 			// Track the child processes involved in this test in this array
@@ -203,15 +214,10 @@ _.each( options.tests, function( item ) {
 			totalAssertions = 0,
 			childrenAssertionsReported = 0,
 
-			spawnOptions = _.extend( {
+			commonOptions = {
 				uuid: uuid.v4(),
-				clientLocation: options.clientLocation,
-				serverLocation: options.serverLocation,
-				environment: options.environment,
-				interpreter: options.interpreter,
-				teardown: function( error, sourceProcess ) {
+				teardown: function( error ) {
 					var index,
-						signal = "SIGKILL",
 
 						// When killing child processes in a loop we have to copy the array
 						// because it may become modified by the incoming notifications that a
@@ -219,10 +225,7 @@ _.each( options.tests, function( item ) {
 						copyOfChildren = children.slice();
 
 					for ( index in copyOfChildren ) {
-						if ( sourceProcess && sourceProcess === copyOfChildren[ index ] ) {
-							continue;
-						}
-						copyOfChildren[ index ].kill( signal );
+						copyOfChildren[ index ].kill( "SIGINT" );
 					}
 
 					if ( error ) {
@@ -245,21 +248,23 @@ _.each( options.tests, function( item ) {
 						assert.expect( totalAssertions );
 					}
 				}
-			}, ( "preamble" in options ? { preamble: options.preamble } : {} ) );
+			};
 
 		// We run the server first, because the server has to be there before the clients
 		// can run. OTOH, the clients may initiate the termination of the test via a non-error
 		// teardown request.
-		children.push( spawnOne( assert, _.extend( {}, spawnOptions, {
+		children.push( spawnOne( assert, _.extend( {}, actualOptions.server, commonOptions, {
 			name: "Server",
 			path: serverPath,
 			onReady: function() {
 				var clientIndex = 0;
 				async.eachSeries( clientPaths, function startOneChild( item, callback ) {
-					children.push( spawnOne( assert, _.extend( {}, spawnOptions, {
-						name: "Client" +
-							( clientPaths.length > 1 ? " " + ( ++clientIndex ) : "" ),
-					path: item } ) ) );
+					children.push( spawnOne( assert,
+						_.extend( {}, actualOptions.client, commonOptions, {
+							name: "Client" +
+								( clientPaths.length > 1 ? " " + ( ++clientIndex ) : "" ),
+							path: item
+						} ) ) );
 
 					// Spawn clients at least two seconds apart to avoid message uniqueness
 					// issue in iotivity: https://jira.iotivity.org/browse/IOT-724
@@ -269,6 +274,8 @@ _.each( options.tests, function( item ) {
 		} ) ) );
 	} );
 } );
+
+process.on( "SIGINT", process.exit );
 
 process.on( "exit", function() {
 	var childIndex;
