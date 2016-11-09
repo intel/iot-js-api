@@ -8,7 +8,6 @@ Web IDL for Bluetooth Smart, Peripheral Mode
 [NoInterfaceObject]
 interface BluetoothPeripheralDevice {
     readonly attribute BluetoothDeviceAddress address;
-    readonly attribute BluetoothDeviceAddressType addressType;
     readonly attribute String name;
 
     readonly attribute sequence<Service> services;  // primary services
@@ -34,11 +33,6 @@ BluetoothPeripheralDevice implements EventEmitter;
 
 typedef (String or unsigned long long) BluetoothDeviceAddress;
 typedef String BluetoothUUID;
-
-enum BluetoothDeviceAddressType {
-    "public", "static-random", "private-resolvable", "private"
-};
-// private addresses are also random, but 'random-private-resolvable' is too long
 
 dictionary AdvertisingOptions {
     boolean connectable = true;
