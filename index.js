@@ -163,6 +163,10 @@ var actualOptions = {
 		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) )
 };
 
+if ( actualOptions.tests.length === 0 ) {
+	console.log( "*** No tests were requested ***" );
+}
+
 _.each( actualOptions.tests, function( item ) {
 	var clientPathIndex,
 		clientPaths = glob.sync( path.join( item, "client*.js" ) ),
