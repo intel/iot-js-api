@@ -44,6 +44,7 @@ Describes an object that is passed to server event listeners.
 | `target`  |  [`ResourceId`](./client.md/#resourceid) | no  | `undefined` | Request handling resource |
 | `data` | object   | no | `undefined` | Resource id or resource or resource representation |
 | `options` | object | yes | `undefined` | dictionary containing the request options |
+| `observe` | boolean | no | `undefined` | whether observation is to be on or off |
 
 <a name="requesttype"></a>
 The `type` property represents the OCF request type: `"create"`, `"retrieve"`, `"update"`, `"delete"`.
@@ -53,7 +54,9 @@ The `data` property in a request is an object that contains data that depends on
 
 <a name="requestoptions"></a>
 The `options` property is an object whose properties represent the `REST` query parameters passed along with the request as a JSON-serializable dictionary. The semantics of the parameters are application-specific (e.g. requesting a resource representation in metric or imperial units). For instance request options may be used with the [retrieve](./client.md/#retrieveoptions) request.
-In addition, the `observe` flag for OCF retrieve requests is exposed as a `boolean` property on `options`.
+
+<a name="observeflag"></a>
+The `observe` property is a flag for OCF retrieve requests that tells whether observation for the requested resource should be on or off. For requests other than `"retrieve"` the value SHOULD be `undefined`.
 
 #### `OcfRequest` methods
 <a name="respond"></a>
