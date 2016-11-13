@@ -14,22 +14,14 @@
 
 var server = require( process.argv[ 3 ] ).server;
 
-console.log( JSON.stringify( { assertionCount: 6 } ) );
-
-console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof server.on, "function", "server.on is a function"
-] } ) );
+console.log( JSON.stringify( { assertionCount: 4 } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
 	typeof server.register, "function", "server.register is a function"
 ] } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof server.unregister, "function", "server.unregister is a function"
-] } ) );
-
-console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof server.notify, "function", "server.notify is a function"
+	typeof server.oncreate, "function", "server.oncreate is a function"
 ] } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [

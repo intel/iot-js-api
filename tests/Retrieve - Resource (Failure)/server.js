@@ -24,9 +24,9 @@ server
 		discoverable: true
 	} )
 	.then(
-		function() {
-			server.on( "retrieve", function( request ) {
-				request.error( "Go bug someone else!" );
+		function( resource ) {
+			resource.onretrieve( function( request ) {
+				request.respondWithError( "Go bug someone else!" );
 			} );
 			console.log( JSON.stringify( { ready: true } ) );
 		},

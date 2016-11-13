@@ -19,14 +19,14 @@ ocf.device.name = "test-device-" + process.argv[ 2 ];
 console.log( JSON.stringify( { assertionCount: 0 } ) );
 
 ocf.server
-	.on( "create", function( request ) {
+	.oncreate( function( request ) {
 		ocf.server.register( request.data )
 			.then(
 				function( resource ) {
 					request.respond( resource );
 				},
 				function( error ) {
-					request.error( error );
+					request.respondWithError( error );
 				} );
 	} )
 	.register( {
@@ -41,7 +41,7 @@ ocf.server
 		},
 		function( error ) {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				false, "Server: Failed to register resource" +
+				false, "Server: Failed to register resource: " +
 					( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
 			] } ) );
 		} );

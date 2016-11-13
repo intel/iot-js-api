@@ -24,7 +24,6 @@ var expectedValue = {
 
 console.log( JSON.stringify( { assertionCount: 7 } ) );
 
-// Multiply a value by a scale given in the options
 server
 	.register( {
 		resourcePath: "/a/" + process.argv[ 2 ],
@@ -36,8 +35,8 @@ server
 		function( resource ) {
 			var requestCount = 0;
 
-			server
-				.on( "update", function( request ) {
+			resource
+				.onupdate( function( request ) {
 					requestCount++;
 					console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
 						requestCount, 1, "Server: The first request is 'update'"
@@ -66,7 +65,7 @@ server
 								] } ) );
 							} );
 				} )
-				.on( "retrieve", function( request ) {
+				.onretrieve( function( request ) {
 					requestCount++;
 					console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
 						requestCount, 2, "Server: The second request is 'retrieve'"

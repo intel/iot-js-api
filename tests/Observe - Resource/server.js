@@ -41,7 +41,7 @@ function fakeSensorLoop( resource ) {
 		timeoutId = ( ++notificationCount < 6 ) ?
 			setTimeout( timeout, ( Math.random() ) * 1000 + 500 ) : 0;
 
-		server.notify( resource )
+		resource.notify()
 			.then(
 				function() {
 					console.log( JSON.stringify( { assertion: "ok", arguments: [
@@ -68,10 +68,10 @@ server
 		properties: {
 			value: Math.random() + 1
 		}
-	}, transformSensorData )
+	} )
 	.then(
 		function( resource ) {
-			server.on( "retrieve", function( request ) {
+			resource.ontranslate( transformSensorData ).onretrieve( function( request ) {
 				oldObserverCount = observerCount;
 				observerCount += ( "observe" in request ) ? ( request.observe ? 1 : -1 ) : 0;
 

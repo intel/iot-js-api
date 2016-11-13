@@ -33,7 +33,7 @@ server
 		resourceTypes: [ "core.light" ],
 		interfaces: [ "oic.if.baseline" ],
 		discoverable: true
-	}, transformSensorData )
+	} )
 	.then(
 		function( resource ) {
 			var requestCount = 0;
@@ -41,7 +41,7 @@ server
 			resource.properties = {
 				value: 42
 			};
-			server.on( "retrieve", function( request ) {
+			resource.ontranslate( transformSensorData ).onretrieve( function( request ) {
 				if ( requestCount++ > 1 ) {
 					console.log( JSON.stringify( { assertion: "ok", arguments: [
 						false, "Server: Unexpected extra request"

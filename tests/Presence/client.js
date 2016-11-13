@@ -23,56 +23,58 @@ console.log( JSON.stringify( { assertionCount: 4 } ) );
 ocf.device.name = "test-device-" + process.argv[ 2 ];
 
 ocf.server
-	.on( "update", function( request ) {
-		if ( request.target.resourcePath === "/disable-presence" ) {
-			ocf.server.disablePresence().then(
-				function() {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						true, "Server: disablePresence() succeeded"
-					] } ) );
-					setTimeout( function() {
-						ocf.server.enablePresence().then(
-							function() {
-								console.log( JSON.stringify( { assertion: "ok", arguments: [
-									true, "Server: enablePresence() succeeded"
-								] } ) );
-							},
-							function( error ) {
-								console.log( JSON.stringify( { assertion: "ok", arguments: [
-									false, "Server: enablePresence() failed: " +
-										( "" + error ) + "\n" + JSON.stringify( error )
-								] } ) );
-							} );
-					}, 5000 );
-				},
-				function( error ) {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						false, "Server: disablePresence() failed: " +
-							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-					] } ) );
-				} );
-		}
-		request.respond()
-			.then(
-				function() {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						true, "Server: response successfully sent"
-					] } ) );
-				},
-				function( error ) {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						false, "Server: sending response failed" +
-							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-					] } ) );
-				} );
-	} )
 	.register( {
 		resourcePath: "/disable-presence",
 		interfaces: [ "oic.if.baseline" ],
 		resourceTypes: [ "core.light" ],
 		discoverable: true
 	} ).then(
-		function() {
+		function( resource ) {
+			resource.onupdate( function( request ) {
+				if ( request.target.resourcePath === "/disable-presence" ) {
+					ocf.server.disablePresence().then(
+						function() {
+							console.log( JSON.stringify( { assertion: "ok", arguments: [
+								true, "Server: disablePresence() succeeded"
+							] } ) );
+							setTimeout( function() {
+								ocf.server.enablePresence().then(
+									function() {
+										console.log( JSON.stringify( { assertion: "ok",
+											arguments: [
+												true, "Server: enablePresence() succeeded"
+											] } ) );
+									},
+									function( error ) {
+										console.log( JSON.stringify( { assertion: "ok",
+											arguments: [
+												false, "Server: enablePresence() failed: " +
+													( "" + error ) + "\n" + JSON.stringify( error )
+											] } ) );
+									} );
+							}, 5000 );
+						},
+						function( error ) {
+							console.log( JSON.stringify( { assertion: "ok", arguments: [
+								false, "Server: disablePresence() failed: " +
+									( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+							] } ) );
+						} );
+				}
+				request.respond()
+					.then(
+						function() {
+							console.log( JSON.stringify( { assertion: "ok", arguments: [
+								true, "Server: response successfully sent"
+							] } ) );
+						},
+						function( error ) {
+							console.log( JSON.stringify( { assertion: "ok", arguments: [
+								false, "Server: sending response failed: " +
+									( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+							] } ) );
+						} );
+			} );
 			ocf.server.enablePresence().then(
 				function() {
 					console.log( JSON.stringify( { assertion: "ok", arguments: [
@@ -88,7 +90,7 @@ ocf.server
 		},
 		function( error ) {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				false, "Server: Failed to register resource" +
+				false, "Server: Failed to register resource: " +
 					( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
 			] } ) );
 		} );

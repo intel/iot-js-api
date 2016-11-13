@@ -20,7 +20,7 @@ var legitimateResourceInit = {
 	interfaces: [ "oic.if.baseline" ]
 };
 
-console.log( JSON.stringify( { assertionCount: 6 } ) );
+console.log( JSON.stringify( { assertionCount: 12 } ) );
 
 Promise.all( [
 
@@ -119,6 +119,24 @@ Promise.all( [
 						properties: {}
 					}, "Legitimate resource creation successful with correct result"
 				] } ) );
+				console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+					typeof resource.onretrieve, "function", "resource.onretrieve is a function"
+				] } ) );
+				console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+					typeof resource.ontranslate, "function", "resource.ontranslate is a function"
+				] } ) );
+				console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+					typeof resource.notify, "function", "resource.notify is a function"
+				] } ) );
+				console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+					typeof resource.onupdate, "function", "resource.onupdate is a function"
+				] } ) );
+				console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+					typeof resource.ondelete, "function", "resource.ondelete is a function"
+				] } ) );
+				console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+					typeof resource.unregister, "function", "resource.unregister is a function"
+				] } ) );
 			},
 			function( error ) {
 				console.log( JSON.stringify( { assertion: "ok", arguments: [
@@ -138,12 +156,12 @@ Promise.all( [
 			},
 			function( error ) {
 				console.log( JSON.stringify( { assertion: "ok", arguments: [
-					true, "Duplicate legitimate resource creation throws an error: \n" +
+					true, "Duplicate legitimate resource creation throws an error: " +
 						( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
 				] } ) );
 			} )
 		.then( function() {
-			return server.unregister( legitimateResource );
+			return legitimateResource.unregister();
 		} ).then(
 			function() {
 				console.log( JSON.stringify( { assertion: "ok", arguments: [
@@ -152,7 +170,7 @@ Promise.all( [
 			},
 			function( error ) {
 				console.log( JSON.stringify( { assertion: "ok", arguments: [
-					false, "Legitimate resource unregistration failed with: \n" +
+					false, "Legitimate resource unregistration failed with: " +
 						( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
 				] } ) );
 			} )
