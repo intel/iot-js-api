@@ -26,7 +26,7 @@ function identityLineFilter( value ) {
 	return value;
 }
 
-function spawn( commandLine, interpreter ) {
+function spawn( interpreter, commandLine ) {
 	return childProcess.spawn( interpreter, commandLine, {
 		stdio: [ process.stdin, "pipe", process.stderr ]
 	} );
@@ -61,7 +61,7 @@ function spawnOne( assert, options ) {
 		commandLine[ 0 ] = temporary.name;
 	}
 
-	theChild = options.spawn( commandLine, options.interpreter );
+	theChild = options.spawn( options.interpreter, commandLine );
 
 	runningProcesses.push( theChild );
 

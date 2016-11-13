@@ -21,7 +21,7 @@ var desiredNewResource = {
 	discoverable: true
 };
 
-console.log( JSON.stringify( { assertionCount: 3 } ) );
+console.log( JSON.stringify( { assertionCount: 2 } ) );
 
 function filterKeys( object, keys ) {
 	var index;
@@ -43,8 +43,6 @@ function getResources( device ) {
 	function resourcefound( resource ) {
 		if ( resource.resourcePath === desiredNewResource.resourcePath ) {
 			resourceList.desired = resource;
-		} else if ( resource.resourcePath === "/target-resource" ) {
-			resourceList.target = resource;
 		}
 	}
 
@@ -64,18 +62,13 @@ function tryDevice( device ) {
 	// We've found the server, so stop looking
 	client.removeListener( "devicefound", tryDevice );
 
-	getResources( device )
-		.then( function( resourceList ) {
-			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				resourceList.target && !resourceList.desired,
-				"Client: Initially the device contains the target resource but not the desired one"
-			] } ) );
-			return client.create( desiredNewResource, resourceList.target );
-		} )
+	desiredNewResource.deviceId = device.uuid;
+
+	client.create( desiredNewResource )
 		.then( function( newResource ) {
 			console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
 				filterKeys( newResource, [
-					"resourcePath", "interfaces", "resourceTypes", "discoverable"
+					"resourcePath", "interfaces", "resourceTypes", "discoverable", "deviceId"
 				] ),
 				desiredNewResource,
 				"Client: The newly created resource has the expected structure"
@@ -84,9 +77,8 @@ function tryDevice( device ) {
 		} )
 		.then( function( resourceList ) {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				resourceList.target && resourceList.desired,
-				"Client: After creating the resource, the device contains the target resource " +
-					"as well as the desired one"
+				resourceList.desired,
+				"Client: After creating the resource, the device contains the desired resource"
 			] } ) );
 			console.log( JSON.stringify( { finished: 0 } ) );
 		} )

@@ -58,7 +58,7 @@ function positiveListener( resource ) {
 					] } ) );
 				}, function( error ) {
 					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						"Client: Failed to attach second listener for positive view" +
+						"Client: Failed to attach second listener for positive view: " +
 							( "" + error ) + JSON.stringify( error, null, 4 )
 					] } ) );
 				} );
@@ -98,7 +98,7 @@ function negativeListener( resource ) {
 					] } ) );
 				}, function( error ) {
 					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						"Client: Failed to attach second listener" +
+						"Client: Failed to attach second listener: " +
 							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
 					] } ) );
 				} );

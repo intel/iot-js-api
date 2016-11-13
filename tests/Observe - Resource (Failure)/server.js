@@ -25,9 +25,9 @@ server
 		observable: true
 	} )
 	.then(
-		function() {
-			server.on( "retrieve", function( request ) {
-				request.error( "Go about yer merry way!" );
+		function( resource ) {
+			resource.onretrieve( function( request ) {
+				request.respondWithError( "Go about yer merry way!" );
 			} );
 			console.log( JSON.stringify( { ready: true } ) );
 		},

@@ -17,14 +17,14 @@ var server = require( process.argv[ 3 ] ).server;
 console.log( JSON.stringify( { assertionCount: 5 } ) );
 
 // Multiply a value by a scale given in the options
-function transformSensorData( representation, options ) {
+function transformSensorData( options ) {
 	var scale = ( options && "scale" in options ) ? ( +options.scale ) : 1;
 
 	if ( isNaN( scale ) ) {
 		scale = 1;
 	}
 
-	return { value: representation.value * scale };
+	return { value: this.properties.value * scale };
 }
 
 server
@@ -33,7 +33,7 @@ server
 		resourceTypes: [ "core.light" ],
 		interfaces: [ "oic.if.baseline" ],
 		discoverable: true
-	}, transformSensorData )
+	} )
 	.then(
 		function( resource ) {
 			var requestCount = 0;
@@ -41,7 +41,7 @@ server
 			resource.properties = {
 				value: 42
 			};
-			server.on( "retrieve", function( request ) {
+			resource.ontranslate( transformSensorData ).onretrieve( function( request ) {
 				if ( requestCount++ > 1 ) {
 					console.log( JSON.stringify( { assertion: "ok", arguments: [
 						false, "Server: Unexpected extra request"

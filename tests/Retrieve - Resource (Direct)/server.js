@@ -19,9 +19,6 @@ ocf.device.name = "test-device-" + process.argv[ 2 ];
 console.log( JSON.stringify( { assertionCount: 0 } ) );
 
 ocf.server
-	.on( "retrieve", function( request ) {
-		request.respond();
-	} )
 	.register( {
 		resourcePath: "/direct",
 		resourceTypes: [ "core.light" ],
@@ -32,7 +29,11 @@ ocf.server
 		}
 	} )
 	.then(
-		function() {
+		function( resource ) {
+			resource.onretrieve( function( request ) {
+				request.respond();
+			} );
+
 			console.log( JSON.stringify( { ready: true } ) );
 		},
 		function( error ) {
