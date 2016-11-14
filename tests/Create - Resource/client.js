@@ -70,7 +70,7 @@ function tryDevice( device ) {
 				resourceList.target && !resourceList.desired,
 				"Client: Initially the device contains the target resource but not the desired one"
 			] } ) );
-			return client.create( resourceList.target, desiredNewResource );
+			return client.create( desiredNewResource, resourceList.target );
 		} )
 		.then( function( newResource ) {
 			console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
