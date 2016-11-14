@@ -59,8 +59,7 @@ interface OcfClient {
   Promise<Device> getDeviceInfo(USVString deviceId);
   Promise<Platform> getPlatformInfo(USVString deviceId);
 
-  Promise<ClientResource> create(ResourceId target,
-                           Resource resource);
+  Promise<ClientResource> create(Resource resource, optional ResourceId target);
 
   Promise<ClientResource> retrieve(ResourceId resource,
                              optional Dictionary options,
