@@ -2,12 +2,12 @@ IoT Bluetooth Smart API
 =======================
 
 - [The `BluetoothPeripheralDevice` interface](#bpd)
-- [`BluetoothPeripheralDevice` events]
+- `BluetoothPeripheralDevice` events
   * [enabledchange](#onenabledchange)
   * [connect](#onconnect)
   * [disconnect](#ondisconnect)
   * [error](#onerror)
-- [`BluetoothPeripheralDevice` methods]
+- `BluetoothPeripheralDevice` methods
   * [enable()](#enable)
   * [disable()](#disable)
   * [startAdvertising(advertisement, options)](#startadvertising)
@@ -17,19 +17,18 @@ IoT Bluetooth Smart API
 - [The `BluetoothService` dictionary](#service)
 - [The `BluetoothDescriptor` dictionary](#descriptor)
 - [The `BluetoothCharacteristic` interface](#characteristic)
-  * `BluetoothCharacteristic` events
-    - [read](#onread)
-    - [write](#onwrite)
-    - [subscribe](#onsubscribe)
-    - [unsubscribe](#onunsubscribe)
-    - [error](#oncherror)
   * `BluetoothCharacteristic methods
     - [startNotifications()](#startnotifications)
     - [stopNotifications()](#stopnotifications)
+    - [onread(handler)](#onread)
+    - [onwrite(handler)](#onwrite)
+    - [onsubscribe(handler)](#onsubscribe)
+    - [onunsubscribe(handler)](#onunsubscribe)
+    - [onerror(handler)](#oncherror)
 - [The `BluetoothCharacteristicRequest` interface](#characteristicrequest)
   * `BluetoothCharacteristicRequest` methods
     - [respond(data)](#respond)
-    - [error(error)](#errormethod)
+    - [respondWithError(error)](#errormethod)
 
 Introduction
 ------------
@@ -49,7 +48,7 @@ The [W3C Web Bluetooth](https://webbluetoothcg.github.io/web-bluetooth) API expo
 
 This API is used by applications that implement a Bluetooth Peripheral device and expose sensor data via Bluetooth.
 - Applications define the Bluetooth Smart services, characteristics and descriptors, then registers them with the implementation.
-- Applications can build Bluetooth advertisement packets, then start (and stop) advertising.
+- Applications can build Bluetooth advertisement packets, then start and stop advertising.
 - For the defined characteristics, applications should register event listeners for handling requests coming from clients. The event listeners receive the request, and should reply to them with appropriate data, or error code.
 
 <a name="apiobject">
@@ -100,7 +99,7 @@ The `services` property is a read-only array (sequence) of [`BluetoothService`](
 | *error*           | Error                   |
 
 <a name="onenabledchange"></a>
-The `enabledchange` event is emitted when the [`enabled`](#bd_enabled) property is changed. Event listeners should check the value of the `enabled` property.
+The `enabledchange` event is emitted when the [`enabled`](#bd_enabled) property is changed. Event listeners are called with no parameters and should check the value of the `enabled` property.
 
 <a name="onconnect"></a>
 The `connect` event is emitted when a Bluetooth Smart device in Central mode (client) is connected. Event listeners are invoked with the client's [Bluetooth Device Address](#bd_addr) as a string argument.
@@ -219,38 +218,6 @@ The `flags` property is an array of strings that can take the following values: 
 
 The `descriptors` property is an array of [`BluetoothDescriptor`](#descriptor) objects that describe this Bluetooth Characteristic.
 
-#### `BluetoothCharacteristic` events
-
-| Event name    | Event callback argument |
-| ------------  | ----------------------- |
-| *read*        | [`BluetoothCharacteristicRequest`](#request) |
-| *write*       | [`BluetoothCharacteristicRequest`](#request) |
-| *subscribe*   | [`BluetoothCharacteristicRequest`](#request) |
-| *unsubscribe* | [`BluetoothCharacteristicRequest`](#request) |
-| *error*       | `Error`                 |
-
-<a name="onread"></a>
-The `read` event is emitted when the device receives a request for reading a Characteristic.
-Listeners receive a [`BluetoothCharacteristicRequest`](#request) object as argument.
-...
-
-<a name="onwrite"></a>
-The `write` event is emitted when the device receives a request for writing a Characteristic.
-Listeners receive a [`BluetoothCharacteristicRequest`](#request) object as argument.
-...
-
-<a name="onsubscribe"></a>
-The `subscribe` event is emitted when the device receives a request for subscribing to notifications for a Characteristic.
-Listeners receive a [`BluetoothCharacteristicRequest`](#request) object as argument.
-...
-
-<a name="onunsubscribe"></a>
-The `subscribe` event is emitted when the device receives a request for unsubscribing to notifications for a Characteristic.
-...
-
-<a name="oncherror"></a>
-The `error` event is emitted when a Bluetooth error concerning operations with Characteristics needs to be reported to the application. Event listeners are invoked with an [`Error`](https://nodejs.org/api/errors.html#errors_class_error) object as argument.
-
 #### `BluetoothCharacteristic` methods
 
 <a name="startnotifications"></a>
@@ -261,6 +228,26 @@ Requests the underlying platform to start sending notifications for this charact
 ##### The `stopNotifications()` method
 Requests the underlying platform to stop sending notifications for this characteristic.
 
+<a name="onread"></a>
+##### The `onread(handler)` method
+Registers a function to handle read requests for the Characteristic. The `handler` argument is a function that accepts a [`BluetoothCharacteristicRequest`](#request) argument.
+
+<a name="onwrite"></a>
+##### The `onwrite(handler)` method
+Registers a function to handle write requests for the Characteristic. The `handler` argument is a function that accepts a [`BluetoothCharacteristicRequest`](#request) argument.
+
+<a name="onsubscribe"></a>
+##### The `onsubscribe(handler)` method
+Registers a function to handle subscribe requests for the Characteristic. The `handler` argument is a function that accepts a [`BluetoothCharacteristicRequest`](#request) argument.
+
+<a name="onunsubscribe"></a>
+##### The `onunsubscribe(handler)` method
+Registers a function to handle unsubscribe requests for the Characteristic. The `handler` argument is a function that accepts a [`BluetoothCharacteristicRequest`](#request) argument.
+
+<a name="oncherror"></a>
+##### The `onerror(handler)` method
+Registers a function to handle sa Bluetooth error concerning operations with Characteristics needs to be reported to the application. The `handler` argument is a function that accepts an [`Error`](https://nodejs.org/api/errors.html#errors_class_error) object as argument.
+
 <a name="characteristicrequest"></a>
 ### The `BluetoothCharacteristicRequest` interface
 
@@ -268,15 +255,15 @@ Contains the following read-only properties:
 
 | Property  | Type    | Optional | Default value | Represents |
 | ---       | ---     | ---      | ---           | ---        |
+| type      | String  | no       | `undefined`   | request type |
 | source    | String  | no       | `undefined`   | client Bluetooth Device Address |
-| operation | String  | no       | `undefined`   | operation: read, write, notify |
 | data      | `Buffer` | yes     | `null`        | data |
 | offset    | number  | yes      | 0             | Offset in data` |
 | needsResponse | boolean | yes  | `true`        | whether response needs to be sent |
 
-The `source` property is a string representing the Bluetooth Device Address of the client.
+The `type` property is a string that can take one of the following values: `"read"`, `"write"`, `"notify"`, `"subscribe"`, `"unsubscribe"`.
 
-The `operation` property is a string that can take one of the following values: `"read"`, `"write"`, "`notify"`.
+The `source` property is a string representing the Bluetooth Device Address of the client.
 
 The `data` property is a [`Buffer`](../README.md/#buffer) object that is not `null` for `"write"` operation, and `null` otherwise.
 

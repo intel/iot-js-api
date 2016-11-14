@@ -6,10 +6,10 @@ interface Board {
     attribute EventHandler onerror;
 
     Pin pin(PinName);  // board specific dictionary for mapping pins
-    sequence<String> pins();  // get all board pin names
+    sequence<PinName> pins();  // get all board pin names
 
     AIO aio(PinName pin);
-    GPIO gpio( (PinName or GPIOOptions) options);
+    GPIO gpio(GPIOInit init);
     PWM pwm( (PinName or PWMOptions) options);
 
     Promise<I2C> i2c(I2COptions options);
@@ -35,21 +35,30 @@ interface Pin {
 
 // GPIO
 dictionary GPIOOptions {
-    PinName pin;
+    PinName name;
+    sequence<PinName> port;
     PinMode mode = "input";
     boolean activeLow = false;
     String edge = "any";  // "none", "rising", "falling", "any"
     String pull = "none"; // "none", "pull-up", "pull-down"
 };
 
-[Constructor(GPIOOptions options, optional Board board)]
+typedef (PinName or sequence<PinName> or GPIOOptions) GPIOInit;
+
+[NoInterfaceObject]
 interface GPIO: Pin {
-    void write(boolean value);
+    void write(long value);
     void close();
-    attribute EventHandler<boolean> onchange;
+    attribute EventHandler<long> onchange;
 };
 
 GPIO implements EventEmitter;
+
+// GPIO Ports (8, 16 or 32 pins configured together)
+[Constructor(GPIOInit init, optional Board board)]
+interface GPIOPort: GPIO {
+   sequence<PinName> pins();
+};
 
 // AIO
 

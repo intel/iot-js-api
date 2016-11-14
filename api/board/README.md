@@ -1,7 +1,7 @@
 Board API
 =========
 
-This API provides low level I/O operations supported by hardware boards.
+This API provides low level interfaces for I/O operations supported by the board and define pin mappings between board pin names and pin values mapped by the OS.
   - [GPIO - General Purpose I/O](./gpio.md)
   - [AIO - Analog I/O](./aio.md)
   - [PWM - Pulse Width Modulation](./pwm.md)
@@ -15,17 +15,25 @@ The full Web IDL definition for Board and IO APIs can be found [here](./webidl.m
 
 The API object
 --------------
-The API entry point is a [`Board`](./#board) object that is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be constructed.
+The API entry point is a [`Board`](./#board) object that is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API.
 
+In the following example, the application requires an implementation that exposed Arduino 101 values and semantics for pins.
 ```javascript
-var board = require("iot-board-arduino101");  // example package name
-
-// Alternative
-// var board = new Board();  // provides an instance of the default board
+var board = require("iot-js-board-arduino101");  // example package name
 
 console.log("Connected to board " + board.name);
 ```
+
+On other platforms, e.g. in browsers, the API entry point can be exposed on another object, or constructed.
+```javascript
+var board = new Board();  // provides an instance of the default board
+```
+
 If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
+
+The names, values and semantics related to hardware pins are owned by the implementation. This API uses opaque values for names. For instance, when requiring `"iot-js-board-arduino101"` the semantics will be board specific, i.e. developers could expect using the same labels as the ones printed on the board.
+
+In a different use case it would be needed to use OS specific mappings for pins. For instance, when requiring `"iot-js-zephyr"`, the semantics will be defined by the mapping used in [Zephyr OS](https://wiki.zephyrproject.org/view/Arduino_/_Genuino_101#Arduino_101_Pinout) to abstract various supported boards.
 
 <a name="pin"></a>
 ### The `Pin` interface

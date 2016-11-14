@@ -4,46 +4,22 @@ IoT Web APIs
 <a name="introduction"></a>
 Introduction
 ------------
-The following JavaScript APIs are aimed for handling Internet of Things (IoT) applications.
+The following JavaScript APIs are aimed for handling Internet of Things (IoT) applications on a given device:
+* [Open Connect Foundation (OCF) API](./ocf/README.md), exposing OCF Client and Server APIs
+* [Bluetooth Smart API](./ble/README.md), exposing functionality for Bluetooth Peripheral mode
+* [Sensor API](./sensors/README.md), exposing sensor functionality supported on the device
+* [Board API](./board/README.md) provides low level interfaces for I/O operations supported by the device board, so that applications could implement support for new types of sensors that are not supported by the Sensor API.
 
-* [Sensor API](./sensors/README.md): high level sensor APIs standardized in the [W3C Generic Sensor Working Group](https://www.w3.org/2009/dap/) and defines the [Generic Sensor API](https://www.w3.org/TR/generic-sensor/), but adapted to constrained environments. It also exposes interfaces to handle various [sensor types](https://www.w3.org/2009/dap/).
-* [Board API](./board/README.md): provides low level interfaces for I/O operations supported by the board, and define pin mappings between board pin names and pin values mapped by the OS, so that developers could use board pin names in the API methods.
-* [OCF - Open Connect Foundation](./ocf/README.md) API
-* [Bluetooth Smart API](./ble/README.md) API (Peripheral mode).
-
-Since implementations of these APIs will partly be running on constrained hardware, they might not support the latest [ECMAScript](http://www.ecma-international.org) versions.
-
-However, implementations should support at least [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/). Examples are limited to ECMAScript 5.1 with the exception of using Promises.
+Since implementations of these APIs exist also on constrained hardware, they might not support the latest [ECMAScript](http://www.ecma-international.org) versions. However, implementations should support at least [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/). Examples are limited to ECMAScript 5.1 with the exception of using [Promises](#promise).
 
 <a name="structures"></a>
 Structures
 ----------
-The following structures MAY be implemented in a constrained version:
-  - [EventEmitter](#events)
+The following structures SHOULD be implemented in a constrained environment:
   - [Promise](#promise)
-  - [Buffer](.#buffer)
-  - [Errors](#errors).
-
-<a name="events"></a>
-### Events
-The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events) by extending the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface. In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
-- the [`on(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener) method
-- the [`addListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener) method, as an alias to the `on()` method
-- the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
-- the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
-
-Additionally, for compatibility it is recommended to support the following [EventTarget](https://developer.mozilla.org/en/docs/Web/API/EventTarget) methods:
-- the [`addEventListener(eventName, listener)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener) method
-- the [`removeEventListener(eventName, listener)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener) method
-- the [`dispatchEvent(event)`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent) method
-- note that listeners receive an [`Event`](https://developer.mozilla.org/en-US/docs/Web/API/Event) object, following the semantics of `EventTarget`(https://developer.mozilla.org/en/docs/Web/API/EventTarget)
-- the [`Event`](https://developer.mozilla.org/en-US/docs/Web/API/Event) objects MUST contain at least the following properties:
-  * [`Event.type`](https://developer.mozilla.org/en-US/docs/Web/API/Event/type)
-  * [`Event.cancelable`](https://developer.mozilla.org/en-US/docs/Web/API/Event/cancelable), with the default value `false`
-  * [`Event.bubbles`](https://developer.mozilla.org/en-US/docs/Web/API/Event/bubbles), with the default value `false`
-  * [`Event.eventPhase`](https://developer.mozilla.org/en-US/docs/Web/API/Event/eventPhase).
-
-Optionally, it is recommended to extend the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface in the way described in [eventobserver.md](./eventobserver.md).
+  - [Buffer](#buffer)
+  - [EventEmitter](#events)
+  - [Error](#errors).
 
 <a name="promise"></a>
 ### Promises
@@ -61,6 +37,18 @@ to read and write binary data accurately from JavaScript. This API supports a su
 - the [`readUint8(offset)`](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html#buffer_buf_readuint8_offset_noassert) method
 - the [`writeUint8(value, offset)`](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html#buffer_buf_writeuint8_value_offset_noassert) method
 - the [`toString(encoding)`](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html#buffer_buf_tostring_encoding_start_end) method.
+
+<a name="events"></a>
+### Events
+The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events). In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
+- the [`on(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener) method
+- the [`addListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener) method, as an alias to the `on()` method
+- the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
+- the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
+
+Note that in order to make sure only one entity responds to a request, server request handling is done with registering callbacks at the serving objects (end points), rather than using events. Also, when subscribing to notifications requires options or filters, callbacks are used instead of events.
+
+In the future events may be replaced by [`Observables`](https://github.com/tc39/proposal-observable) with signal semantics.
 
 <a name="errors"></a>
 ### Error handling

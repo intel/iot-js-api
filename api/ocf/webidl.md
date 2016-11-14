@@ -1,3 +1,4 @@
+
 OCF JavaScript API Web IDL
 ==========================
 
@@ -7,8 +8,8 @@ For instance, note that an `EventListener` callback adherent to Web IDL conventi
 
 As such, the `EventHandler<typelist>` notation denotes an event that accepts listeners with the type of the arguments enumerated in `typelist`. For instance `EventHandler<Resource>` provides listeners with one `Resource` object argument, and `EventHandler<ResourceId, ResourceId>` provides listeners with two `ResourceId` object arguments.
 
-
-## OCF API entry point
+OCF API entry point
+-------------------
 
 ```javascript
 
@@ -45,7 +46,9 @@ interface Device {
 
 ```
 
-## OCF Client API
+OCF Client API
+--------------
+
 ```javascript
 interface OcfClient {
   Promise<void> findResources(optional DiscoveryOptions options,
@@ -56,27 +59,26 @@ interface OcfClient {
   Promise<Device> getDeviceInfo(USVString deviceId);
   Promise<Platform> getPlatformInfo(USVString deviceId);
 
-  Promise<Resource> create(ResourceId target,
-                           ResourceInit resource);
+  Promise<ClientResource> create(Resource resource, optional ResourceId target);
 
-  Promise<Resource> retrieve(ResourceId resource,
+  Promise<ClientResource> retrieve(ResourceId resource,
                              optional Dictionary options,
                              optional ResourceCallback listener);
 
-  Promise<void> update(Resource resource);  // partial dictionary
+  Promise<void> update(Resource resource);  // at least resourceId + properties
   Promise<void> delete(ResourceId resource);
 
   attribute EventHandler<Platform> onplatformfound;
   attribute EventHandler<Device> ondevicefound;
   attribute EventHandler<Device> ondevicelost;
   attribute EventHandler<Device> ondevicechanged;
-  attribute EventHandler<Resource> onresourcefound;
+  attribute EventHandler<ClientResource> onresourcefound;
   attribute EventHandler<Error> onerror;
 };
 
 OCFClient implements EventEmitter;
 
-callback ResourceCallback = void (Resource resource);
+callback ResourceCallback = void (ClientResource resource);
 callback DeviceCallback = void (Device device);
 callback PlatformCallback = void (Platform platform);
 
@@ -89,80 +91,91 @@ dictionary DiscoveryOptions {
 dictionary ResourceId {
   USVString deviceId;
   USVString resourcePath;
-};;
-
-[NoInterfaceObject]
-interface Resource: ResourceId {
-  // gets the properties of ResourceInit, all read-only
-  readonly attribute sequence<DOMString> resourceTypes;
-  readonly attribute sequence<DOMString> interfaces;
-  readonly attribute sequence<DOMString> mediaTypes;
-  readonly attribute boolean discoverable;
-  readonly attribute boolean observable;
-  readonly attribute boolean slow;
-  readonly attribute ResourceRepresentation properties;
-
-  attribute EventHandler onupdate;
-  attribute EventHandler ondelete;
 };
 
-Resource implements EventEmitter;
-
-```
-
-## OCF Server API
-```javascript
-dictionary ResourceInit {
+dictionary Resource: ResourceId {
   sequence<DOMString> resourceTypes;
   sequence<DOMString> interfaces;
   sequence<DOMString> mediaTypes;
   boolean discoverable;
   boolean observable;
-  boolean secure;
   boolean slow;
-  Dictionary properties;
+  ResourceRepresentation properties;
 };
 
+[NoInterfaceObject]
+interface ClientResource: Resource {
+  attribute EventHandler onupdate;
+  attribute EventHandler ondelete;
+};
+
+ClientResource implements EventEmitter;
+
+dictionary ResourceRepresentation {
+  readonly attribute TimeStamp timeStamp;
+
+  // here come the properties added by various sensor/resource data models
+};
+
+```
+
+OCF Server API
+--------------
+
+```javascript
+
 interface OcfServer {
-  Promise<Resource> register(ResourceInit resource,
-                             optional TranslateCallback translate);
-  Promise<void> unregister(ResourceId resource);
+  // Register a resource with the OCF network and get a resource Id.
+  Promise<ServerResource> register(Resource resource);
 
-  // handle CRUDN requests from clients
-  attribute EventHandler<OcfRequest> oncreate;
-  attribute EventHandler<OcfRequest> onretrieve;
-  attribute EventHandler<OcfRequest> onupdate;
-  attribute EventHandler<OcfRequest> ondelete;
+  void oncreate(RequestHandler handler);
 
-  // update notification could be done automatically in most cases,
-  // but in a few cases manual notification is needed
-  // delete notifications should be made automatic by implementations
-  Promise<void> notify(Resource resource);
-
-  // enable/disable presence for this device
+  // Enable/disable presence for this device.
   Promise<void> enablePresence(optional unsigned long timeToLive);  // in ms
   Promise<void> disablePresence();
 };
 
-OCFServer implements EventEmitter;
+[NoInterfaceObject]  // ServerResource can only be created by register().
+interface ServerResource: Resource {
+  // Register CRUDN request handlers.
+  ServerResource onretrieve(RequestHandler handler);
+  ServerResource onupdate(RequestHandler handler);
+  ServerResource ondelete(RequestHandler handler);
+
+  // Give the implementation a translate function for the resource representation.
+  ServerResource ontranslate(TranslateCallback translator);
+
+  // Update notification could be done automatically in most cases,
+  // but in a few cases manual notification is needed.
+  // Delete notifications should be made automatically by implementations.
+  Promise<void> notify();
+
+  Promise<void> unregister();
+};
+
+callback RequestHandler = void (Request request);
+
+callback ErrorHandler = void (Error error);
 
 // The function that is called by implementation to select resource representation.
-callback TranslateCallback =
-    ResourceRepresentation (ResourceRepresentation representation,
-                            Dictionary requestOptions);
+callback TranslateCallback = ResourceRepresentation (Dictionary requestOptions);
 
 // The request types below hide the request id, source, and target (this) deviceId.
 
 [NoInterfaceObject]
 interface OcfRequest {
+  readonly attribute RequestType type;
   readonly attribute ResourceId source;
   readonly attribute ResourceId target;
-  readonly attribute USVString requestId;
-  readonly attribute ResourceId resource;
+  readonly attribute ResourceId? data;
+  readonly attribute Dictionary options;
+  readonly attribute boolean? observe;
 
   // Reply to a given request
   Promise<void> respond(optional Resource? resource);
-  Promise<void> error(Error error);
+  Promise<void> respondWithError(Error error);
 }
+
+enum RequestType { "create", "retrieve", "update", "delete" };
 
 ```
