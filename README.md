@@ -25,12 +25,14 @@ ocfTestSuite( {
 		lineFilter: function( line, /* fileName */ ) { return line; },
 		location: "ocf",
 		/* preamble: function not provided, meaning run the test as is */
+		/* spawn: function not provided, meaning spawn the endpoint in the default fashion */
 	},
 	server: {
 		interpreter: "node",
 		lineFilter: function( line, /* fileName */ ) { return line; },
 		location: "ocf",
 		/* preamble: function not provided, meaning run the test as is */
+		/* spawn: function not provided, meaning spawn the endpoint in the default fashion */
 	},
 	single: {
 		interpreter: "node",
@@ -38,6 +40,7 @@ ocfTestSuite( {
 		location: "ocf",
 		skip: false,
 		/* preamble: function not provided, meaning run the test as is */
+		/* spawn: function not provided, meaning spawn the endpoint in the default fashion */
 	}
 	/* tests: array not provided, meaning run all available tests */
 } );
@@ -141,4 +144,8 @@ Thus, if the environment in which you wish to run the tests does not provide the
 	};
 ```
 
-[OCF JS API]: https://github.com/01org/iot-js-api/tree/master/api/ocf
+#### `spawn( interpreter, commandLine )`
+A function responsible for creating the child process that contains the endpoint. This function returns an object such as the one produced by node's [spawn()][]. This option gives you finer control over the process of launching a test endpoint than the `interpreter` and `preamble` options alone, since you can precede the launch of the child process with any number of custom actions, such as setting up the file system in preparation for the child process, or passing it custom environment variables.
+
+[OCF JS API]: ./api/ocf
+[spawn()]: https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options

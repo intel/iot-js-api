@@ -36,7 +36,7 @@ ocf.server
 						function( error ) {
 							request.respondWithError( error );
 						} );
-			} )
+			} );
 			console.log( JSON.stringify( { ready: true } ) );
 		},
 		function( error ) {
