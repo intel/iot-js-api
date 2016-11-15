@@ -31,7 +31,7 @@ The API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-prom
 <a name="buffer"></a>
 ### Buffer
 Buffer is a [node.js API](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html)
-to read and write binary data accurately from JavaScript. This API supports a subset that will be expanded on need:
+to read and write binary data accurately from JavaScript. This API supports a subset that will be expanded as needed:
 - constructor with a number argument `size`
 - the `length` property
 - the [`readUint8(offset)`](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html#buffer_buf_readuint8_offset_noassert) method

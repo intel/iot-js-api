@@ -77,12 +77,11 @@ Therefore only attribution is possible with implementations of this API.
 ```
 
 ### `Sensor` constructor
-For sensors connected to a board, at a controller may need to be specified.
-In addition, other properties may also associated with sensors.
+For sensors connected to a board, a controller may need to be specified. In addition, other properties may also associated with sensors.
 
-In this API, sensors can be constructed using additional optional properties: sensor name, the name of the hardware controller, the board object, and list of pin names used on the board.
+In this API, sensors can be constructed using additional optional properties: sensor name, the name of the hardware controller, the board object, and a list of pin names used on the board.
 
-In rest, the sensor interfaces are the same. When board is not specified to a constructor, it takes the default board selected by the underlying platform.
+Otherwise, the sensor interfaces are the same. When `board` is not given to a constructor, it takes the default board selected by the underlying platform.
 
 ```javascript
 // Additional properties to W3C Generic Sensor object.
@@ -182,7 +181,6 @@ The `reading` property of the [`Magnetometer`](https://w3c.github.io/magnetomete
 | y        | double | no    | 0  | geomagnetic field along the Y axis |
 | z        | double | no    | 0  | geomagnetic field along the Z axis |
 
-
 ### The data model for geolocation
 Work in progress.
 
@@ -198,7 +196,7 @@ The `reading` property of the `TemperatureSensor` object is a dictionary that co
 
 ## Future additions
 
-For enumerating sensors connected to the board, a new object is defined as API entry point.
+For enumerating sensors connected to the board, a new object is defined as the API entry point.
 On boards where hot-plug sensors are supported, events are emitted when sensors are added, and removed, respectively.
 
 ```javascript

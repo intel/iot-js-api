@@ -5,7 +5,7 @@ Web IDL for Board and IO APIs
 interface Board {
     attribute EventHandler onerror;
 
-    Pin pin(PinName);  // board specific dictionary for mapping pins
+    Pin pin(PinName);  // board-specific dictionary for mapping pins
     sequence<PinName> pins();  // get all board pin names
 
     AIO aio(PinName pin);

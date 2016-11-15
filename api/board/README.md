@@ -1,7 +1,7 @@
 Board API
 =========
 
-This API provides low level interfaces for I/O operations supported by the board and define pin mappings between board pin names and pin values mapped by the OS.
+This API provides low level interfaces for I/O operations supported by the board and defines pin mappings between board pin names and pin values mapped by the OS.
   - [GPIO - General Purpose I/O](./gpio.md)
   - [AIO - Analog I/O](./aio.md)
   - [PWM - Pulse Width Modulation](./pwm.md)
@@ -15,7 +15,7 @@ The full Web IDL definition for Board and IO APIs can be found [here](./webidl.m
 
 The API object
 --------------
-The API entry point is a [`Board`](./#board) object that is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API.
+The API entry point is a [`Board`](./#board) object that is exposed in a platform-specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API.
 
 In the following example, the application requires an implementation that exposed Arduino 101 values and semantics for pins.
 ```javascript
@@ -31,9 +31,9 @@ var board = new Board();  // provides an instance of the default board
 
 If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
 
-The names, values and semantics related to hardware pins are owned by the implementation. This API uses opaque values for names. For instance, when requiring `"iot-js-board-arduino101"` the semantics will be board specific, i.e. developers could expect using the same labels as the ones printed on the board.
+The names, values and semantics related to hardware pins are owned by the implementation. This API uses opaque values for names. For instance, when requiring `"iot-js-board-arduino101"` the semantics will be board-specific, i.e. developers could expect using the same labels as the ones printed on the board.
 
-In a different use case it would be needed to use OS specific mappings for pins. For instance, when requiring `"iot-js-zephyr"`, the semantics will be defined by the mapping used in [Zephyr OS](https://wiki.zephyrproject.org/view/Arduino_/_Genuino_101#Arduino_101_Pinout) to abstract various supported boards.
+In a different use case OS-specific mappings would need to be used for pins. For instance, when requiring `"iot-js-zephyr"`, the semantics will be defined by the mapping used in [Zephyr OS](https://wiki.zephyrproject.org/view/Arduino_/_Genuino_101#Arduino_101_Pinout) to abstract various supported boards.
 
 <a name="pin"></a>
 ### The `Pin` interface
@@ -49,9 +49,9 @@ Represents a hardware pin on the board.
 
 All properties are read-only.
 
-The `pin` property is the board specific name of a pin defined in the pin mapping of the board.
+The `pin` property is the board-specific name of a pin defined in the pin mapping of the board.
 
-The `address` property is the operating system specific representation for that pin, usually a number.
+The `address` property is the operating-system-specific representation for that pin, usually a number.
 
 <a name="pinmode">
 The `mode` property can take the following values:
@@ -98,7 +98,7 @@ Board errors are represented as augmented [`Error`](https://nodejs.org/api/error
 - `BoardIOError`.
 
 #### `Board` methods
-In all `Board` methods description, `board` denotes a reference to this `Board` object.
+In all the descriptions of `Board` methods, `board` denotes a reference to this `Board` object.
 
 <a name="getpin"></a>
 ##### The `pin(name)` method
@@ -106,25 +106,25 @@ Returns a [`Pin`](#pin) object associated with the pin name given in the `name` 
 
 <a name="getpins"></a>
 ##### The `pins()` method
-Returns an array of strings containing the board pin names supported by the board, that can be used in the [`pin()`](#getpin) method.
+Returns an array of strings containing the board pin names supported by the board that can be used in the [`pin()`](#getpin) method.
 
 <a name="gpio"></a>
 ##### The `gpio(options)` method
 Returns a [`GPIO`](./gpio.md/#gpio) object associated with the pin name or pin options given in the `options` argument. It runs the following steps:
 - Let `board` be the object representing this board.
-- Run the internal [`GPIO initialization`](./gpio.md/#init) algorithm with `options` and `board` as argument, and return its result. Rethrow any errors that occur.
+- Run the internal [`GPIO initialization`](./gpio.md/#init) algorithm with `options` and `board` as arguments, and return its result. Rethrow any errors that occur.
 
 <a name="aio"></a>
 ##### The `aio(options)` method
 Returns an [`AIO`](./aio.md/#aio) object associated with the pin name or pin options given in the `name` argument. It runs the following steps:
 - Let `board` be the object representing this board.
-- Run the internal [`AIO initialization`](./aio.md/#init) algorithm with `options` and `board` as argument and return its result. Rethrow any errors that occur.
+- Run the internal [`AIO initialization`](./aio.md/#init) algorithm with `options` and `board` as arguments and return its result. Rethrow any errors that occur.
 
 <a name="pwm"></a>
 ##### The `pwm(options)` method
 Returns a [`PWM`](./pwm.md/#pwm) object associated with the pin name or pin options given in the [`options`](./pwm.md/#pwmoptions) argument. It runs the following steps:
 - Let `board` be the object representing this board.
-- Run the internal [`PWM initialization`](./pwm.md/#init) algorithm with `options` and `board` as argument and return its result. Rethrow any errors that occur.
+- Run the internal [`PWM initialization`](./pwm.md/#init) algorithm with `options` and `board` as arguments and return its result. Rethrow any errors that occur.
 
 <a name="i2c"></a>
 ##### The `i2c(options)` method
@@ -132,7 +132,7 @@ Configures I2C communication. The method runs the following steps:
 - Let `board` be the object representing this board.
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If the I2C functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the internal [`I2C initialization`](./i2c.md/#init) algorithm with `options` and `board` as argument and let `i2c` be the returned result.
+- Run the internal [`I2C initialization`](./i2c.md/#init) algorithm with `options` and `board` as arguments and let `i2c` be the returned result.
 - If `i2c` is not `null`, resolve `promise` with the `i2c` object.
 - Otherwise reject `promise`.
 
@@ -143,7 +143,7 @@ The method runs the following steps:
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If the SPI functionality is not supported, reject `promise` with `"NotSupportedError"`.
 - Let `board` be the object representing this board.
-- Run the [`SPI init`](./spi.md/#init) steps with `options` and `board` as argument and let `spi` be the returned result.
+- Run the [`SPI init`](./spi.md/#init) steps with `options` and `board` as arguments and let `spi` be the returned result.
 - If `spi` is not `null`, resolve `promise` with the `spi` object.
 - Otherwise reject `promise`.
 

@@ -1,4 +1,3 @@
-
 Event Observers
 ===============
 
@@ -61,11 +60,11 @@ Objects that normally implement `EventTarget` or `EventEmitter`, will implement 
 
 Listeners are added to events as before, only that `on()` now returns an `EventObserver` self-reference instead of `EventEmitter` self reference.
 
-Also, `on()` will accept an optional filter, either a dictionary where all properties must match a property in event data, or a filter function that receives event data and returns `true` or `false`.
+Also, `on()` will accept an optional filter, which is either a dictionary where all properties must match a property in the event data, or a filter function that receives the event data and returns `true` or `false`.
 
 When a filter is a function, it receives the same arguments as listeners.
 
-When a filter is a dictionary, the listener receives only one argument that is an object, and each property found in the filter is a value-match a property with the same name in the argument object.
+When a filter is a dictionary, the listener receives only one argument that is an object, and each property found in the filter is a value-match of a property with the same name in the argument object.
 
 When a new filter is appended to the watch, it is applied after the previous filters, so it restricts more and more the invocation of the event listener ('AND' semantics).
 

@@ -1,7 +1,7 @@
 SPI API
 =======
 
-The SPI API supports Serial Peripheral Interface, a synchronous serial protocol that allows multiple slave chips to communicate with a master chip. A single SPI bus uses 4 pins, SCK for clock, SS for slave select, MOSI (Master Out, Slave In) for write, and MISO (Master In, Slave Out) for read. Multiple SPI buses may be present on a board.
+The SPI API supports the Serial Peripheral Interface, a synchronous serial protocol that allows multiple slave chips to communicate with a master chip. A single SPI bus uses 4 pins, SCK for clock, SS for slave select, MOSI (Master Out, Slave In) for write, and MISO (Master In, Slave Out) for read. Multiple SPI buses may be present on a board.
 For each clock signal one bit is written from the master to the selected slave and one bit is read by the master from the selected slave, so there is no separate read and write, but one transfer operation.
 When a slave device's chip select is 0 (low), then it communicates with the master, otherwise it ignores the master.
 This API uses a [`Buffer`](../README.mk/#buffer) object for both read and write.
@@ -54,7 +54,7 @@ The `msb` property is a boolean denoting whether the most significant bit (MSB) 
 The `bits` property is a number denoting the number of data bits (word size). Usually it is 1, 2, 4, 8 or 16. The default value is 4.
 
 The `mode` property denotes the SPI mode, i.e.
-- `"mode0"`, normal polarity, phase 0, sampled on leading clock
+- `"mode0"`, polarity normal, phase 0, sampled on leading clock
 - `"mode1"`, polarity normal, phase 1, sampled on trailing clock
 - `"mode2"`, polarity inverse, phase 0, sampled on leading clock
 - `"mode3"`  polarity inverse, phase 1, sampled on trailing clock.
@@ -62,8 +62,8 @@ The `mode` property denotes the SPI mode, i.e.
 #### SPI methods
 <a name="init">
 ##### SPI initialization
-This internal algorithm is used by the [`Board.spi()`](./README.md/#spi) method. Configures the SPI bus and bus speed provided by the `options` (first) dictionary argument on the [`board`](./README.md/#board) specified by the `board` (second) argument.
-- Let `spi` be an `SPI`](#spi) object.
+This internal algorithm is used by the [`Board.spi()`](./README.md/#spi) method. It configures the SPI bus and bus speed provided by the `options` (first) dictionary argument on the [`board`](./README.md/#board) specified by the `board` (second) argument.
+- Let `spi` be an [SPI`](#spi) object.
 - If `options` is a dictionary and the `options.bus` property is a number between 0 and 127, let `spi.bus` be `options.bus`, otherwise select the platform default value, and if that is not available, set the value to 0.
 - If `options.speed` is not a number, let `spi.speed` be 10. Otherwise, set `spi.speed` to the closest matching value that is lower than `options.speed` and is supported by the platform.
 - If `options.msb` is `false`, set `spi.msb` to `false`, otherwise set it to `true`.

@@ -27,7 +27,7 @@ Client API
 
 Introduction
 ------------
-The OCF Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality that enables remote access to resources in the network, as well as OCF discovery.
+The OCF Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality that enables remote access to resources on the network, as well as OCF discovery.
 
 The Client API object does not expose its own properties, only events and methods.
 
@@ -53,7 +53,7 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
 | `interfaces`    | array of strings | no    | `[]` | List of supported interfaces |
 | `mediaTypes`    | array of strings | no    | `[]` | List of supported Internet media types |
 | `discoverable`  | boolean | no    | `true` | Whether the resource is discoverable |
-| `observable`    | boolean | no    | `true` | Whether the resource is discoverable |
+| `observable`    | boolean | no    | `true` | Whether the resource is observable |
 | `secure`        | boolean | no    | `true` | Whether the resource is secure |
 | `slow`          | boolean | yes   | `false` | Whether the resource is constrained |
 | `properties`    | object | yes    | `{}` | Resource representation properties as described in the data model |
@@ -63,12 +63,12 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
 <a name="clientresource"></a>
 ### 1.3. The `ClientResource` object
 #### `ClientResource` properties
-`ClientResource` extends `Resource`, it has all the properties of [`Resource`](#resource), and in addition it has the following events.
+`ClientResource` extends `Resource`. It has all the properties of [`Resource`](#resource), and in addition it has the following events.
 
 Note that applications should not create `ClientResource` objects, as they are created and tracked by implementations. Applications can create and use `ResourceId` and `Resource` objects as method arguments, but client-created `ClientResource` objects are not tracked by implementations and will not receive events.
 
 #### `ClientResource` events
-`Resource` objects support the following events:
+`ClientResource` objects support the following events:
 
 | Event name | Event callback argument |
 | -----------| ----------------------- |
@@ -76,7 +76,7 @@ Note that applications should not create `ClientResource` objects, as they are c
 | *delete*   | N/A |
 
 <a name="onresourceupdate"></a>
-The `update` event is fired on a `Resource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
+The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
 
 <a name="onresourcelost"></a>
 The `delete` event is fired on a `ClientResource` object when the `devicelost` event is fired with the device that contains the resource, or when the implementation gets notified about the resource being deleted or unregistered from the OCF network.
@@ -89,7 +89,7 @@ The Client API supports the following events:
 | *platformfound*   | [`Platform`](./README.md/#platform) object |
 | *devicefound*     | [`Device`](./README.md/#device) object |
 | *devicelost*      | [`Device`](./README.md/#device) object |
-| *resourcefound*   | [`Resource`](#resource) object |
+| *resourcefound*   | [`ClientResource`](#resource) object |
 | *error*           | [`Error`](../README.md/#ocferror) object |
 
 <a name="onplatformfound"></a>
@@ -202,7 +202,7 @@ The method runs the following steps:
 | `resourceType` | string | yes      | `undefined`   | OCF resource type |
 | `resourcePath` | string | yes      | `undefined`   | OCF resource path |
 
-- The `listener` argument is optional, and is an event listener for the [`resourcefound`](#onresourcefound) event that receives as argument a [`Resource`](./README.md/#resource) object.
+- The `listener` argument is optional, and is an event listener for the [`resourcefound`](#onresourcefound) event that receives as argument a [`ClientResource`](./README.md/#resource) object.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -213,16 +213,16 @@ The method runs the following steps:
 - If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
 - If the `listener` argument is specified, add it as a listener to the [`resourcefound`](#resourcefound) event.
-- When a resource is discovered, fire a `resourcefound` event that contains a property named `resource`, whose value is a [`Resource`](#resource) object.
+- When a resource is discovered, fire a `resourcefound` event that contains a property named `resource`, whose value is a [`ClientResource`](#resource) object.
 
 <a name="client-methods"></a>
 ## 4. Client methods
 <a name="create"></a>
 ##### 4.1. The `create(resource, target)` method
-- Creates a remote resource on a given device, and optionally specify a target resource that is supposed to create the new resource. The device's [`oncreate`](./server.md/#oncreate) event handler takes care of dispatching the request to the target resource that will handle creating the resource, and responds with the created resource, or with an error.
+- Creates a remote resource on a given device, and optionally specifies a target resource that is supposed to create the new resource. The device's [`oncreate`](./server.md/#oncreate) event handler takes care of dispatching the request to the target resource that will handle creating the resource, and responds with the created resource, or with an error.
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
-- The optional `target` argument is a [ResourceId](#resourceid) object that contains at least a device UUID and a resource path that identify the target resource responsible for creating the requested resource.
-- The `resource` argument is a [Resource](#resource) object. It should contain at least the following properties (other resource properties may also be specified).
+- The optional `target` argument is a [ResourceId](#resourceid) object that contains at least a device UUID and a resource path that identifies the target resource responsible for creating the requested resource.
+- The `resource` argument is a [Resource](#resource) object. It should contain at least the following properties (other resource properties may also be specified):
 
 | Property       | Type   | Optional | Default value | Represents            |
 | ---            | ---    | ---      | ---           | ---                   |
@@ -243,25 +243,24 @@ The method runs the following steps:
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
 - The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path. Note that any [`Resource`](#resource) object can also be provided.
 - The `options` argument is optional, and it is an object whose properties represent the `REST` query parameters passed along with the `GET` request as a JSON-serializable dictionary. Implementations SHOULD validate this client input to fit OCF requirements. The semantics of the parameters are application-specific (e.g. requesting a resource representation in metric or imperial units). Similarly, the properties of an OIC resource representation are application-specific and are represented as a JSON-serializable dictionary.
-- The `listener` argument is optional, and is an event listener for the `Resource` [`update`](#onresourceupdate) event that is added on the returned [Resource](#resource) object.
+- The `listener` argument is optional, and is an event listener for the `ClientResource` [`update`](#onresourceupdate) event that is added on the returned [`ClientResource`](#resource) object.
 
-In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that request (and get a retrieve response with a resource representation for each resource change).
+In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that resource (and get a retrieve response with a resource representation for each resource change).
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Let `observe` be `null`.
-- If the `listener` argument is specified, add it as a listener to the `Resource` [`update`](#onresourceupdate) event, and set `observe` to `true`.
+- If the `listener` argument is specified, add it as a listener to the `ClientResource` [`update`](#onresourceupdate) event, and set `observe` to `true`.
 - Let `resource` be the resource identified by `resourceId`.
-- Otherwise, if `listener` is not specified, set `observe` to `false`. If previously `resource` has been observed, then stop firing `Resource` [`update`](#onresourceupdate) event on the resource.
 - Send a request to retrieve the resource specified by `resourceId` with the OCF `observe` flag set to the value of `observe`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - If `observe` is `false`, resolve `promise` with `resource` updated from the retrieve response.
-- Otherwise, if `observe` is `true, for each OCF retrieve response received while `resource` being observed, update `resource` with the new values, and fire the `Resource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed.
-- If there are OCF protocol errors during observe, fire an [`error`](#onerror) event with a new [`OcfError`](#ocferror) object `error` with `error.kind` is set to `"observe"`, `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.path`.
+- Otherwise, if `observe` is `true, for each OCF retrieve response received while `resource` being observed, update `resource` with the new values, and fire the `ClientResource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed.
+- If there are OCF protocol errors during observe, fire an [`error`](#onerror) event with a new [`OcfError`](#ocferror) object `error` with `error.kind` is set to `"observe"`, `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.resourcePath`.
 
 <a name="update"></a>
 ##### 4.3. The `update(resource)` method
-- Updates a resource in the network by sending a request to the device specified by `resource.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource` is updated.
+- Updates a resource on the network by sending a request to the device specified by `resource.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource` is updated.
 - Returns: a [`Promise`](./README.md/#promise) object.
 - The `resource` argument is a [Resource](#resource) object.
 

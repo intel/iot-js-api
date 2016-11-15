@@ -3,7 +3,7 @@ Board Support for FRDM-K64F
 
 The FRDM-K64F board pin names and locations are shown [here](https://developer.mbed.org/platforms/FRDM-K64F/).
 
-Theere are 16 general purpose I/O pins, `D0` - `D15`. `D14` and `D15` can be used as GPIO inputs but not outputs currently.
+There are 16 general purpose I/O pins, `D0` - `D15`. `D14` and `D15` can currently be used as GPIO inputs but not as outputs.
 
 There is an onboard RGB LED which can be controlled through three different GPIO outputs for the red, green, and blue components. `LEDR` controls the red portion, `LEDG` the green portion, and `LEDB` the blue
 portion. They are all active on high.
@@ -14,7 +14,7 @@ There are ten pins that can be used as PWM output, `PWM0` - `PWM9`.
 
 There are six analog input pins, `A0` - `A5`.
 
-Supported pins are summarized in the following table.
+Supported pins are summarized in the following table:
 
 |Pin name |Supported modes (channel), [other]   |
 | ---     | ---                                 |

@@ -1,13 +1,13 @@
 Board Support for Arduino 101
 =============================
 
-This page defines the values returned by the [`Board.pins()`](./README.md/#getpins) method and describes the pin mapping for the [`Board.pin()`](./README.md/#getpin) method, from board labels that are printed on the board to operating system specific values.
+This page defines the values returned by the [`Board.pins()`](./README.md/#getpins) method and describes the pin mapping for the [`Board.pin()`](./README.md/#getpin) method, from board labels that are printed on the board to operating system-specific values.
 
 The board labels are described in the [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) board documentation. Also, for each board pin, the [`supportedModes`](./README.md/#pin) property of each pin is described.
 
 The [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) board has 20 I/O pins that operate at 3.3V and can be configured as described by the following table.
 
-Pins 0 and 1 can be also configured to be used as UART, the port name is exposed as `uart0`.
+Pins 0 and 1 can be also configured to be used as UART. The port name is exposed as `uart0`.
 
 On GPIO pins (0..13) interrupts can be configured to be triggered on low value, high value, rising edge and falling edge. Some of the GPIO pins can trigger interrupt on value *change* (pins 2, 5, 7, 8, 10, 11, 12, 13).
 
@@ -27,7 +27,7 @@ Other names:
   * MISO (Master In Slave Out) on pin 12
   * SCK (Serial Clock) on pin 13.
 
-Arduino 101 pins are summarized in the following table.
+Arduino 101 pins are summarized in the following table:
 
 |Pin name |Supported modes (channel), [other]  |
 | ---     | ---                                |

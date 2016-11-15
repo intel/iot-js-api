@@ -106,7 +106,7 @@ try {
     console.log("GPIO port value has changed; value: " + value);
   };
 
-    // Initialize and write an output port
+  // Initialize and write an output port
   gwport = new GPIO({ pins: [1,2,3,4,5,6,7,8], mode: "output", activeLow: true });
   gwgport.write(0x21);
   gwport.close();
@@ -137,13 +137,13 @@ The `mode` property inherited from [`Pin`](./README.md/#pin) can take the values
 
 The `supportedModes` property inherited from [`Pin`](./README.md/#pin) returns an array of supported modes for the pin, according to the board documentation. Implementations are not required to implement this property, in which case its value should be `undefined`.
 
-The `value` property inherited from [`Pin`](./README.md/#pin) provides the raw value of the pin, 0 (meaning `low`, or `false`) or 1 (meaning `high`, or `true`) or `undefined`. The default value is `undefined`, meaning the input may be floating, and output is not specified. When reading the property, implementations SHOULD make a synchronous read operation to fetch the value of the pin.
+The `value` property inherited from [`Pin`](./README.md/#pin) provides the raw value of the pin, 0 (meaning `low`, or `false`) or 1 (meaning `high`, or `true`) or `undefined`. The default value is `undefined`, meaning the input may be floating, and output is not specified. When reading the property, implementations SHOULD perform a synchronous read operation to fetch the value of the pin.
 
-The `address` property inherited from [`Pin`](./README.md/#pin) is initialized by implementation with the pin mapping value provided by the board, and represents the identifier of the pin in the given platform and operating system.
+The `address` property inherited from [`Pin`](./README.md/#pin) is initialized by the implementation with the pin mapping value provided by the board, and represents the identifier of the pin in the given platform and operating system.
 
 The `activeLow` property tells whether the pin value 0 means active. If `activeLow` is `true`, with `value` 0 the pin is active, otherwise inactive. For instance, if an actuator is attached to the (output) pin active on low, client code should write the value 0 to the pin in order to activate the actuator.
 
-The `edge` property is used for input pins and tells whether the `onchange` event is emitted on the rising edge of the signal (string value `"rising"`) when `value` changes from 0 to 1, or on falling edge (string value `"falling"`) when `value` changes from 1 to 0, or both edges (string value `"any"`), or never (string value `"none`"). The default value is `"none"`, which means by default the `onchange` events will fire on any change.
+The `edge` property is used for input pins and tells whether the `onchange` event is emitted on the rising edge of the signal (string value `"rising"`) when `value` changes from 0 to 1, or on falling edge (string value `"falling"`) when `value` changes from 1 to 0, or both edges (string value `"any"`), or never (string value `"none`"). The default value is `"none"`, which means the event will not fire on any change.
 
 The `pull` property tells if the internal pulldown (string value `"pulldown"`) or pullup (string value `"pullup"`) resistor is used for input pins to provide a default value (0 or 1) when the input is floating. The default value is `"none"`, meaning no resistor is used and the input is floating.
 
@@ -191,13 +191,13 @@ The `value` property inherited from [`Pin`](./README.md/#pin) provides the raw n
 #### `GPIOPort` methods
 
 ##### The `write(value)` method
-If `value` is `0`, `null` or `undefined`, let `value` be 0. If `value` is larger than the numeric range of the port, throw `RangeError`. The method synchronously writes `value` to the GPIO port, regardless of the value of `activeLow`.
+If `value` is `0`, `false`, `null` or `undefined`, let `value` be 0. If `value` is larger than the numeric range of the port, throw `RangeError`. The method synchronously writes `value` to the GPIO port, regardless of the value of `activeLow`.
 
 ##### The `close()` method
 Called when the application is no longer interested in the port. This also removes all listeners to the `onchange` event. Until the next invocation of `init()`, invoking the `write()` method or reading the `value` property SHOULD throw `InvalidAccessError`.
 
 #### `GPIOPort` events
-The `GPIOPort` object supports the following events inherited from [`GPIO`](#gpio).
+The `GPIOPort` object supports the following events inherited from [`GPIO`](#gpio):
 
 | Event name        | Event callback argument |
 | --------------    | ----------------------- |
@@ -212,12 +212,12 @@ This internal algorithm is used by the [`Board.gpio()`](./README.md/#gpio) metho
 - If `options` is a string, and there is no matching GPIO pins or ports defined by the board, throw `TypeError`.
 - Create a dictionary `init` and use the value of `options` to initialize the `init.name` property.
 - Otherwise, if `options` is a dictionary, let `init` be `options`. It may contain the following [`GPIO`](#gpio) properties:
-  * `name` for GPIO pin or port name defined by the board
+  * `name` for the GPIO pin or port name defined by the board
   * `mode` with valid values `"input"` or `"output"`, by default `"input"`
   * `activeLow`, by default `false`
   * `edge`, by default `"any"`
   * `pull`, by default `"none"`.
-- If any of the `init` properties has invalid value, throw `TypeError`.
+- If any of the `init` properties has an invalid value, throw `TypeError`.
 - If `board` is `undefined` or `null`, let `board` be the default board connected. If no default board exists, throw `InvalidAccessError`.
 - If `init.name` matches a GPIO port name defined by the board, run the following sub-steps:
   * let `gpioport` be the [`GPIOPort`](#gpioport) object representing the requested port initialized by `init`. For the [`GPIOPort`](#gpioport) properties missing from the `init` dictionary, use the default values of the [`GPIOPort`](#gpioport) object properties.
@@ -229,7 +229,7 @@ This internal algorithm is used by the [`Board.gpio()`](./README.md/#gpio) metho
 - Otherwise, run the following sub-steps:
   * Let `gpio` be the [`GPIO`](#gpio) object representing the requested pin initialized by `init`. For the [`GPIO`](#gpio) properties missing from the `init` dictionary, use the default values of the `GPIO` object properties.
   * Initialize the `gpio.pin` property with `init.name`.
-  * Initialize the `gpio.address` property with the board specific pin mapping value, if available.
+  * Initialize the `gpio.address` property with the board-specific pin mapping value, if available.
   * Request the underlying platform to initialize the GPIO pin on the given `board` with the `init` properties.
   * In case of failure, return `null`.
   * Initialize the `gpio.value` property with the current value of the pin, if available.

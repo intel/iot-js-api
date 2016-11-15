@@ -22,7 +22,7 @@ Introduction
 ------------
 The Server API provides the means to
 - register and unregister resources,
-- register handlers that serve CRUDN requests in a device,
+- register handlers that serve CRUDN requests on a device,
 - notify of resource changes, and
 - enable and disable presence functionality on the device.
 
@@ -83,13 +83,13 @@ The method is typically used from request handlers, and internally reuses the re
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Construct a response message to `request`, reusing the properties of `request`.
-- If `error` is not `null` and is an instance of `Error`, then mark the error in the response message (the error may be application specific). Otherwise, mark a generic error in the response message.
+- If `error` is not `null` and is an instance of `Error`, then mark the error in the response message (the error may be application-specific). Otherwise, mark a generic error in the response message.
 - Send the response back to the sender.
 - If there is an error during sending the response, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="serverresource"></a>
 ### The `ServerResource` interface
-`ServerResource` extends [`Resource`](./client.md/#resource), so it has all the properties of [`Resource`](#resource) as read-only, and in addition it has the following methods.
+`ServerResource` extends [`Resource`](./client.md/#resource), so it has all the properties of [`Resource`](#resource) as read-only, and in addition it has the following methods:
 
 #### `ServerResource` methods
 
@@ -123,7 +123,7 @@ server.onretrieve(function(request) {
   console.log("Client resource id: " + request.source);
   console.log("Target resource id, to be retrieved: " + request.target);
 
-  // Retrieve resource in a device specific way.
+  // Retrieve resource in a device-specific way.
   let res = _getResource(request.target);
   let err = res ? null : new Error('retrieving resource failed');
 
@@ -202,14 +202,14 @@ server.ondelete(function(request) {
 
 <a name="notify"></a>
 ##### The `notify()` method
-Notifies subscribed clients about resource representation change and returns a [`Promise`](./README.md/#promise) object.
+Notifies subscribed clients about a resource representation change and returns a [`Promise`](./README.md/#promise) object.
 
 See the [example](#exampleonupdate) for the `update` event.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - For each client that requested observing `this.resourcePath`, run the following sub-steps:
-    * If there were request options specified with the retrieve request associated with observing the resource, and if a [translate function](#ontranslate) has been defined for the resource, then let `translatedRepresentation` be the result of invoking that translate function with `this.properties` and the [request options dictionary](#requestoptions) that has been saved for the [observation request](#onretrieve).
+    * If there were request options specified with the retrieve request associated with observing the resource, and if a [translate function](#ontranslate) has been defined for the resource, then let `translatedRepresentation` be the result of invoking that translate function with the [request options dictionary](#requestoptions) that has been saved for the [observation request](#onretrieve).
     * Send an OCF update notification to the client using `translatedRepresentation`.
 - When all notifications are sent, resolve `promise`.
 
@@ -273,7 +273,7 @@ server.on('create', function(request) {
   var translate = function (representation, requestOptions) {
         switch (requestOptions.units) {
           case "C" :
-            // use sensor specific code to get Celsius units
+            // use sensor-specific code to get Celsius units
             representation.temperature = _getCelsiusFromSensorT1();
             break;
           case "F":
@@ -288,8 +288,9 @@ server.on('create', function(request) {
   }
 
   // Register the new resource and then respond to the request.
-  server.register(res, translate)
+  server.register(res)
     .then(function(resource) {
+      resource.ontranslate(translate);
       server.respond(request, null, resource);
     }).catch(function(error) {
       server.respond(request, error, res);

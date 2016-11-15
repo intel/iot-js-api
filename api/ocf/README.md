@@ -17,10 +17,10 @@ This document presents a JavaScript API for the [OCF](https://openconnectivity.o
 
 Since implementations may run on constrained hardware, examples use [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/).
 
-The OCF specifies
-  - the Core Framework for OCF core architecture, interfaces, protocols and services to enable OCF profiles implementation for IoT usages
+The OCF provides
+  - the specification for the Core Framework for OCF core architecture, interfaces, protocols and services to enable the implementation of OCF profiles for IoT usages
 
-  - Application Profiles Specification documents specify the OCF profiles to enable IoT usages for different market segments such as home, industrial, healthcare, and automotive.
+  - Application Profiles Specification documents for the OCF profiles to enable IoT usages for different market segments such as home, industrial, healthcare, and automotive.
 
 In OCF terminology, multiple providers and solutions can share a physical hardware *platform*. A platform may host multiple physical or virtual *devices*.
 Devices are addressable endpoints of communication, and run the OCF software stack. A device may host multiple physical or virtual *resources*.
@@ -32,10 +32,10 @@ The devices support installable software modules called *applications*. This API
 
 The API object
 --------------
-The API object is exposed in a platform specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be exposed as a property of a global object.
+The API object is exposed in a platform-specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be exposed as a property of a global object.
 
 ```javascript
-let module = 'ocf';  // use your own implementations' name
+let module = 'ocf';  // use your own implementation's name
 var ocf = require(module);
 ```
 If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
@@ -47,11 +47,11 @@ When `require` is successful, it MUST return an object with the following read-o
 - `platform` is an [`OcfPlatform`](#ocfplatform) object that represents properties of the platform that hosts the current device.
 
 The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality,
-  * enabling remote access to resources in the network,
+  * enabling remote access to resources on the network,
   * enabling listening to presence notifications in the OCF network. and
-  * implementing discovery for platforms, devices and resources in the OCF network.
+  * implementing discovery for platforms, devices and resources on the OCF network.
 
-The Server API implements the functionality to serve CRUDN requests in a device. It also provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
+The Server API implements the functionality to serve CRUDN requests on a device. It also provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
 
 Structures
 ----------
@@ -107,11 +107,11 @@ All these errors are instances of [`Error`](https://nodejs.org/api/errors.html#e
 - The `message` property is inherited from `Error`.
 
 The constructor of `OcfDiscoveryError`, `OcfObserveError` and `OcfPresenceError` takes the following parameters:
-- the `message` parameter is a string representing an error message, like with `Error`
+- the `message` parameter is a string representing an error message, as with `Error`
 - the `deviceId` parameter instantiates the `deviceId` property
 - the `resourcePath` parameter instantiates `the resourcePath`.
 
-If `deviceId` is defined, and `resourcePath` is `undefined` or `null`, it means the error is device specific without being specific to the resource (such as device presence related errors).
+If `deviceId` is defined, and `resourcePath` is `undefined` or `null`, it means the error is device-specific without being specific to the resource (such as errors realted to device presence).
 
 ```javascript
 let message = "OCF error";
@@ -136,8 +136,8 @@ Code using this API is deployed to a device which exposes one or more resources.
 
 **Resource identification** is URL path, relative to a given device. A URL composed of the ```oic``` scheme, the device ID as host and the resource path can also be used for identifying a resource: ```oic://<deviceID>/<resourcePath>```. However, this specification uses the device ID and resource ID separately.
 
-**Device discovery** uses endpoint discovery: multicast request "GET /oic/res" to "All CoAP nodes" (```224.0.1.187``` for IPv4 and ```FF0X::FD``` for IPv6, port 5683). The response lists devices and their resources (at least URI, resource type, interfaces, and media types).
+**Device discovery** uses endpoint discovery, that is, a multicast request "GET /oic/res" to "All CoAP nodes" (```224.0.1.187``` for IPv4 and ```FF0X::FD``` for IPv6, port 5683). The response lists devices and their resources (at least URI, resource type, interfaces, and media types).
 
 OCF defines special resources on each device, for implementing device discovery, resource discovery, platform discovery, presence, etc. API implementations should encapsulate handling these special resources and the hardcoded/fixed URIs.
 
-This version of the API supports the OCF Core Specification version 1.0 (final) and 1.1.0 (draft), except that it doesn not yet support OCF resource *links*, *scenes*, *rules* and *scripts*.
+This version of the API supports the OCF Core Specification version 1.0 (final) and 1.1.0 (draft), except that it does not yet support OCF resource *links*, *scenes*, *rules* and *scripts*.

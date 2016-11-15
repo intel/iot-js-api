@@ -4,7 +4,7 @@ PWM API
 The PWM API supports writing analog values to pins using Pulse Width Modulation. Usually PWM is used for controlling LEDs, fans, vibration, etc.
 
 PWM is characterized by a repeating digital signal of given pulse width (duration for value 1 in normal polarity and for value 0 in reverse polarity) and a total duration of the signal (period). Also, PWM is characterized by a duty cycle that is the ratio between the pulse width and the total signal period.
-For instance, a LED that is driven with a PWM signal with 50% duty cycle will be approximately half bright.
+For instance, a LED that is driven with a PWM signal with 50% duty cycle will be approximately half-bright.
 
 The term 'channel' is used to refer to the fact that PWM controller hardware has multiple channels, but they are exposed as output pins. In this API the value of a channel is the numeric index of a PWM pin relative to the controller.
 
@@ -56,7 +56,7 @@ Represents the properties and methods that expose PWM functionality. The `PWM` o
 
 The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board mapping.
 
-The `address` property inherited from [`Pin`](./README.md/#pin) is initialized by implementation with the pin mapping value provided by the board, and represents the identifier of the pin in the given platform and operating system.
+The `address` property inherited from [`Pin`](./README.md/#pin) is initialized by the implementation with the pin mapping value provided by the board, and represents the identifier of the pin in the given platform and operating system.
 
 The `mode` property inherited from [`Pin`](./README.md/#pin) takes the value `"pwm"`.
 
@@ -87,11 +87,11 @@ This internal algorithm is used by the [`Board.pwm()`](./README.md/#pwm) method 
 - If any of the `init` properties has invalid value, throw `InvalidAccessError`.
 - If `board` is `undefined` or `null`, let `board` be the default board connected. If no default board exists, throw `InvalidAccessError`.
 - initialize the `reversePolarity` property with the value requested by the application.
-- Let `pwm` be the `PWM`](#pwm) object representing the pin identified by the `name` argument.
+- Let `pwm` be the [`PWM`](#pwm) object representing the pin identified by the `name` argument.
 - Request the underlying platform to initialize AIO on the given `board` for the given pin `name`.
 - In case of failure, return `null`.
-- Initialize the `pwm.address` property with the board specific pin mapping value, if available.
-- Initialize the `pwm.channel` property with the board specific value, if available.
+- Initialize the `pwm.address` property with the board-specific pin mapping value, if available.
+- Initialize the `pwm.channel` property with the board-specific value, if available.
 - Initialize the `value` property with the dictionary described [here](#pwmdata) with default property values.
 - Return the `pwm` object.
 

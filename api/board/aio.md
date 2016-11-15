@@ -1,7 +1,7 @@
 AIO API
 =======
 
-The AIO API supports reading analog input pins that measure analog voltage signal between 0 and a maximum voltage (usually 3.3 or 5 Volts), then do Analog-to-Digital Conversion (ADC) with a resolution of 10 or 12 bits on most boards, so that the result (pin value) is 0 to 1023 or 0 to 4095, inclusively.
+The AIO API supports reading analog input pins that measure the analog voltage signal between 0 and a maximum voltage (usually 3.3 or 5 Volts), then do Analog-to-Digital Conversion (ADC) with a resolution of 10 or 12 bits on most boards, so that the result (pin value) is 0 to 1023 or 0 to 4095, inclusively.
 
 On some boards access to AIO may be asynchronous. This API provides both synchronous and asynchronous read. Also, applications can subscribe to an event that is fired when data is sampled on the pin, and if not interested in all samples, it can also provide a hint to the implementation about a minimum time between two events.
 
@@ -65,13 +65,13 @@ The `mode` property inherited from [`Pin`](./README.md/#pin) takes the value `"a
 
 The `supportedModes` property inherited from [`Pin`](./README.md/#pin) returns an array of supported modes fot the pin, according to the board documentation. Implementations are not required to implement this property, in which case its value should be `undefined`.
 
-The `value` property inherited from [`Pin`](./README.md/#pin) can take values between 0 and 1024 or between 0 and 4096. Its getter performs a synchronous read operation for the pin value. On platforms where AIO access is asynchronous, the read is blocked until data is available.
+The `value` property inherited from [`Pin`](./README.md/#pin) can take values between 0 and 1023 or between 0 and 4095. Its getter performs a synchronous read operation for the pin value. On platforms where AIO access is asynchronous, the read is blocked until data is available.
 
 The `address` property inherited from [`Pin`](./README.md/#pin) is initialized by implementation with the pin mapping value provided by the board, and represents the identifier of the pin in the given platform and operating system.
 
 The `channel` property is initialized by implementation and provides the numeric index of the analog pin, e.g. it is 0 for pin `"A0"` and 5 for pin `"A5"`.
 
-The `rateLimit` property represents the minimum number of milliseconds between two emits of the `ondata` event. It is used as a hint from applications when initializing AIO pins, and the value is reflecting the capability of the platform (`undefined` when rate limitation is not supported).
+The `rateLimit` property represents the minimum number of milliseconds between two emits of the `ondata` event. It is used as a hint from applications when initializing AIO pins, and the value reflects the capability of the platform (`undefined` when rate limitation is not supported).
 
 The `precision` property represents the bit length of the digital sample. It is usually 10 or 12 bits, depending on board.
 
@@ -84,10 +84,10 @@ This internal algorithm is used by the [`Board.aio()`](./README.md/#aio) method 
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`AIO`](#aio) properties:
   * `pin` for board pin name with the valid values defined by the board
   * `rateLimit`.
-- If any of the `init` properties has invalid value, throw `InvalidAccessError`.
+- If any of the `init` properties has an invalid value, throw `InvalidAccessError`.
 - If `board` is `undefined` or `null`, let `board` be the default board connected. If no default board exists, throw `InvalidAccessError`.
 - Let `aio` be the `AIO`](#aio) object representing the pin identified by the `name` argument.
-- Initialize the `aio.address` property with the board specific pin mapping value, if available.
+- Initialize the `aio.address` property with the board-specific pin mapping value, if available.
 - Request the underlying platform to initialize AIO on the given `board` for the given pin `name`.
 - In case of failure, return `null`.
 - Initialize the `value` property with `undefined`.

@@ -1,4 +1,3 @@
-
 OCF JavaScript API Web IDL
 ==========================
 
@@ -157,7 +156,7 @@ callback RequestHandler = void (Request request);
 
 callback ErrorHandler = void (Error error);
 
-// The function that is called by implementation to select resource representation.
+// The function that is called by the implementation to select resource representation.
 callback TranslateCallback = ResourceRepresentation (Dictionary requestOptions);
 
 // The request types below hide the request id, source, and target (this) deviceId.

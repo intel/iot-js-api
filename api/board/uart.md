@@ -1,7 +1,7 @@
 UART API
 ========
 
-The UART API supports Universal Asynchronous Receiver/Transmitter that allows to the board to communicate with other external devices. It uses 2 pins, RX for receiving and TX for transmit. UART ports are usually referred by string names (see board definitions), but numbers may also be accepted.
+The UART API supports the Universal Asynchronous Receiver/Transmitter that allows the board to communicate with other external devices. It uses 2 pins, RX for receiving and TX for transmitting. UART ports are usually referred by string names (see board definitions), but numbers may also be accepted.
 This API uses a [`Buffer`](../README.mk/#buffer) object for both read and write.
 
 The API object
@@ -36,7 +36,7 @@ try {
 
 <a name="UART">
 ### The `UART` interface
-Represents the properties and methods that expose UART functionality. The `UART` interface implements the [`EventEmitter`](../README/#events) interface and exposes one event with name `onread`.
+Represents the properties and methods that expose UART functionality. The `UART` interface implements the [`EventEmitter`](../README/#events) interface and exposes one event named `onread`.
 
 | Event name        | Event callback argument |
 | --------------    | ----------------------- |
@@ -55,7 +55,6 @@ The `UART` object has the following properties:
 
 The `port` property denotes the UART port as a string defined by the board documentation, such as `"tty0"`, `"serialUSB0"`, etc.
 
-
 The `speed` property represents the baud rate and its value can be 9600, 19200, 38400, 57600, 115200 (by default).
 
 The `dataBits` property represents the number of data bits (word size), and it can be between 5 and 8 (by default).
@@ -71,11 +70,11 @@ The `flowControl` boolean property denotes if flow control is used. By default i
 ##### UART initialization
 This internal algorithm is used by the [`Board.uart()`](./README.md/#uart) method. Configures UART with the `options` (first) dictionary argument on the [`board`](./README.md/#board) specified by the `board` (second) argument.
 - If `options.port` is not a string, return `null`.
-- Let `uart` be an `UART`](#uart) object.
+- Let `uart` be an [`UART`](#uart) object.
 - For all `uart` properties, if the `options` dictionary defines the same property with a valid value, let the `uart` property take that value, otherwise the default value.
 - Request the underlying platform to initialize the UART with the parameters provided by `uart`.
 - In case of failure, return `null`.
-- Invoke the `uart.setReadRange(min, max)` method with `min` = 1, and `max` taking a value determined by the platform that is greater or equal than 1.
+- Invoke the `uart.setReadRange(min, max)` method with `min` = 1, and `max` taking a value determined by the platform that is greater than or equal to 1.
 - Return `uart`.
 
 ##### The `write(buffer)` method
