@@ -15,20 +15,23 @@ Introduction
 ------------
 This document presents a JavaScript API for the [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.0 (final) and 1.1.0 (draft).
 
-Since implementations may run on constrained hardware, examples use [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/).
-
 The OCF provides
   - the specification for the Core Framework for OCF core architecture, interfaces, protocols and services to enable the implementation of OCF profiles for IoT usages
 
   - Application Profiles Specification documents for the OCF profiles to enable IoT usages for different market segments such as home, industrial, healthcare, and automotive.
 
 In OCF terminology, multiple providers and solutions can share a physical hardware *platform*. A platform may host multiple physical or virtual *devices*.
-Devices are addressable endpoints of communication, and run the OCF software stack. A device may host multiple physical or virtual *resources*.
-A resource represents *sensors* and *actuators*.
-A given sensor or actuator is represented by resource properties. A read-only resource property represents a sensorial input, whereas a read-write property represents the state of an actuator.
-Resources can be accessed remotely, and can notify subscribers with data and state changes. The resources act as servers, and communication may involve different protocols. Resources may also be represented by devices that translate between resource-specific and standard protocols. These devices are called *gateways*, or OCF *intermediary devices*.
+Devices are addressable endpoints of communication, and run the OCF software stack. A device may host multiple physical or virtual *resources*. A resource represents *sensors* and *actuators*.
 
-The devices support installable software modules called *applications*. This API is exposed on an OCF device and enables writing the applications that implement resources and business logic.
+A given sensor or actuator is represented by resource properties. A read-only resource property represents a sensorial input, whereas a read-write property represents the state of an actuator.
+
+Resources can be accessed remotely, and can notify subscribers with data and state changes. The resources act as servers, and communication may involve different protocols like CoAP or HTTP. Resources may also be represented by devices that translate between resource-specific and standard protocols. These devices are called *gateways*, or OCF *intermediary devices*.
+
+The devices support installable software modules called *applications*. This API is exposed on an OCF device and enables writing applications that implement resources and related business logic.
+
+This version of the API supports OCF Resource, Device, and Platform related functionality. OCF Collections, Links and Scenes are not yet supported.
+
+Since implementations may run on constrained hardware, examples use [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/).
 
 The API object
 --------------
