@@ -70,7 +70,6 @@ interface OcfClient {
   attribute EventHandler<Platform> onplatformfound;
   attribute EventHandler<Device> ondevicefound;
   attribute EventHandler<Device> ondevicelost;
-  attribute EventHandler<Device> ondevicechanged;
   attribute EventHandler<ClientResource> onresourcefound;
   attribute EventHandler<Error> onerror;
 };

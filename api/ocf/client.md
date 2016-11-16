@@ -119,9 +119,9 @@ client.on('devicelost', function(device) {
 });
 ```
 
-When the first listener is added to the `ondevicefound` or the `ondevicelost` event, implementations SHOULD enable listening to OCF presence notifications.
+When the first listener is added to the `ondevicefound` or the `ondevicelost` event, implementations SHOULD enable watching device status, if supported by the underlying platform.
 
-When the last listener is removed from the `ondevicefound` and the `ondevicelost` event, implementations SHOULD disable listening to OCF presence notifications.
+When the last listener is removed from the `ondevicefound` and the `ondevicelost` event, implementations SHOULD disable watching device status.
 
 <a name="onresourcefound"></a>
 ##### 2.4. The `resourcefound` event
