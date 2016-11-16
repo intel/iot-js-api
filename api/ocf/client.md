@@ -79,7 +79,7 @@ Note that applications should not create `ClientResource` objects, as they are c
 The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
 
 <a name="onresourcelost"></a>
-The `delete` event is fired on a `ClientResource` object when the `devicelost` event is fired with the device that contains the resource, or when the implementation gets notified about the resource being deleted or unregistered from the OCF network.
+The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. This might not be supported in all OCF networks.
 
 ## 2. Events
 The Client API supports the following events:
