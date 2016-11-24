@@ -96,7 +96,7 @@ The Client API supports the following events:
 ##### 2.1. The `platformfound` event
 Fired when a platform is discovered. The event callback receives as argument a [`Platform`](./README.md/#platform) object.
 ```javascript
-client.addListener('platformfound', function(platform) {
+client.on('platformfound', function(platform) {
   console.log("Platform found with id: " + platform.id);
 });
 ```
@@ -105,7 +105,7 @@ client.addListener('platformfound', function(platform) {
 ##### 2.2. The `devicefound` event
 Fired when a device is discovered or when a device appears on the network as a result of enabling its presence. The event callback receives as argument a [`Device`](./README.md/#device) object.
 ```javascript
-client.addListener('devicefound', function(device) {
+client.on('devicefound', function(device) {
   console.log("Device found with id: " + device.uuid);
 });
 ```
