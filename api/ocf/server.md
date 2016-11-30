@@ -15,18 +15,15 @@ OCF Server API
 - Server methods
   * [register(resource)](#register)
   * [oncreate(handler)](#oncreate)
-  * [enablePresence(timeToLive)](#enable)
-  * [disablePresence()](#disable)
 
 Introduction
 ------------
 The Server API provides the means to
 - register and unregister resources,
 - register handlers that serve CRUDN requests on a device,
-- notify of resource changes, and
-- enable and disable presence functionality on the device.
+- notify of resource changes.
 
-A device that implements the Server API may provide special resources to handle CRUDN requests. A server implementation should encapsulate and manage OCF presence. Applications can only enable or disable presence. Clients can subscribe to presence information using the [OCF Client API](./client.md).
+A device that implements the Server API may provide special resources to handle CRUDN requests.
 
 The Server API object does not expose its own properties, only methods for registering handlers.
 
@@ -233,8 +230,6 @@ The method runs the following steps:
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.
 
-The OCF network should send the presence notifications to listeners.
-
 2. Server Methods
 -----------------
 
@@ -315,24 +310,3 @@ The method runs the following steps:
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, update `resource` to be a [`ServerResource`](#serverresource) object.
 - Resolve `promise` with `resource`.
-
-<a name="enablepresence"></a>
-##### 2.9. `enablePresence(timeToLive)`
-Enables presence for the current device, with an optional time-to-live argument.
-Returns a [`Promise`](./README.md/#promise) object. The `timeToLive` argument is optional. It is a number representing the time to live of the request in seconds.
-
-The method runs the following steps:
-- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- Send a request to enable presence for the current device, and wait for the answer.
-- If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise`.
-
-<a name="disablepresence"></a>
-##### 2.10. `disablePresence()`
-Disables presence for the current device and returns a [`Promise`](./README.md/#promise) object.
-
-The method runs the following steps:
-- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- Send a request to disable presence for the current device, and wait for the answer.
-- If there is an error during the request, reject `promise` with that error.
-- When the answer is received, resolve `promise`.

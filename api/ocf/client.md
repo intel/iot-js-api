@@ -79,7 +79,9 @@ Note that applications should not create `ClientResource` objects, as they are c
 The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
 
 <a name="onresourcelost"></a>
-The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. This might not be supported in all OCF networks.
+The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener received a [`ResourceId`](#resourceid) dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
+###### Note
+Note that presence (`/oic/ad` resource and `oic.wk.ad` resource type) is not any more defined by the OCF specification. Therefore implementations SHOULD observe the `/oic/res` resource for getting notified when a resource is removed, acccording to the [`findResources` steps](#findresources). When a resource is deleted, implementations SHOULD fire the `delete` event on the deleted resource.
 
 ## 2. Events
 The Client API supports the following events:
@@ -103,7 +105,7 @@ client.on('platformfound', function(platform) {
 
 <a name="ondevicefound"></a>
 ##### 2.2. The `devicefound` event
-Fired when a device is discovered or when a device appears on the network as a result of enabling its presence. The event callback receives as argument a [`Device`](./README.md/#device) object.
+Fired when a device is discovered. The event callback receives as argument a [`Device`](./README.md/#device) object.
 ```javascript
 client.on('devicefound', function(device) {
   console.log("Device found with id: " + device.uuid);
@@ -213,7 +215,9 @@ The method runs the following steps:
 - If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
 - If the `listener` argument is specified, add it as a listener to the [`resourcefound`](#resourcefound) event.
-- When a resource is discovered, fire a `resourcefound` event that contains a property named `resource`, whose value is a [`ClientResource`](#resource) object.
+- When a resource is discovered, run the following sub-steps:
+  * Start observing the `/oic/res` resource on the device that owns the resource, so that when the resource is removed, the [`delete`](#resourcelost) event could be fired on the resource.
+  * Fire a `resourcefound` event that contains a property named `resource`, whose value is a [`ClientResource`](#resource) object.
 
 <a name="client-methods"></a>
 ## 4. Client methods
