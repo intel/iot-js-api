@@ -289,6 +289,6 @@ process.on( "exit", function() {
 	}
 } );
 
-}, { defaultCallbacks: defaultCallbacks } );
+}, { defaultCallbacks: defaultCallbacks, defaultSpawn: spawn } );
 
 module.exports = testSuite;
