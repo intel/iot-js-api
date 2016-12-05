@@ -41,26 +41,41 @@ Identifies an OCF resource by the UUID of the device that hosts the resource, an
 | `deviceId` | string | no       | `undefined`   | UUID of the device |
 | `resourcePath` | string | no       | `undefined`   | URI path of the resource |
 
+<a name="resourcelink"></a>
+### 1.2. The `ResourceLink` dictionary
+Extends `ResourceId`. Represents an OCF resource Link used in Collections.
+
+| Property        | Type    | Optional | Default value | Represents |
+| ---             | ---     | ---      | ---           | ---     |
+| `resourceTypes` | array of strings | no    | `[]` | List of OCF resource types |
+| `interfaces`    | array of strings | no    | `[]` | List of supported interfaces |
+| `discoverable`  | boolean | no    | `true` | Whether the resource is discoverable |
+| `observable`    | boolean | no    | `true` | Whether the resource is observable |
+| `ins`           | string  | yes   | `undefined` | Immutable instance identifier of a link  |
+
+The `discoverable` and `observable` properties come from the `p` (policy) property of a Web Link.
 
 <a name="resource"></a>
-### 1.2. The `Resource` dictionary
+### 1.3. The `Resource` dictionary
 Extends `ResourceId`. Used for creating and registering resources, exposes the properties of an OCF resource. All properties are read-write.
 
 | Property        | Type    | Optional | Default value | Represents |
 | ---             | ---     | ---      | ---           | ---     |
-| `resourcePath`  | string  | no       | `undefined`   | URI path of the resource |
 | `resourceTypes` | array of strings | no    | `[]` | List of OCF resource types |
 | `interfaces`    | array of strings | no    | `[]` | List of supported interfaces |
 | `mediaTypes`    | array of strings | no    | `[]` | List of supported Internet media types |
 | `discoverable`  | boolean | no    | `true` | Whether the resource is discoverable |
 | `observable`    | boolean | no    | `true` | Whether the resource is observable |
+| `links`         | array of ResourceLink | no    | `undefined` | Collection of links |
 | `secure`        | boolean | no    | `true` | Whether the resource is secure |
 | `slow`          | boolean | yes   | `false` | Whether the resource is constrained |
 | `properties`    | object | yes    | `{}` | Resource representation properties as described in the data model |
 
  The `properties` property is a resource representation that contains resource-specific properties and values usually described in the [RAML data model](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource.
 
-<a name="clientresource"></a>
+ The `links` property, when present, means the resource is an OCF Collection resource that contains zero or more [RFC5988 Web Links](https://tools.ietf.org/html/rfc5988) represented by the [`ResourceLink`](#resourcelink) dictionary.
+
+ <a name="clientresource"></a>
 ### 1.3. The `ClientResource` object
 #### `ClientResource` properties
 `ClientResource` extends `Resource`. It has all the properties of [`Resource`](#resource), and in addition it has the following events.
@@ -72,14 +87,15 @@ Note that applications should not create `ClientResource` objects, as they are c
 
 | Event name | Event callback argument |
 | -----------| ----------------------- |
-| *update*   | dictionary |
-| *delete*   | N/A |
+| *update*   | partial `ClientResource` dictionary |
+| *delete*   | `ResourceId` dictionary |
 
 <a name="onresourceupdate"></a>
 The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
 
 <a name="onresourcelost"></a>
-The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener received a [`ResourceId`](#resourceid) dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
+The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a [`ResourceId`](#resourceid) dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
+
 ###### Note
 Note that presence (`/oic/ad` resource and `oic.wk.ad` resource type) is not any more defined by the OCF specification. Therefore implementations SHOULD observe the `/oic/res` resource for getting notified when a resource is removed, acccording to the [`findResources` steps](#findresources). When a resource is deleted, implementations SHOULD fire the `delete` event on the deleted resource.
 
@@ -250,6 +266,13 @@ The method runs the following steps:
 - The `listener` argument is optional, and is an event listener for the `ClientResource` [`update`](#onresourceupdate) event that is added on the returned [`ClientResource`](#resource) object.
 
 In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that resource (and get a retrieve response with a resource representation for each resource change).
+
+The `options` argument usually contains the interface the retrieve method if called on, denoted by the `if` property.
+For instance,
+```javascript
+client.retrieve({ deviceId: "xxx", resourceId: "/light/room/1"}, options: { if: "oic.if.ll"; });
+```
+retrieves the collection of lights from room 1. Note that the `/light/room/1` resource may contain more than one interface in its `interfaces` property, and the `options` argument needs to specify which interface of the resource should be used with the retrieve operation. By default, the resource definition defines the default interface for an operation. If not specified, the `oic.if.baseline` is used.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
