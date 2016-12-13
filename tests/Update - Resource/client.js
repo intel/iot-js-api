@@ -24,45 +24,48 @@ var desiredValue = {
 
 console.log( JSON.stringify( { assertionCount: 2 } ) );
 
-client
-	.on( "resourcefound", function( resource ) {
-		resource.properties = desiredValue;
-		client.update( resource )
-			.then(
-				function( updatedResource ) {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						updatedResource === resource,
-						"Client: Updated resource is the discovered resource"
-					] } ) );
-				},
-				function( error ) {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						false, "Client: update() failed unexpectedly: " +
-							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-					] } ) );
-				} )
-			.then( function() {
-
-				// Retrieve the resource to see if the properties were applied
-				return client.retrieve( resource );
+function resourcefound( resource ) {
+	client.removeListener( "resourcefound", resourcefound );
+	resource.properties = desiredValue;
+	client.update( resource )
+		.then(
+			function( updatedResource ) {
+				console.log( JSON.stringify( { assertion: "ok", arguments: [
+					updatedResource === resource,
+					"Client: Updated resource is the discovered resource"
+				] } ) );
+			},
+			function( error ) {
+				console.log( JSON.stringify( { assertion: "ok", arguments: [
+					false, "Client: update() failed unexpectedly: " +
+						( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+				] } ) );
 			} )
-			.then(
-				function( retrievedResource ) {
-					console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
-						retrievedResource.properties, desiredValue,
-						"Client: Retrieved resouce properties are as expected"
-					] } ) );
-				},
-				function( error ) {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						false, "Client: retrieve() failed unexpectedly: " +
-							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-					] } ) );
-				} )
-			.then( function() {
-				console.log( JSON.stringify( { finished: 0 } ) );
-			} );
-	} )
+		.then( function() {
+
+			// Retrieve the resource to see if the properties were applied
+			return client.retrieve( resource );
+		} )
+		.then(
+			function( retrievedResource ) {
+				console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
+					retrievedResource.properties, desiredValue,
+					"Client: Retrieved resouce properties are as expected"
+				] } ) );
+			},
+			function( error ) {
+				console.log( JSON.stringify( { assertion: "ok", arguments: [
+					false, "Client: retrieve() failed unexpectedly: " +
+						( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+				] } ) );
+			} )
+		.then( function() {
+			console.log( JSON.stringify( { finished: 0 } ) );
+		} );
+}
+
+client
+	.on( "resourcefound", resourcefound )
 	.findResources( { resourcePath: "/a/" + process.argv[ 2 ] } )
 	.catch( function( error ) {
 		console.log( JSON.stringify( { assertion: "ok", arguments: [

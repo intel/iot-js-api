@@ -36,34 +36,40 @@ var client = require( process.argv[ 3 ] ).client;
 
 console.log( JSON.stringify( { assertionCount: 3 } ) );
 
+function resourcefound( resource ) {
+	if ( resource.resourcePath === "/a/" + process.argv[ 2 ] ) {
+		client.removeListener( "resourcefound", resourcefound );
+		console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
+			filterKeys( resource, [
+				"resourcePath", "interfaces", "resourceTypes", "discoverable", "observable",
+				"secure"
+			] ),
+			{
+				resourcePath: "/a/" + process.argv[ 2 ],
+				interfaces: [ "oic.if.baseline" ],
+				resourceTypes: [ "core.light" ],
+				discoverable: true,
+				observable: false,
+				secure: false
+			}, "Client: Resource found via .on()"
+		] } ) );
+		maybeQuit();
+	}
+}
+
+function resourcefoundConveniently( resource ) {
+	if ( resource.resourcePath === "/a/" + process.argv[ 2 ] ) {
+		client.removeListener( "resourcefound", resourcefoundConveniently );
+		console.log( JSON.stringify( { assertion: "ok", arguments: [
+			true, "Client: Resource found via convenience handler"
+		] } ) );
+		maybeQuit();
+	}
+}
+
 client
-	.on( "resourcefound", function( resource ) {
-		if ( resource.resourcePath === "/a/" + process.argv[ 2 ] ) {
-			console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
-				filterKeys( resource, [
-					"resourcePath", "interfaces", "resourceTypes", "discoverable", "observable",
-					"secure"
-				] ),
-				{
-					resourcePath: "/a/" + process.argv[ 2 ],
-					interfaces: [ "oic.if.baseline" ],
-					resourceTypes: [ "core.light" ],
-					discoverable: true,
-					observable: false,
-					secure: false
-				}, "Client: Resource found via .on()"
-			] } ) );
-			maybeQuit();
-		}
-	} )
-	.findResources( function( resource ) {
-		if ( resource.resourcePath === "/a/" + process.argv[ 2 ] ) {
-			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				true, "Client: Resource found via convenience handler"
-			] } ) );
-			maybeQuit();
-		}
-	} )
+	.on( "resourcefound", resourcefound )
+	.findResources( resourcefoundConveniently )
 	.then(
 		function() {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [

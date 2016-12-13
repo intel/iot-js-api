@@ -16,38 +16,44 @@ var ocf = require( process.argv[ 3 ] );
 
 console.log( JSON.stringify( { assertionCount: 4 } ) );
 
+function handleDeviceFound( device ) {
+	if ( device.name === "test-device-" + process.argv[ 2 ] ) {
+		ocf.client.removeListener( "devicefound", handleDeviceFound );
+		console.log( JSON.stringify( { assertion: "ok", arguments: [
+			true, "Client: Found device via .on()"
+		] } ) );
+		ocf.client.getDeviceInfo( device.uuid )
+			.then(
+				function( deviceViaGet ) {
+					console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
+						deviceViaGet, device,
+						"Client: Retrieved device info is identical to discovered device info"
+					] } ) );
+				},
+				function( error ) {
+					console.log( JSON.stringify( { assertion: "ok", arguments: [
+						false, "Client: Unexpectedly failed to retrieve device info: " +
+							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+					] } ) );
+				} )
+			.then( function() {
+				console.log( JSON.stringify( { finished: 0 } ) );
+			} );
+	}
+}
+
+function handleDeviceFoundConvenience( device ) {
+	if ( device.name === "test-device-" + process.argv[ 2 ] ) {
+		ocf.client.removeListener( "devicefound", handleDeviceFoundConvenience );
+		console.log( JSON.stringify( { assertion: "ok", arguments: [
+			true, "Client: Found device via convenience handler"
+		] } ) );
+	}
+}
+
 ocf.client
-	.on( "devicefound", function( device ) {
-		if ( device.name === "test-device-" + process.argv[ 2 ] ) {
-			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				true, "Client: Found device via .on()"
-			] } ) );
-			ocf.client.getDeviceInfo( device.uuid )
-				.then(
-					function( deviceViaGet ) {
-						console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
-							deviceViaGet, device,
-							"Client: Retrieved device info is identical to discovered device info"
-						] } ) );
-					},
-					function( error ) {
-						console.log( JSON.stringify( { assertion: "ok", arguments: [
-							false, "Client: Unexpectedly failed to retrieve device info: " +
-								( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-						] } ) );
-					} )
-				.then( function() {
-					console.log( JSON.stringify( { finished: 0 } ) );
-				} );
-		}
-	} )
-	.findDevices( function( device ) {
-		if ( device.name === "test-device-" + process.argv[ 2 ] ) {
-			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				true, "Client: Found device via convenience handler"
-			] } ) );
-		}
-	} )
+	.on( "devicefound", handleDeviceFound )
+	.findDevices( handleDeviceFoundConvenience )
 	.then(
 		function() {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [

@@ -29,57 +29,60 @@ var client = require( process.argv[ 3 ] ).client;
 
 console.log( JSON.stringify( { assertionCount: 2 } ) );
 
-client
-	.findDevices( function( device ) {
-		if ( device.name !== "test-device-" + process.argv[ 2 ] ) {
-			return;
-		}
-		client.retrieve( { deviceId: device.uuid, resourcePath: "/non-existing-resource" } )
-			.then(
-				function( resource ) {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						false, "Client: Retrieved non-existing resource: " +
-							JSON.stringify( resource, null, 4 )
-					] } ) );
-				},
-				function( error ) {
-					console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-						error.message, "Resource not found",
-						"Client: Error indicating inability to directly access resource has " +
-							"the expected message"
-					] } ) );
-				} )
-			.then( function() {
-				return client.retrieve( { deviceId: device.uuid, resourcePath: "/direct" } );
+function devicefound( device ) {
+	if ( device.name !== "test-device-" + process.argv[ 2 ] ) {
+		return;
+	}
+	client.removeListener( "devicefound", devicefound );
+	client.retrieve( { deviceId: device.uuid, resourcePath: "/non-existing-resource" } )
+		.then(
+			function( resource ) {
+				console.log( JSON.stringify( { assertion: "ok", arguments: [
+					false, "Client: Retrieved non-existing resource: " +
+						JSON.stringify( resource, null, 4 )
+				] } ) );
+			},
+			function( error ) {
+				console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+					error.message, "Resource not found",
+					"Client: Error indicating inability to directly access resource has " +
+						"the expected message"
+				] } ) );
 			} )
-			.then(
-				function( resource ) {
-					console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
-						filterKeys( resource, [
-							"resourcePath", "interfaces", "resourceTypes", "properties",
-							"discoverable", "deviceId"
-						] ), {
-							deviceId: device.uuid,
-							resourcePath: "/direct",
-							interfaces: [ "oic.if.baseline" ],
-							resourceTypes: [ "core.light" ],
-							properties: {
-								name: "Pankovski"
-							},
-							discoverable: true
-						}, "Client: Directly accessed resource has expected structure"
-					] } ) );
-				},
-				function( error ) {
-					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						false, "Client: Failed to directly retrieve resource: " +
-							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-					] } ) );
-				} )
-			.then( function() {
-				console.log( JSON.stringify( { finished: 0 } ) );
-			} );
-	} )
+		.then( function() {
+			return client.retrieve( { deviceId: device.uuid, resourcePath: "/direct" } );
+		} )
+		.then(
+			function( resource ) {
+				console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
+					filterKeys( resource, [
+						"resourcePath", "interfaces", "resourceTypes", "properties",
+						"discoverable", "deviceId"
+					] ), {
+						deviceId: device.uuid,
+						resourcePath: "/direct",
+						interfaces: [ "oic.if.baseline" ],
+						resourceTypes: [ "core.light" ],
+						properties: {
+							name: "Pankovski"
+						},
+						discoverable: true
+					}, "Client: Directly accessed resource has expected structure"
+				] } ) );
+			},
+			function( error ) {
+				console.log( JSON.stringify( { assertion: "ok", arguments: [
+					false, "Client: Failed to directly retrieve resource: " +
+						( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+				] } ) );
+			} )
+		.then( function() {
+			console.log( JSON.stringify( { finished: 0 } ) );
+		} );
+}
+
+client
+	.findDevices( devicefound )
 	.catch( function( error ) {
 		console.log( JSON.stringify( { assertion: "ok", arguments: [
 			false, "Client: Failed to start device discovery: " +
