@@ -152,9 +152,8 @@ client.on('resourcefound', function(resource) {
 
 <a name="onerror"></a>
 ##### 2.5. The `error` event
-Fired when there is a protocol error about which the application needs to know. The `Event` object contains an `error` property whose value is an [`Error`](https://nodejs.org/api/events.html#events_error_events) object with two additional optional properties:
-- `deviceId`: a string representing the device UUID that signaled the error
-- `resourcePath`: an [`ResourceInit`](#resourceinit) object relevant for the error.
+
+Fired when there is a protocol error about which the application needs to know. The `Event` object contains an `error` property whose value is an [`OcfError`](./README.md/#ocferror) object.
 
 ```javascript
 client.on('error', function(error) {
