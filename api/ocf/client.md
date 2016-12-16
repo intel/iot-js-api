@@ -97,7 +97,7 @@ The `update` event is fired on a `ClientResource` object when the implementation
 The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a [`ResourceId`](#resourceid) dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
 
 ###### Note
-Note that presence (`/oic/ad` resource and `oic.wk.ad` resource type) is not any more defined by the OCF specification. Therefore implementations SHOULD observe the `/oic/res` resource for getting notified when a resource is removed, acccording to the [`findResources` steps](#findresources). When a resource is deleted, implementations SHOULD fire the `delete` event on the deleted resource.
+Note that presence (`/oic/ad` resource and `oic.wk.ad` resource type) is no longer defined by the OCF specification. Therefore implementations SHOULD observe the `/oic/res` resource for getting notified when a resource is removed, acccording to the [`findResources` steps](#findresources). When a resource is deleted, implementations SHOULD fire the `delete` event on the deleted resource.
 
 ## 2. Events
 The Client API supports the following events:
@@ -137,9 +137,16 @@ client.on('devicelost', function(device) {
 });
 ```
 
-When the first listener is added to the `ondevicefound` or the `ondevicelost` event, implementations SHOULD enable watching device status, if supported by the underlying platform.
+When the first listener is added to the `ondevicefound` or the `ondevicelost` event, implementations SHOULD enable [watching device status](#devicestatus), if supported by the underlying platform.
 
 When the last listener is removed from the `ondevicefound` and the `ondevicelost` event, implementations SHOULD disable watching device status.
+
+<a name="devicestatus"></a>
+__Note__
+The mechanism used for watching device status depends on the underlying native stack. According to the OCF Core Specification, presence (using the `/oic/ad` resource) is not supported any longer, but e.g. [iotivity](https://www.iotivity.org/) still supports it. So implementations MAY use the presence related mechanisms provided by the native stack, but this will work only with devices that run on the same underlying native stack.
+In general (e.g. in heterogenous OCF networks where some of the devices native stack doesn't support presence), implementations SHOULD poll the devices discovered so far by periodically retrieving the `/oic/res` resource on that device, if there is a listener on the `devicelost` event.
+This is to encapsulate this use case in the implementation, and relieve application code from having to poll.
+The situation will be changed when the OCF Core specification will adopt a device entry/exit mechanism *in lieu of* presence. Then this temporary polling solution can be discontinued without changing application code.
 
 <a name="onresourcefound"></a>
 ##### 2.4. The `resourcefound` event
