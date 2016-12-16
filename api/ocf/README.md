@@ -13,7 +13,7 @@ OCF Web API
 
 Introduction
 ------------
-This document presents a JavaScript API for the [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.0 (final) and 1.1.0 (draft).
+This document presents a JavaScript API for the [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.1.0.
 
 The OCF provides
   - the specification for the Core Framework for OCF core architecture, interfaces, protocols and services to enable the implementation of OCF profiles for IoT usages
@@ -96,7 +96,7 @@ Errors during OCF network operations are exposed via `onerror` events and `Promi
 OCF errors (see also [these notes](../README.md#errors)) are represented as augmented instances of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects.
 
 The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling OCF issues:
-- `OcfResourceNotFound` used if the resource if cannot be located in the OCF network, or when an observed resource is deleted from the network.
+- `OcfResourceNotFound` used if the resource cannot be located in the OCF network, or when an observed resource is deleted from the network.
 - `OcfDeviceNotFound` used if the device id cannot be located in the OCF network.
 - `OcfDiscoveryError` for generic discovery related errors
 - `OcfObserveError` for generic observe related errors that are not covered by `OcfResourceNotFound`.
