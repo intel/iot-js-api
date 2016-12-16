@@ -52,7 +52,7 @@ function spawnOne( assert, options ) {
 	var temporary;
 	var commandLine = [ options.path, options.uuid, options.location ];
 	var theChild;
-	var accumulator = "";
+	var accumulator;
 
 	if ( "preamble" in options ) {
 		var temporary = tmp.fileSync();
@@ -87,16 +87,15 @@ function spawnOne( assert, options ) {
 
 	// The stdout of the child is a sequence of \n-separated stringified JSON objects.
 	theChild.stdout.on( "data", function serverStdoutData( data ) {
-		data = data.toString().split( "\n" );
-		data[ 0 ] = accumulator + data[ 0 ];
-		if ( data[ data.length - 1 ] !== "" ) {
-			accumulator = data[ data.length - 1 ];
-			data.splice( data.length - 1, 1 );
-		} else {
-			accumulator = "";
-		}
+		var lastNewline;
 
-		_.each( data, function( value ) {
+		data = Buffer.concat( ( accumulator ? [ accumulator ] : [] ).concat( [ data ] ) );
+		for ( lastNewline = data.length - 1;
+				lastNewline >= 0 && data[ lastNewline ] !== 10;
+				lastNewline-- ) {}
+		accumulator = data.slice( lastNewline + 1 );
+
+		_.each( data.slice( 0, lastNewline ).toString().split( "\n" ), function( value ) {
 			var jsonObject;
 
 			value = options.lineFilter( value, options.path );
