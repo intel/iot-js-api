@@ -62,6 +62,7 @@ function spawnOne( assert, options ) {
 	}
 
 	theChild = options.spawn( options.interpreter, commandLine );
+	theChild.path = options.path;
 
 	runningProcesses.push( theChild );
 
@@ -160,22 +161,37 @@ var actualOptions = {
 		_.map( options.tests, function( item ) {
 			return path.join( __dirname, "tests", item );
 		} ) :
-		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) )
+		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) ).map( path.normalize )
 };
 
 if ( actualOptions.tests.length === 0 ) {
 	console.log( "*** No tests were requested ***" );
 }
 
+getQUnit().module( "OCF tests", {
+	beforeEach: function() {
+		this.children = [];
+	},
+	afterEach: function() {
+		this.children.forEach( function( childProcess ) {
+			console.log( "Killing child " + childProcess.path );
+			childProcess.removeAllListeners();
+			childProcess.kill( "SIGKILL" );
+		} );
+	}
+} );
+
 _.each( actualOptions.tests, function( item ) {
 	var clientPathIndex,
-		clientPaths = glob.sync( path.join( item, "client*.js" ) ),
+		clientPaths = glob.sync( path.join( item, "client*.js" ) ).map( path.normalize ),
 		serverPath = path.join( item, "server.js" );
 
 	if ( fs.lstatSync( item ).isFile() && !actualOptions.single.skip ) {
 		getQUnit()
 			.test( path.basename( item ).replace( /\.js$/, "" ), function( assert ) {
-				spawnOne( assert,
+				var done = assert.async();
+				var children = this.children;
+				children.push( spawnOne( assert,
 					_.extend( {}, actualOptions.single, {
 						uuid: uuid.v4(),
 						name: "Test",
@@ -183,9 +199,12 @@ _.each( actualOptions.tests, function( item ) {
 						teardown: function( error, sourceProcess ) {
 							sourceProcess.kill( "SIGINT" );
 						},
-						maybeQuit: assert.async(),
+						maybeQuit: function() {
+							children.pop();
+							done();
+						},
 						reportAssertions: _.bind( assert.expect, assert )
-					} ) );
+					} ) ) );
 			} );
 		return;
 	}
@@ -208,7 +227,7 @@ _.each( actualOptions.tests, function( item ) {
 		var totalChildren = clientPaths.length + 1,
 
 			// Track the child processes involved in this test in this array
-			children = [],
+			children = this.children,
 
 			// Turn this test async
 			done = assert.async(),
