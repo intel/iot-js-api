@@ -78,7 +78,14 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
  <a name="clientresource"></a>
 ### 1.3. The `ClientResource` object
 #### `ClientResource` properties
-`ClientResource` extends `Resource`. It has all the properties of [`Resource`](#resource), and in addition it has the following events.
+`ClientResource` extends `Resource`. It has all the properties of [`Resource`](#resource), and in addition it has the following property.
+
+| Property        | Type    | Optional | Default value | Represents |
+| ---             | ---     | ---      | ---           | ---     |
+| `polling`       | number  | yes      | `undefined`   | Polling hint for this resource |
+
+The `polling` property is a number that represents the period of polling in milliseconds, used in the [resource polling algorithm](#resourcepolling). By writing `polling`, applications provide a hint to the implementation about how often it should attempt retrieving the resource in order to determine it is alive. Implementations MAY override the value of `polling`.
+
 
 Note that applications should not create `ClientResource` objects, as they are created and tracked by implementations. Applications can create and use `ResourceId` and `Resource` objects as method arguments, but client-created `ClientResource` objects are not tracked by implementations and will not receive events.
 
@@ -93,11 +100,28 @@ Note that applications should not create `ClientResource` objects, as they are c
 <a name="onresourceupdate"></a>
 The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
 
+When a listener function `listener` is attached to the `update` event of `resource`, it is equivalent of invoking [`receive(resource, null, listener)](#receive).
+
 <a name="onresourcelost"></a>
 The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a [`ResourceId`](#resourceid) dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
 
-###### Note
-Note that presence (`/oic/ad` resource and `oic.wk.ad` resource type) is no longer defined by the OCF specification. Therefore implementations SHOULD observe the `/oic/res` resource for getting notified when a resource is removed, acccording to the [`findResources` steps](#findresources). When a resource is deleted, implementations SHOULD fire the `delete` event on the deleted resource.
+<a name="resourcestatus"></a>
+When a listener is attached to the `delete` event of `resource`, implementations SHOULD run the [resource status algorithm](#resourcestatus) on `resource`:
+- Start observing the `/oic/res` resource on the device identified by `resource.deviceId`, in order to be notified when a resource is deleted or added on that device. (Presence mechanism based on the `/oic/ad` resource and `oic.wk.ad` resource type is no longer defined by the OCF specification.)
+- When an update notification (observe response) is received from `/oic/res`, check if `resource` is still part of the resource list. If not, i.e. when `resource` is removed, fire the [`delete`](#resourcelost) event on `resource`.
+- If observing `/oic/res` fails or an implementation specific timeout happens, run the [resource polling algorithm](#resourcepolling) on `resource`.
+- If that algorithm returns `false`, fire the [`delete`](#resourcelost) event on `resource` and terminate this algorithm.
+- Otherwise, repeat the algorithm.
+
+<a name="resourcepolling"></a>
+The [resource polling algorithm](#resourcepolling) takes one argument: `resource` as a [`ClientResource`](#clientresource) object.
+It runs the following steps:
+- If `resource.polling` is `0`, then return `true` (i.e. do not poll the resource).
+- Otherwise, if `resource.polling` is a non-zero number, let `pollingPeriod` be the optimal polling period as determined by the implementation with `resource.polling` taken into account.
+- Otherwise, let `pollingPeriod` be the optimal polling period as determined by the implementation.
+- Start a periodic OCF retrieve operation on `resource` with`pollingPeriod`. If the retrieve operation fails, stop polling and return `false`.
+
+Note that this algorithm may change, or may be removed in subsequent versions of this API specification (depending on what mechanisms will be supported by the OCF Core Specification in the future).
 
 ## 2. Events
 The Client API supports the following events:
@@ -142,7 +166,7 @@ When the first listener is added to the `ondevicefound` or the `ondevicelost` ev
 When the last listener is removed from the `ondevicefound` and the `ondevicelost` event, implementations SHOULD disable watching device status.
 
 <a name="devicestatus"></a>
-__Note__
+__Implementation Note__
 The mechanism used for watching device status depends on the underlying native stack. According to the OCF Core Specification, presence (using the `/oic/ad` resource) is not supported any longer, but e.g. [iotivity](https://www.iotivity.org/) still supports it. So implementations MAY use the presence related mechanisms provided by the native stack, but this will work only with devices that run on the same underlying native stack.
 In general (e.g. in heterogenous OCF networks where some of the devices native stack doesn't support presence), implementations SHOULD poll the devices discovered so far by periodically retrieving the `/oic/res` resource on that device, if there is a listener on the `devicelost` event.
 This is to encapsulate this use case in the implementation, and relieve application code from having to poll.
@@ -225,21 +249,25 @@ The method runs the following steps:
 | `deviceId`     | string | yes      | `undefined`   | OCF device UUID   |
 | `resourceType` | string | yes      | `undefined`   | OCF resource type |
 | `resourcePath` | string | yes      | `undefined`   | OCF resource path |
+| `polling`      | number | yes      | `undefined`   | Polling period for discovery |
+| `timeout`      | number | yes      | `undefined`   | Timeout period for discovery |
 
 - The `listener` argument is optional, and is an event listener for the [`resourcefound`](#onresourcefound) event that receives as argument a [`ClientResource`](./README.md/#resource) object.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Configure an OCF resource discovery request as follows:
-  - If `options.deviceId` is specified, make a direct discovery request to that device
+  - If `options.deviceId` is specified, make a direct resource discovery request to that device
   - If `options.resourceType` is specified, include it as the `rt` parameter in a new endpoint multicast discovery request `GET /oic/res` to "All CoAP nodes" (`224.0.1.187` for IPv4 and `FF0X::FD` for IPv6, port `5683`).
   - If `options.resourcePath` is specified, filter results locally.
-- If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
-- If there is an error during the discovery protocol, fire an `error` event.
-- If the `listener` argument is specified, add it as a listener to the [`resourcefound`](#resourcefound) event.
-- When a resource is discovered, run the following sub-steps:
-  * Start observing the `/oic/res` resource on the device that owns the resource, so that when the resource is removed, the [`delete`](#resourcelost) event could be fired on the resource.
-  * Fire a `resourcefound` event that contains a property named `resource`, whose value is a [`ClientResource`](#resource) object.
+  - If the `listener` argument is specified, add it as a listener to the [`resourcefound`](#resourcefound) event.
+- If `timeout` is a positive number, start a timer with `timeout`. When it expires, discard any further discovery responses matching this query.
+- Execute the following sub-steps:
+  * Send the discovery request.
+  * If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
+  * If `polling` is a positive number, start a timer `timer` with `polling` as timeout.
+  * Wait for discovery responses. If there is an error during the discovery protocol, fire an `error` event. Whenever a resource `resource` is discovered, fire the [`resourcefound`](#resourcefound) event with `resource` as an argument to the listener function.
+  * When `timer` expires, repeat these sub-steps.
 
 <a name="client-methods"></a>
 ## 4. Client methods
@@ -288,8 +316,12 @@ The method runs the following steps:
 - Send a request to retrieve the resource specified by `resourceId` with the OCF `observe` flag set to the value of `observe`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - If `observe` is `false`, resolve `promise` with `resource` updated from the retrieve response.
-- Otherwise, if `observe` is `true, for each OCF retrieve response received while `resource` being observed, update `resource` with the new values, and fire the `ClientResource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed.
-- If there are OCF protocol errors during observe, fire an [`error`](#onerror) event with a new [`OcfError`](#ocferror) object `error` with `error.kind` is set to `"observe"`, `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.resourcePath`.
+- Otherwise, if `observe` is `true, run the following sub-steps:
+  * Start observing the `oic/res` resource on the hosting device.
+  * If the `ClientResource` [`delete`](#onresourcedelete) event on `resource` has listeners, then invoke the [resource polling algorithm](#resourcepolling) with `resource` as argument.
+  * For each OCF retrieve response received for resource representation change while `resource` is being observed, update `resource` with the new values, and fire the `ClientResource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed, in addition to `resourcePath` and `deviceId`.
+- If there is an OCF protocol error during observation, run the [resource polling algorithm](#resourcepolling) on `resource`.
+- If that returns `true` (i.e. if polling has been turned off on `resource` by the application), fire an [`error`](#onerror) event with a new [`OcfObserveError`](../README.md/#ocferror) object `error` with `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.resourcePath`.
 
 <a name="update"></a>
 ##### 4.3. The `update(resource)` method
@@ -304,7 +336,7 @@ The method runs the following steps:
 
 <a name="delete"></a>
 ##### 4.4. The `delete(resourceId)` method
-- Deletes a resource from the network by sending a request to the device specified in `resourceId.deviceId`. The device's [`delete`](./server.md/#ondelete) event handler takes care of deleting the resource and reporting success or error.
+- Deletes a resource from the network by sending a request to the device specified in `resourceId.deviceId`. The device's [`delete`](./server.md/#ondelete) event handler takes care of deleting (unregistering) the resource and reporting success or error.
 - Returns: a [`Promise`](./README.md/#promise) object.
 - The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path that identifies the resource to be deleted.
 
