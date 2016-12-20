@@ -170,7 +170,8 @@ __Implementation Note__
 The mechanism used for watching device status depends on the underlying native stack. According to the OCF Core Specification, presence (using the `/oic/ad` resource) is not supported any longer, but e.g. [iotivity](https://www.iotivity.org/) still supports it. So implementations MAY use the presence related mechanisms provided by the native stack, but this will work only with devices that run on the same underlying native stack.
 In general (e.g. in heterogenous OCF networks where some of the devices native stack doesn't support presence), implementations SHOULD poll the devices discovered so far by periodically retrieving the `/oic/res` resource on that device, if there is a listener on the `devicelost` event.
 This is to encapsulate this use case in the implementation, and relieve application code from having to poll.
-The situation will be changed when the OCF Core specification will adopt a device entry/exit mechanism *in lieu* presence. Then this temporary polling solution can be discontinued without changing application code.
+
+The situation will be changed when the OCF Core specification will adopt a device entry/exit mechanism *in lieu of* presence. Then this temporary polling solution can be discontinued without changing application code.
 
 <a name="onresourcefound"></a>
 ##### 2.4. The `resourcefound` event
