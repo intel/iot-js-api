@@ -51,7 +51,7 @@ When `require` is successful, it MUST return an object with the following read-o
 
 The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality,
   * enabling remote access to resources on the network,
-  * enabling listening to presence notifications in the OCF network. and
+  * enabling listening to presence notifications in the OCF network, and
   * implementing discovery for platforms, devices and resources on the OCF network.
 
 The Server API implements the functionality to serve CRUDN requests on a device. It also provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
