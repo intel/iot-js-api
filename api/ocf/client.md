@@ -62,18 +62,22 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
 | Property        | Type    | Optional | Default value | Represents |
 | ---             | ---     | ---      | ---           | ---     |
 | `resourceTypes` | array of strings | no    | `[]` | List of OCF resource types |
-| `interfaces`    | array of strings | no    | `[]` | List of supported interfaces |
+| `interfaces`    | array of strings | no    | `["oic.if.baseline"]` | List of supported interfaces |
 | `mediaTypes`    | array of strings | no    | `[]` | List of supported Internet media types |
 | `discoverable`  | boolean | no    | `true` | Whether the resource is discoverable |
 | `observable`    | boolean | no    | `true` | Whether the resource is observable |
 | `links`         | array of ResourceLink | no    | `undefined` | Collection of links |
 | `secure`        | boolean | no    | `true` | Whether the resource is secure |
 | `slow`          | boolean | yes   | `false` | Whether the resource is constrained |
-| `properties`    | object | yes    | `{}` | Resource representation properties as described in the data model |
+| `properties`    | object | yes    | `undefined` | Resource representation properties as described in the data model |
 
- The `properties` property is a resource representation that contains resource-specific properties and values usually described in the [RAML data model](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource.
+ The `properties` property is a resource representation object that contains resource-specific properties and values usually described in the [RAML data model](http://www.oneiota.org/documents?filter%5Bmedia_type%5D=application%2Framl%2Byaml) definition of the resource.
 
  The `links` property, when present, means the resource is an OCF Collection resource that contains zero or more [RFC5988 Web Links](https://tools.ietf.org/html/rfc5988) represented by the [`ResourceLink`](#resourcelink) dictionary.
+
+ Either the `properties` or the `links` property MUST be defined.
+
+ The `interfaces` property MUST at least contain `"oic.if.baseline"`.
 
  <a name="clientresource"></a>
 ### 1.3. The `ClientResource` object

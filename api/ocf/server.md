@@ -296,11 +296,15 @@ server.on('create', function(request) {
 ##### The `register(resource)` method
 Registers a resource in the OCF network.
 The `resource` argument is an object that should contain at least the following properties (other resource properties may also be specified):
-
-| Property       | Type   | Optional | Default value | Represents        |
-| ---            | ---    | ---      | ---           | ---               |
-| `resourcePath` | string | no       | `undefined`   | OCF device UUID   |
-| `resourceTypes` | array of strings | no       | `undefined`   | List of OCF resource types |
+- `resourcePath` and string
+- `resourceTypes` as array of strings with at least one element
+- `interfaces` as array of strings with at least one element `"oic.if.baseline"`
+- `mediaTypes` as array of strings that can be empty
+- `discoverable` (by default `true`)
+- `observable` (by default `true`)
+- `secure` (by default `true`)
+- `slow` (by default `false`)
+- either `properties` as an object, or `links` as array of [`ResourceLink`](../client.md/#resourcelink) objects.
 
 See the [create example](#exampleoncreate).
 
