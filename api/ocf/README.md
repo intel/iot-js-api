@@ -13,7 +13,7 @@ OCF Web API
 
 Introduction
 ------------
-This document presents a JavaScript API for the [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.0 (final) and 1.1.0 (draft).
+This document presents a JavaScript API for the [OCF](https://openconnectivity.org) [Core Specification](https://openconnectivity.org/resources/specifications) version 1.1.0.
 
 The OCF provides
   - the specification for the Core Framework for OCF core architecture, interfaces, protocols and services to enable the implementation of OCF profiles for IoT usages
@@ -51,7 +51,7 @@ When `require` is successful, it MUST return an object with the following read-o
 
 The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality,
   * enabling remote access to resources on the network,
-  * enabling listening to presence notifications in the OCF network. and
+  * enabling listening to presence notifications in the OCF network, and
   * implementing discovery for platforms, devices and resources on the OCF network.
 
 The Server API implements the functionality to serve CRUDN requests on a device. It also provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
@@ -93,12 +93,17 @@ Exposes information about the OCF platform that hosts the current device.
 
 Errors during OCF network operations are exposed via `onerror` events and `Promise` rejections.
 
-OCF errors (see also [these notes](../README.md#errors)) are represented as augmented [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects with added properties. The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling OCF issues:
-- `OcfDiscoveryError`
-- `OcfObserveError`
-- `OcfPresenceError`.
+OCF errors (see also [these notes](../README.md#errors)) are represented as augmented instances of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects.
 
-All these errors are instances of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) and contain the following additional properties:
+The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling OCF issues:
+- `OcfResourceNotFound` used if the resource cannot be located in the OCF network, or when an observed resource is deleted from the network.
+- `OcfDeviceNotFound` used if the device id cannot be located in the OCF network.
+- `OcfDiscoveryError` for generic discovery related errors
+- `OcfObserveError` for generic observe related errors that are not covered by `OcfResourceNotFound`.
+- `OcfResourceError` for other resource related errors.
+- `OcfDeviceError` for other device related errors.
+
+The OCF error objects MAY contain two additional optional properties.
 
 | Property       | Type   | Optional | Default value | Represents |
 | ---            | ---    | ---      | ---           | ---     |

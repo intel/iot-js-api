@@ -19,7 +19,7 @@ The following structures SHOULD be implemented in a constrained environment:
   - [Promise](#promise)
   - [Buffer](#buffer)
   - [EventEmitter](#events)
-  - [Error](#errors).
+  - [Error](#error).
 
 <a name="promise"></a>
 ### Promises
@@ -50,6 +50,35 @@ Note that in order to make sure only one entity responds to a request, server re
 
 In the future events may be replaced by [`Observables`](https://github.com/tc39/proposal-observable) with signal semantics.
 
-<a name="errors"></a>
+<a name="error"></a>
 ### Error handling
-Errors are exposed via `onerror` events and `Promise` rejections, using augmented [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects with added properties.
+Errors are exposed via `onerror` events and `Promise` rejections, using augmented instances of a minimal subset of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects with added properties.
+
+The `Error` object MUST contain at least the following properties:
+
+| Property        | Type    | Optional | Default value | Represents |
+| ---             | ---     | ---      | ---           | ---     |
+| name            | string  | no       | "Error"       | The standard name of the error |
+| message         | string  | yes      | ""            | The error reason |
+
+The following error names may be used by all APIs:
+- `SecurityError` for lack of permission or invalid access.
+- `NotSupportedError` for features not implemented.
+- `SyntaxError` for broken JavaScript and `eval` errors. Use it sparingly.
+- `TypeError` for invalid types, parameters, etc.
+- `RangeError` for parameters out of permitted range.
+- `TimeoutError` for timeouts.
+- `NetworkError` for generic connection or protocol related errors.
+- `SystemError` for generic platform errors, including reference errors.
+
+Further errors may be defined in specific APIs.
+
+Examples:
+```
+var error = new SecurityError("No permissions");
+
+if (SecurityError instanceof Error) {  // true
+  console.log(error.name);  // "SecurityError"
+  console.log(error.message);  // "No permissions"
+}
+```
