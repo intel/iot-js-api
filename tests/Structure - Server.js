@@ -14,7 +14,7 @@
 
 var server = require( process.argv[ 3 ] ).server;
 
-console.log( JSON.stringify( { assertionCount: 4 } ) );
+console.log( JSON.stringify( { assertionCount: 2 } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
 	typeof server.register, "function", "server.register is a function"
@@ -22,14 +22,6 @@ console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
 	typeof server.oncreate, "function", "server.oncreate is a function"
-] } ) );
-
-console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof server.enablePresence, "function", "server.enablePresence is a function"
-] } ) );
-
-console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof server.disablePresence, "function", "server.disablePresence is a function"
 ] } ) );
 
 console.log( JSON.stringify( { finished: 0 } ) );
