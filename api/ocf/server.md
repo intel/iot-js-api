@@ -108,7 +108,7 @@ Whenever the underlying platform notifies the implementation about an OCF retrie
   * The value of the `target` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource to be retrieved.
   * The value of the `data` property of `request` is `undefined`.
   * The value of the boolean `request.observe` property of `request` tells if the client wants to also observe the resource for changes.
-- Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target`.
+- Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
 - If there is no such object, invoke `request.respondWithError(error)` with a new `"NotFoundError"` and terminate these steps.
 - If there is a registered retrieve handler on `resource`, invoke that function with `request` as argument.
 - If `request.observe` is `true`, set up change notifications for the resource, and send an OCF retrieve response including the resource representation every time the resource is changed, according to the [`notify` algorithm](#notify). If `request.options` is an object, then save that object in association with `request.source` in order that it can be used by the `notify()` algorithm.
