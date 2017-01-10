@@ -118,7 +118,7 @@ Whenever the underlying platform notifies the implementation about an OCF retrie
 var server = require('ocf').server;
 server.onretrieve(function(request) {
   console.log("Client resource id: " + request.source);
-  console.log("Target resource id, to be retrieved: " + request.target);
+  console.log("Target resource id, to be retrieved: " + request.target.resourcePath);
 
   // Retrieve resource in a device-specific way.
   let res = _getResource(request.target);
@@ -148,7 +148,7 @@ Whenever the underlying platform notifies the implementation about an OCF update
   * The value of the `source` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
   * The value of the `target` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource to be updated.
   * The `data` property of `request` should be an object that contains the *resource representation* properties that should be updated, according to the data model of the given resource.
-- Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target`.
+- Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
 - If there is no such object, invoke `request.respondWithError(error)` with a new `NotFoundError` and terminate these steps.
 - If there is a registered update handler on `resource`, invoke that function with `request` as argument.
 
@@ -180,7 +180,7 @@ Whenever the underlying platform notifies the implementation about an OCF delete
   * The value of the `source` property of the request is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
   * The value of the `target` property of the request is the [ResourceId](./client.md/#resourceid) of the resource to be deleted.
   * The rest of `request` properties are `undefined`.
-- Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target`.
+- Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
 - If there is no such object, invoke `request.respondWithError(error)` with a new `NotFoundError` and terminate these steps.
 - If there is a registered delete handler on `resource`, invoke that function with `request` as argument.
 
@@ -188,7 +188,7 @@ Whenever the underlying platform notifies the implementation about an OCF delete
 var server = require('ocf').server;
 server.ondelete(function(request) {
   console.log("Client resource id: " + request.source);
-  console.log("Resource to be deleted: " + request.target);
+  console.log("Resource to be deleted: " + request.target.resourcePath);
 
   if(_deleteResource(request.target))  // private function
     request.respond();
