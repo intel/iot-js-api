@@ -40,7 +40,7 @@ server.register( desiredResource ).then(
 	function( resource ) {
 		console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
 			filterKeys( resource, [
-				"resourcePath", "resourceTypes", "interfaces", "resourceTypes", "discoverable"
+				"resourcePath", "resourceTypes", "interfaces", "discoverable"
 			] ), desiredResource, "Server: Resource registered successfully"
 		] } ) );
 

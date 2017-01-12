@@ -1,25 +1,62 @@
-## Description
-This suite provides tests for the [OCF JS API][].
-
-## Build status
 <a href="https://travis-ci.org/01org/iot-js-api/">
-	<img alt="Build Status" src="https://travis-ci.org/01org/iot-js-api.svg?branch=ocf-new-api"></img>
+	<img alt="Build Status" src="https://travis-ci.org/01org/iot-js-api.svg?branch=master"></img>
 </a>
 
-## Usage:
+## Description
+This repository provides [Javascript API specifications](./api) for a variety of APIs necessary for creating and communicating with Internet-of-Things(IoT) devices.
+
+It also contains a collection of [test scripts](./tests) which serve both as example code illustrating the usage of the APIs specified, and as test cases which can be executed given an implementation. The test cases can be conveyed to an implementation using a flexible [test runner](#running-the-test-suite) provided herein both as a [npm][] package and as a [grunt][] plugin.
+
+Currently, the test suite is restricted to cases covering the Javascript API for OCF communication.
+
+<a name="running-the-test-suite">
+## Running the test suite
+
+The test suite requires Node.js to run. Note, however, that the tests themselves do not require Node.js. The test suite runs each test script in its own process, and the test scripts output a sequence of JSON objects to standard output which the test suite then collects. The name of the interpreter responsible for running the test script, the preamble to add to the test script (if necessary), and even the Node.js code for spawning the child process that runs the test script can be [configured](#options). Thus, you can run the test scripts using a different Javascript interpreter than node, and you can even modify them before your interpreter receives them.
+
+To start using the test suite from your project:
+  0. Make sure you have a recent version of Node.js installed.
+
+  0. Turn your project into a npm package by running `npm init .` in the root of your project. Follow the prompts to create an appropriate `package.json` file which defines your npm package. The defaults offered are most often satisfactory.
+
+  0. Run `npm install --save-dev iot-js-api`. This will install this repository and append it to the list of development dependencies for your npm package, and will allow you to load the suite via `require( "iot-js-api" )` from a Node.js script.
+
+  0. Add `package.json` to your project. If you purge your project's intermediate files, you will need to run `npm install` from your project root to re-install this package before you can run the test suite.
+
+### Running as a npm package
+
+Create a script for running your tests. The following example illustrates basic usage. Fill out `options` as appropriate. The available options and their possible values are documented [below](#options).
 
 ```JS
 // Load the test suite
-var ocfTestSuite = require( "iot-js-api" );
+var testSuite = require( "iot-js-api" );
 
 // Run the test suite
-ocfTestSuite( options );
+testSuite( options );
 ```
 
+### Running as a grunt plugin
+This repository provides a grunt multitask named `iot-js-api-ocf`.
+
+Add the following to your Gruntfile.js:
+
+```JS
+grunt.task.loadNpmTasks( "iot-js-api" );
+grunt.initConfig( {
+	"iot-js-api-ocf": {
+		plain: options
+	}
+} );
+
+```
+
+where `options` is a hash as documented [below](#options). You can then run the test suite with the command `grunt iot-js-api-ocf:plain` and build it into your grunt-based workflow.
+
+<a name="options">
 ### Options
 In the above example, `options` is a hash containing four properties:  `tests`, `client`, `server`, and `single`. Briefly illustrated with default values:
 ```JS
-ocfTestSuite( {
+testSuite( {
 	client: {
 		interpreter: "node",
 		lineFilter: function( line, /* fileName */ ) { return line; },
@@ -48,8 +85,9 @@ ocfTestSuite( {
 
 `tests` is an array listing the tests to run. If absent, all tests in the `tests/` subdirectory will be run. When specified, the `tests` option can look like this:
 ```JS
-options.tests = [ "Structure - OCF.js", "Retrieve - Resource", "Structure - Device.js", "Discovery - Device" ];
+options.tests = [ "Structure - OCF.js", "Retrieve - Resource", "Structure - Device.js" ];
 ```
+Each string in the list is the name of a file or a directory in the `tests/` subdirectory of this package.
 
 The other three options are each a hash pertaining to one of the endpoints of the test. Separating the options for launching a client from those for launching a server makes it possible to test one implementation of the API against another. `single` refers to the launch options for tests that have only a single endpoint, e.g. the structural tests.
 
@@ -58,7 +96,7 @@ The `single` hash may contain the property `skip` which, when set to `true`, wil
 Each of `client`, `server`, and `single` is a hash where the following properties are recognized:
 
 #### `interpreter`
-The JS interpreter to use. The default value is `"node"`. If you choose to specify the `spawn` option instead, then this value will be passed to the function you specify therein as its second parameter. The interpreter is invoked with the following command line arguments, in the order given:
+The JS interpreter to use. The default value is `"node"`. If you choose to specify the `spawn` option instead, then this value will be passed to the function you specify therein as its first parameter. The interpreter is invoked with the following command line arguments, in the order given:
 * the name of the test file. This will be a temporary file if the `preamble()` option is present, otherwise it will be the absolute file name of the test.
 * a UUID. This will be shared by client/server tests and helps clients find their test server counterparts on the network.
 * the string that the endpoint should pass to `require()` in order to load the OCF device.
@@ -149,3 +187,5 @@ A function responsible for creating the child process that contains the endpoint
 
 [OCF JS API]: ./api/ocf
 [spawn()]: https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
+[npm]: https://npmjs.com/
+[grunt]: http://gruntjs.com/

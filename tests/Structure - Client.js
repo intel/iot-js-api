@@ -41,15 +41,15 @@ console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
 ] } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof client.delete, "function", "client.findDevices is a function"
+	typeof client.findDevices, "function", "client.findDevices is a function"
 ] } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof client.delete, "function", "client.findPlatforms is a function"
+	typeof client.findPlatforms, "function", "client.findPlatforms is a function"
 ] } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof client.delete, "function", "client.findResources is a function"
+	typeof client.findResources, "function", "client.findResources is a function"
 ] } ) );
 
 console.log( JSON.stringify( { assertion: "strictEqual", arguments: [

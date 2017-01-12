@@ -16,31 +16,34 @@ var ocf = require( process.argv[ 3 ] );
 
 console.log( JSON.stringify( { assertionCount: 2 } ) );
 
+function devicefound( device ) {
+	if ( device.name === "test-device-" + process.argv[ 2 ] ) {
+		ocf.client.removeListener( "devicefound", devicefound );
+		console.log( JSON.stringify( { assertion: "ok", arguments: [
+			true, "Client: Found device"
+		] } ) );
+		ocf.client.getPlatformInfo( device.uuid )
+			.then(
+				function( platform ) {
+					console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
+						platform.supportURL, "ocf://test-device-" + process.argv[ 2 ],
+						"Client: Retrieved platform info has expected support URL"
+					] } ) );
+				},
+				function( error ) {
+					console.log( JSON.stringify( { assertion: "ok", arguments: [
+						false, "Client: Unexpectedly failed to retrieve platform info: " +
+							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+					] } ) );
+				} )
+			.then( function() {
+				console.log( JSON.stringify( { finished: 0 } ) );
+			} );
+	}
+}
+
 ocf.client
-	.on( "devicefound", function( device ) {
-		if ( device.name === "test-device-" + process.argv[ 2 ] ) {
-			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				true, "Client: Found device"
-			] } ) );
-			ocf.client.getPlatformInfo( device.uuid )
-				.then(
-					function( platform ) {
-						console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-							platform.supportURL, "ocf://test-device-" + process.argv[ 2 ],
-							"Client: Retrieved platform info has expected support URL"
-						] } ) );
-					},
-					function( error ) {
-						console.log( JSON.stringify( { assertion: "ok", arguments: [
-							false, "Client: Unexpectedly failed to retrieve platform info: " +
-								( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-						] } ) );
-					} )
-				.then( function() {
-					console.log( JSON.stringify( { finished: 0 } ) );
-				} );
-		}
-	} )
+	.on( "devicefound", devicefound )
 	.findDevices()
 	.catch( function( error ) {
 		console.log( JSON.stringify( { assertion: "ok", arguments: [
