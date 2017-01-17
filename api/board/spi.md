@@ -12,7 +12,7 @@ SPI functionality is exposed by the [`SPI`](#spi) object that can be obtained by
 
 ```javascript
 try {
-  var board = require("iot-board-arduino101");
+  var board = require("board");
 
   board.spi().then(function(spi) {
     console.log("SPI bus " + spi.bus + " opened with bus speed " + spi.speed);

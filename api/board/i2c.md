@@ -14,7 +14,7 @@ I2C functionality is exposed by the [`I2C`](#i2c) object that can be obtained by
 
 ```javascript
 try {
-  var board = require("iot-board-arduino101");
+  var board = require("board");
   var i2c = null;
 
   board.i2c().then(function(iic) {

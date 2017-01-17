@@ -19,7 +19,7 @@ The API entry point is a [`Board`](./#board) object that is exposed in a platfor
 
 In the following example, the application requires an implementation that exposed Arduino 101 values and semantics for pins.
 ```javascript
-var board = require("iot-js-board-arduino101");  // example package name
+var board = require("board");
 
 console.log("Connected to board " + board.name);
 ```

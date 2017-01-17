@@ -22,7 +22,7 @@ Implementations MAY also support an explicit constructor that runs the [`GPIO in
 
 ```javascript
 try {
-  var board = require("iot-board-arduino101");
+  var board = require("board");
 
   // Configure a GPIO pin using the board
   var gpio3 = board.gpio(3);  // GPIO input pin with default configuration.
@@ -62,7 +62,7 @@ Using an implementation with string pin names.
 
 ```javascript
 try {
-  var board = require("iot-js-xy");
+  var board = require("board");
 
   // Configure a GPIO input pin on the default board.
   var gpio3 = new GPIO("GPIO3");
@@ -77,7 +77,7 @@ try {
 
 ```javascript
 try {
-  var board = require("iot-board-arduino101");
+  var board = require("board");
 
   // Configure a GPIO port using the board object and default configuration
   var gport = board.gpio([1,2,3,4,5,6,7,8]);
