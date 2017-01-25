@@ -57,7 +57,7 @@ function getResources( device ) {
 
 // Perform the create() method on a device if it's the right device
 function tryDevice( device ) {
-	if ( !device.name === "test-device-" + process.argv[ 2 ] ) {
+	if ( device.name !== "test-device-" + process.argv[ 2 ] ) {
 		return;
 	}
 
