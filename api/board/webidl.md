@@ -3,13 +3,14 @@ Web IDL for Board and IO APIs
 ```javascript
 
 interface Board {
+    readonly attribute String name;  // board name, e.g. "arduino101"
     attribute EventHandler onerror;
 
-    Pin pin(PinName);  // board-specific dictionary for mapping pins
-    sequence<PinName> pins();  // get all board pin names
+    // Pin pin(PinName);  // board-specific dictionary for mapping pins
+    // sequence<PinName> pins();  // get all board pin names
 
     AIO aio(PinName pin);
-    GPIO gpio(GPIOInit init);
+    GPIO gpio(PinName or GPIOOptions options);
     PWM pwm( (PinName or PWMOptions) options);
 
     Promise<I2C> i2c(I2COptions options);
@@ -23,27 +24,28 @@ typedef (long or unsigned long or double or unrestricted double) Number;
 typedef (DOMString or USVString) String;
 typedef (Number or String) PinName;  // implementation uses board specific mapping
 
-enum { "input", "output", "analog", "pwm" } PinMode;
+enum { "digital-input", "digital-output", "analog-input", "analog-output",
+       "pwm", "uart-tx", "uart-rx", "i2c-scl", "i2c-sda",
+       "spi-sclk", "spi-mosi", "spi-miso", "spi-ss"
+} PinMode;
 
 interface Pin {
     readonly attribute PinName pin;  // board number/name of the pin
     readonly attribute PinName address;  // platform number/name of the pin
     readonly attribute PinMode mode;
-    readonly attribute Number value;  // provides a synchronous read()
     readonly attribute sequence<PinMode> supportedModes;
+    readonly attribute Number value;  // synchronous read()
 };
 
 // GPIO
 dictionary GPIOOptions {
     PinName name;
     sequence<PinName> port;
-    PinMode mode = "input";
+    PinMode mode = "digital-input";
     boolean activeLow = false;
     String edge = "any";  // "none", "rising", "falling", "any"
     String pull = "none"; // "none", "pull-up", "pull-down"
 };
-
-typedef (PinName or sequence<PinName> or GPIOOptions) GPIOInit;
 
 [NoInterfaceObject]
 interface GPIO: Pin {
@@ -55,9 +57,12 @@ interface GPIO: Pin {
 GPIO implements EventEmitter;
 
 // GPIO Ports (8, 16 or 32 pins configured together)
-[Constructor(GPIOInit init, optional Board board)]
-interface GPIOPort: GPIO {
-   sequence<PinName> pins();
+[Constructor(sequence<PinName> init, optional Board board)]
+interface GPIOPort {
+    sequence<Pin> pins();
+    void write(long value);
+    void close();
+    attribute EventHandler<long> onchange;
 };
 
 // AIO
@@ -120,20 +125,18 @@ interface I2C {
 };
 
 // SPI
-enum SPIMode {
 
-  "mode0",  // polarity normal, phase 0, i.e. sampled on leading clock
-  "mode1",  // polarity normal, phase 1, i.e. sampled on trailing clock
-  "mode2",  // polarity inverse, phase 0, i.e. sampled on leading clock
-  "mode3"   // polarity inverse, phase 1, i.e. sampled on trailing clock
-};
+enum SPIDirection { "full-duplex", "single-write", "single-read", "daisy-chain" };
 
 dictionary SPIOptions {
   unsigned long bus = 0;
-  SPIMode mode = "mode0";
-  boolean msb = 1;  // 1: MSB first, 0: LSB first
+  unsigned long polarity = 0;  // 0 or 2
+  unsigned long phase = 0;  // 0 or 1
+  boolean msbFirst = 1;  // 1: MSB first, 0: LSB first
   unsigned long bits = 8; // 1, 2, 4, 8, 16
   double speed = 20;  // in MHz, usually 10..66 MHz
+  SPIDirection direction = "full-duplex";
+  unsigned long frameGap = 0;  // in nanoseconds
 };
 
 [NoInterfaceObject]

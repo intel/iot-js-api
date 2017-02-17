@@ -55,10 +55,18 @@ The `address` property is the operating-system-specific representation for that 
 
 <a name="pinmode">
 The `mode` property can take the following values:
-- `"input"` for digital input (GPIO). The pin value can be 0 or 1.
-- `"output"` for digital output (GPIO). The pin value can be 0 or 1.
-- `"analog"` for analog input (AIO) that is converted to digital value.
+- `"digital-input"` for digital input (GPIO). The pin value can be 0 or 1.
+- `"digital-output"` for digital output (GPIO). The pin value can be 0 or 1.
+- `"analog-input"` for analog input (AIO) that is converted to digital value.
+- `"analog-output"` for analog output (AIO) that is converted from digital value.
 - `"pwm"` for PWM analog output.
+- `"uart-rx"` for serial receive pin.
+- `"uart-tx"` for serial transmit pin.
+- `"i2c-scl"` for I2C clock.
+- `"i2c-scl"` for I2C data.
+- `"spi-sclk"` for SPI clock.
+- `"spi-mosi"` for SPI Master Out Slave In.
+- `"spi-miso"` for SPI Master In Slave Out.
 
 The `supportedModes` property is an array of modes the board supports for the given pin.  Implementations are not required to implement this property, in which case its value should be `undefined`.
 
