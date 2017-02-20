@@ -6,15 +6,11 @@ interface Board {
     readonly attribute String name;  // board name, e.g. "arduino101"
     attribute EventHandler onerror;
 
-    // Pin pin(PinName);  // board-specific dictionary for mapping pins
-    // sequence<PinName> pins();  // get all board pin names
-
-    AIO aio(PinName pin);
-    GPIO gpio(PinName or GPIOOptions options);
-    PWM pwm( (PinName or PWMOptions) options);
-
-    Promise<I2C> i2c(I2COptions options);
-    Promise<SPI> spi(SPIOptions options);
+    Promise<AIO>  aio(PinName pin);
+    Promise<GPIO> gpio(PinName or GPIOOptions options);
+    Promise<PWM>  pwm( (PinName or PWMOptions) options);
+    Promise<I2C>  i2c(I2COptions options);
+    Promise<SPI>  spi(SPIOptions options);
     Promise<UART> uart(UARTOptions options);
 };
 
@@ -24,45 +20,14 @@ typedef (long or unsigned long or double or unrestricted double) Number;
 typedef (DOMString or USVString) String;
 typedef (Number or String) PinName;  // implementation uses board specific mapping
 
-enum { "digital-input", "digital-output", "analog-input", "analog-output",
+enum { "digital-input", "digital-output", "analog-input",
        "pwm", "uart-tx", "uart-rx", "i2c-scl", "i2c-sda",
        "spi-sclk", "spi-mosi", "spi-miso", "spi-ss"
 } PinMode;
 
 interface Pin {
     readonly attribute PinName pin;  // board number/name of the pin
-    readonly attribute PinName address;  // platform number/name of the pin
     readonly attribute PinMode mode;
-    readonly attribute sequence<PinMode> supportedModes;
-    readonly attribute Number value;  // synchronous read()
-};
-
-// GPIO
-dictionary GPIOOptions {
-    PinName name;
-    sequence<PinName> port;
-    PinMode mode = "digital-input";
-    boolean activeLow = false;
-    String edge = "any";  // "none", "rising", "falling", "any"
-    String pull = "none"; // "none", "pull-up", "pull-down"
-};
-
-[NoInterfaceObject]
-interface GPIO: Pin {
-    void write(long value);
-    void close();
-    attribute EventHandler<long> onchange;
-};
-
-GPIO implements EventEmitter;
-
-// GPIO Ports (8, 16 or 32 pins configured together)
-[Constructor(sequence<PinName> init, optional Board board)]
-interface GPIOPort {
-    sequence<Pin> pins();
-    void write(long value);
-    void close();
-    attribute EventHandler<long> onchange;
 };
 
 // AIO
@@ -70,42 +35,56 @@ interface GPIOPort {
 dictionary AIOOptions {
   PinName pin;
   unsigned long rate;
+  unsigned long precision;
 };
 
-[Constructor( (PinName or AIOOptions) pin, optional Board board)]
+[NoInterfaceObject]
 interface AIO: Pin {
     readonly attribute unsigned long channel;  // analog channel
-    readonly attribute unsigned long rateLimit;     // rate limit for ondata
     readonly attribute unsigned long precision;  // 10 or 12 bits
 
-    Promise<unsigned long> read();  // one-shot async read
+    unsigned long read();
     void close();
-
-    attribute EventHandler<unsigned long> ondata;
 };
 
 AIO implements EventEmitter;
+
+// GPIO
+dictionary GPIOOptions {
+    PinName pin;
+    sequence<PinName> port; // GPIO Ports (8, 16 or 32 pins)
+    PinMode mode = "digital-input";
+    boolean activeLow = false;
+    String edge = "any";  // "none", "rising", "falling", "any"
+    String state = "high-impedance"; // "high-impedance", "pull-up", "pull-down"
+};
+
+[NoInterfaceObject]
+interface GPIO: Pin {
+    unsigned long read();
+    void write(long value);
+    void close();
+    attribute EventHandler<unsigned long> ondata;
+};
+
+GPIO implements EventEmitter;
 
 // PWM
 dictionary PWMOptions {
   PinName pin;
   boolean reversePolarity = false;
-};
-
-[Constructor(PWMOptions options, optional Board board)]
-interface PWM: Pin {
-    readonly attribute unsigned long channel;
-    readonly attribute boolean reversePolarity;
-    // 'value' returns PWMOptions
-    void write(PWMOptions value);
-    void stop();
-    void close();
-};
-
-dictionary PWMOptions {
   double period;
   double pulseWidth;
   double dutyCycle;
+};
+
+[NoInterfaceObject]
+interface PWM: Pin {
+    readonly attribute unsigned long channel;
+    readonly attribute boolean reversePolarity;
+    void write(PWMOptions value);
+    void stop();
+    void close();
 };
 
 // I2C
@@ -163,7 +142,7 @@ interface UART {
   // has all the properties of UARTInit as read-only attributes
   Promise<void> write(Buffer data);
   void setReadRange(long minBytes, long maxBytes);
-  attribute EventHandler<Buffer> onread;
+  attribute EventHandler<Buffer> ondata;
   void close();
 };
 

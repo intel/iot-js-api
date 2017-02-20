@@ -20,7 +20,7 @@ try {
   board.i2c().then(function(iic) {
     i2c = iic;
     console.log("I2C bus " + i2c.bus + " opened with bus speed " + i2c.speed);
-    return i2c.write(0x02, [1, 2, 3])
+    return i2c.write(0x02, [1, 2, 3]);
   }).then(function() {
     return i2c.read(0x03, 3);
   }).then(function(buffer) {
