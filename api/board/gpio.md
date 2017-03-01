@@ -5,7 +5,7 @@ The GPIO (General Purpose Input & Output) API supports digital pins.
 
 The API object
 --------------
-GPIO pin functionality is exposed by the [`GPIO`](#gpio) object that can be obtained by using the [gpio() method of the `Board` API](./README.md/#gpio).
+GPIO pin functionality is exposed by the [`GPIO`](#gpio) object that can be obtained by using the [gpio() method of the `Board` API](./README.md/#gpio). See also the [Web IDL](./webidl.md).
 
 On certain boards GPIO pins may be grouped into ports (e.g. 8, 16 or 32 pins), read and written as registers by the controller.
 
@@ -24,7 +24,7 @@ var gpio3 = board.gpio(3)  // GPIO input pin with default configuration.
         gpio3.close();
       });
 
-board.gpio({ pin: 5, mode: "digital-output", activeLow: true })
+board.gpio({ pin: 5, mode: "output", activeLow: true })
     .then(function(gpio) {
         gpio.write(0);  // activate pin
         gpio.close();
@@ -65,7 +65,7 @@ board.gpio({ port: [3,4,5,6,7,8]})
    });
 
 // Initialize and write an output port
-board.gpio({ port: [5,6,7,8], mode: "digital-output", activeLow: true })
+board.gpio({ port: [5,6,7,8], mode: "output", activeLow: true })
 .then(function(gpio){
     gpio.write(0x21);
     gpio.close();
@@ -76,22 +76,34 @@ board.gpio({ port: [5,6,7,8], mode: "digital-output", activeLow: true })
 ```
 <a name="gpio">
 ### The `GPIO` interface
-Represents the properties and methods that expose GPIO functionality. The `GPIO` object implements the [`EventEmitter`](../README/#events) interface, and extends the [`Pin`](./README.md/#pin) object, so it has all properties of [`Pin`](./README.md/#pin). In addition, it has the following properties:
+Represents the properties and methods that expose GPIO functionality. The `GPIO` object implements the [`EventEmitter`](../README.md/#events) interface, and extends the [`Pin`](./README.md/#pin) object, so it has all properties of [`Pin`](./README.md/#pin).
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
+| `pin`      | String or Number | no | `undefined`   | board name for the pin |
+| `mode`     | String | no       | `undefined`   | I/O mode |
 | `port`     | array  | yes      | `undefined`   | array of pin names representing the ports
 | `activeLow` | boolean | yes   | `false` | whether the pin is active on logical low |
 | `edge`     | string | yes      | `"any"`       | Interrupt generation mode |
 | `state`    | string | yes      | `undefined`      | "pulldown", "pullup" |
-| `write()`  | function | no | defined by implementation | synchronous write |
-| `close()`  | function | no | defined by implementation | close the pin |
+
+| Method signature     | Description       |
+| ---                  | ---               |
+| [`read()`](#read)    | synchronous read  |
+| [`write()`](#write)  | synchronous write |
+| [`close()`](#close)  | close the pin     |
+
+| Event name | Event callback argument |
+| -----------| ----------------------- |
+| `data`     | unsigned long (the pin value) |
+
+The `data` event listener callback receives the current value of the pin (0 or 1 for single pins, and positive integer for GPIO ports).
 
 #### `GPIO` properties
 
 The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board mapping, usually positive integers.
 
-The `mode` property inherited from [`Pin`](./README.md/#pin) can take the values `"digital-input"` or `"digital-output"`. The default value is `"digital-input"`. Other [`Pin.mode`](./README.md/#pinmode) values are invalid for GPIO.
+The `mode` property inherited from [`Pin`](./README.md/#pin) can take the values `"input"` or `"output"`. The default value is `"input"`. Other [`Pin.mode`](./README.md/#pinmode) values are invalid for GPIO.
 
 The `port` property, if defined, is an array of strings that represents the ordered list of pin names that form a GPIO port, where the first element in the array represents the MSB.
 
@@ -100,15 +112,6 @@ The `activeLow` property tells whether the pin value 0 means active. If `activeL
 The `edge` property is used for input pins and tells whether the `data` event is emitted on the rising edge of the signal (string value `"rising"`) when `value` changes from 0 to 1, or on falling edge (string value `"falling"`) when `value` changes from 1 to 0, or both edges (string value `"any"`), or never (string value `"none`"). The default value is `"any"`, which means the event will fire on any change.
 
 The `state` property tells if the internal pulldown (string value `"pulldown"`) or pullup (string value `"pullup"`) resistor is used for input pins to provide a default value (0 or 1) when the input is floating. The default value is `undefined`.
-
-#### `GPIO` events
-The `GPIO` object supports the following events:
-
-| Event name | Event callback argument |
-| -----------| ----------------------- |
-| `ondata`   | unsigned long (the pin value) |
-
-The listener callback will receive the current value of the pin (0 or 1 for single pins, and positive integer for GPIO ports).
 
 #### `GPIO` methods
 
@@ -119,7 +122,7 @@ This internal algorithm is used by the [`Board.gpio()`](./README.md/#gpio) metho
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`GPIO`](#gpio) properties:
   * `pin` for the GPIO pin or port name defined by the board
   * `port` for the array of GPIO pins that define the port
-  * `mode` with valid values `"digital-input"` or `"digital-output"`, by default `"digital-input"`
+  * `mode` with valid values `"input"` or `"output"`, by default `"input"`
   * `activeLow`, by default `false`
   * `edge`, by default `"any"`
   * `state`, by default `undefined`.
@@ -132,8 +135,14 @@ This internal algorithm is used by the [`Board.gpio()`](./README.md/#gpio) metho
   * Initialize the `gpio.pin` property with `init.pin`.
 - Return the `gpio` object.
 
+<a name="read">
+##### The `unsigned long read()` method
+Returns the value of the GPIO pin or port.
+
+<a name="write">
 ##### The `write(value)` method
 If `value` is `0`, `null` or `undefined`, let `value` be 0. Otherwise, if `port` is `undefined`, let `value` be `1`. The method synchronously writes `value` to the GPIO pin. If `port` is defined, and if `value` is larger than the numeric range of the port, throw `RangeError`. If `activeLow` is `true`, the value 0 activates the pin, and the value 1 inactivates it. If `activeLow` is `false`, the value 1 activates the pin, and the value 0 deactivates it.
 
+<a name="close">
 ##### The `close()` method
 Called when the application is no longer interested in the pin. This also removes all listeners to the `data` event. Until the next invocation of `init()`, invoking the `write()` method or reading the `value` property SHOULD throw `InvalidAccessError`.

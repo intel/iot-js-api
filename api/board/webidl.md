@@ -20,7 +20,7 @@ typedef (long or unsigned long or double or unrestricted double) Number;
 typedef (DOMString or USVString) String;
 typedef (Number or String) PinName;  // implementation uses board specific mapping
 
-enum { "digital-input", "digital-output", "analog-input",
+enum { "input", "output", "analog-in", "analog-out",
        "pwm", "uart-tx", "uart-rx", "i2c-scl", "i2c-sda",
        "spi-sclk", "spi-mosi", "spi-miso", "spi-ss"
 } PinMode;
@@ -53,7 +53,7 @@ AIO implements EventEmitter;
 dictionary GPIOOptions {
     PinName pin;
     sequence<PinName> port; // GPIO Ports (8, 16 or 32 pins)
-    PinMode mode = "digital-input";
+    PinMode mode = "input";
     boolean activeLow = false;
     String edge = "any";  // "none", "rising", "falling", "any"
     String state = "high-impedance"; // "high-impedance", "pull-up", "pull-down"

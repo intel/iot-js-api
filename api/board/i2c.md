@@ -6,7 +6,7 @@ I2C selects the slave device by addressing: the first byte sent by the master ch
 If read was requested, the master will emit clock, and the selected slave will provide bits to the master as long as clock is emitted.
 If write was requested, the master puts the bit on SDA and sends a clock signal for data available.
 Therefore it is important to select the right speed supported by the master and slave devices.
-This API uses a [`Buffer`](../README.mk/#buffer) object for both read and write.
+This API uses a [`Buffer`](../README.md/#buffer) object for both read and write.
 
 The API object
 --------------
@@ -34,12 +34,18 @@ try {
 
 <a name="i2c">
 ### The `I2C` interface
-Represents the properties and methods that expose I2C functionality. The `I2C` object has the following properties:
+Represents the properties and methods that expose I2C functionality.
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
 | `bus`      | octet  | yes      | platform selected | I2C bus |
 | `speed`    | long   | yes      | platform selected | I2C bus speed |
+
+| Method signature                  | Description             |
+| ---                               | ---                     |
+| [`write(device, buffer)`](#write) | write data to a device  |
+| [`read(device, size)`](#read)     | read data from a device |
+| [`close()`](#close)               | close the I2C bus       |
 
 The `bus` property denotes the I2C bus number between 0 and 127.
 
@@ -56,24 +62,26 @@ This internal algorithm is used by the [`Board.i2c()`](./README.md/#i2c) method.
 - In case of failure, return `null`.
 - Return `i2c`.
 
+<a name="write">
 ##### The `write(device, buffer)` method
-Writes a [`Buffer`](./README.md/#buffer) using I2C to slave `device`. The method runs the following steps:
+Writes a [`Buffer`](../README.md/#buffer) using I2C to slave `device`. The method runs the following steps:
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If `device` is not a number between 0 and 127, reject `promise` with `TypeError` and terminate these steps.
-- Create a [`Buffer`](./README.md/#buffer) from `buffer`. If that fails, reject `promise` with `TypeError` and terminate these steps.
+- Create a [`Buffer`](../README.md/#buffer) from `buffer`. If that fails, reject `promise` with `TypeError` and terminate these steps.
 - Request the underlying platform to write the specified bytes to the specified device.
 If the operation fails, reject `promise`.
 - Otherwise, resolve `promise`.
 
+<a name="read">
 ##### The `read(device, size)` method
-Reads maximum `size` number of bytes from I2C device `device` and resolves with a [`Buffer`](./README.md/#buffer). The method runs the following steps:
+Reads maximum `size` number of bytes from I2C device `device` and resolves with a [`Buffer`](../README.md/#buffer). The method runs the following steps:
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If `device` is not a number between 0 and 127, reject `promise` with `TypeError` and terminate these steps.
-- Create a [`Buffer`](./README.md/#buffer) from `buffer`.
+- Create a [`Buffer`](../README.md/#buffer) from `buffer`.
 - Request the underlying platform to read `size` number of bytes from the specified `device` into `buffer`.
 If the operation fails, reject `promise`.
 - Otherwise, resolve `promise` with `buffer`.
 
-
+<a name="close">
 ##### The `close()` method
 Closes the current [`I2C`](#i2c) bus and interrupts all pending operations.

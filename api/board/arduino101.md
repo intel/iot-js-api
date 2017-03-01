@@ -27,31 +27,31 @@ Other names:
   * MISO (Master In Slave Out) on pin 12
   * SCK (Serial Clock) on pin 13.
 
-Arduino 101 pins are summarized in the following table:
+Arduino 101 pins are summarized in the following table (channel means the index of the same I/O type):
 
-|Pin name |Supported modes (channel), [other]  |
-| ---     | ---                                |
-| `0`     | `"input"`, `"output"`, [UART0 RX]  |
-| `1`     | `"input"`, `"output"`, [UART0 TX]  |
-| `2`     | `"input"`, `"output"`              |
-| `3`     | `"input"`, `"output"`, `"pwm"`(0)  |
-| `4`     | `"input"`, `"output"`              |
-| `5`     | `"input"`, `"output"`, `"pwm"`(1)  |
-| `6`     | `"input"`, `"output"`, `"pwm"`(2)  |
-| `7`     | `"input"`, `"output"`              |
-| `8`     | `"input"`, `"output"`              |
-| `9`     | `"input"`, `"output"`, `"pwm"`(3)  |
-| `10`    | `"input"`, `"output"`, [SPI SS]    |
-| `11`    | `"input"`, `"output"`, [SPI MOSI]  |
-| `12`    | `"input"`, `"output"`, [SPI MISO]  |
-| `13`    | `"input"`, `"output"`, [SPI SCK]   |
-| `"A0"`  | `"analog"`(0)                      |
-| `"A1"`  | `"analog"`(1)                      |
-| `"A2"`  | `"analog"`(2)                      |
-| `"A3"`  | `"analog"`(3)                      |
-| `"A4"`  | `"analog"`(4)                      |
-| `"A5"`  | `"analog"`(5)                      |
-| `"LED0"`| `"output"` (active on 1)           |
-| `"LED1"`| `"output"` (active on 0)           |
-| `"LED2"`| `"output"` (active on 0)           |
+|Pin name |Supported modes (channel)               |
+| ---     | ---                                    |
+| `0`     | `"input"`, `"output"`, `"uart-rx"` (0) |
+| `1`     | `"input"`, `"output"`, `"uart-tx"` (0) |
+| `2`     | `"input"`, `"output"`                  |
+| `3`     | `"input"`, `"output"`, `"pwm"`(0)      |
+| `4`     | `"input"`, `"output"`                  |
+| `5`     | `"input"`, `"output"`, `"pwm"`(1)      |
+| `6`     | `"input"`, `"output"`, `"pwm"`(2)      |
+| `7`     | `"input"`, `"output"`                  |
+| `8`     | `"input"`, `"output"`                  |
+| `9`     | `"input"`, `"output"`, `"pwm"`(3)      |
+| `10`    | `"input"`, `"output"`, `"spi_ss"`      |
+| `11`    | `"input"`, `"output"`, `"spi-mosi"`    |
+| `12`    | `"input"`, `"output"`, `"spi-miso"`    |
+| `13`    | `"input"`, `"output"`, `"spi-sclk"`    |
+| `"A0"`  | `"analog-in"`(0)                       |
+| `"A1"`  | `"analog-in"`(1)                       |
+| `"A2"`  | `"analog-in"`(2)                       |
+| `"A3"`  | `"analog-in"`(3)                       |
+| `"A4"`  | `"analog-in"`(4)                       |
+| `"A5"`  | `"analog-in"`(5)                       |
+| `"LED0"`| `"output"` [active on 1]               |
+| `"LED1"`| `"output"` [active on 0]               |
+| `"LED2"`| `"output"` [active on 0]               |
 

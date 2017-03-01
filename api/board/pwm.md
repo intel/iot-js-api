@@ -10,7 +10,7 @@ The term 'channel' is used to refer to the fact that PWM controller hardware has
 
 The API object
 --------------
-PWM functionality is exposed by the [`PWM`](#pwm) object that can be obtained by using the [pwm() method of the `Board` API](./README.md/#pwm).
+PWM functionality is exposed by the [`PWM`](#pwm) object that can be obtained by using the [pwm() method of the `Board` API](./README.md/#pwm). See also the [Web IDL](./webidl.md).
 
 ### Examples
 
@@ -33,15 +33,23 @@ board.pwm(6)  // configure pin 6 as PWM
 
 <a name="pwm">
 ### The `PWM` interface
-Represents the properties and methods that expose PWM functionality. The `PWM` object extends the [`Pin`](./README.md/#pin) object, so it has all properties of [`Pin`](./README.md/#pin). In addition, it has the following properties:
+Represents the properties and methods that expose PWM functionality. The `PWM` object extends the [`Pin`](./README.md/#pin) object.
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
+| `pin`     | String or Number | no | `undefined`   | board name for the pin |
+| `mode`    | String | no       | `undefined`   | I/O mode |
 | `channel`  | unsigned long  | yes | `undefined` | numeric index of the analog pin |
 | `reversePolarity` | boolean | yes |   `false`   | PWM polarity |
 | `write()`  | function | no | defined by implementation | set and enable PWM signal |
 | `stop()`   | function | no | defined by implementation | stop the PWM signal |
 | `close()`  | function | no | defined by implementation | release the pin |
+
+| Method signature         | Description                |
+| ---                      | ---                        |
+| [`write(value)`](#write) | set and start a PWM signal |
+| [`stop()`](#stop)        | stop the PWM signal        |
+| [`close()`](#close)      | close the pin              |
 
 #### `PWM` properties
 
@@ -52,15 +60,6 @@ The `mode` property inherited from [`Pin`](./README.md/#pin) takes the value `"p
 The `channel` property is initialized by the implementation and provides the numeric index of the analog pin, e.g. it is 0 for pin `"A0"` and 5 for pin `"A5"`.
 
 The `reversePolarity` property tells whether the PWM signal is active on 0. The default value is `false`.
-
-<a name="pwmdata">
-The `value` property inherited from [`Pin`](./README.md/#pin) provides a dictionary with the following properties:
-
-| Property   | Type   | Optional | Default value | Represents |
-| ---        | ---    | ---      | ---           | ---        |
-| period     | double | no       | `undefined`   | the total period of the PWM signal in milliseconds |
-| pulseWidth | double | no       | `undefined`   | the period of the PWM pulse in milliseconds |
-| dutyCycle  | long   | no       | `undefined`   | the calculated PWM duty cycle |
 
 #### `PWM` methods
 
@@ -78,18 +77,30 @@ This internal algorithm is used by the [`Board.pwm()`](./README.md/#pwm) method.
 - Initialize the `pwm.channel` property with the board-specific value, if available.
 - Return the `pwm` object.
 
+<a name="write">
 ##### The `write(value)` method
-Performs a synchronous write operation to define and enable the PWM signal. The argument `value` is a [dictionary defined here](#pwmdata) with at least 2 properties specified:
-- `period` and `pulseWidth`, or
-- `period` and `dutyCycle`, or
-- `pulseWidth` and `dutyCycle`.
+Performs a synchronous write operation to define and enable the PWM signal. The argument `value` MUST be a dictionary defined here.
+<a name="pwmdata">
+
+| Property   | Type   | Optional | Default value | Represents |
+| ---        | ---    | ---      | ---           | ---        |
+| period     | double | no       | `undefined`   | the total period of the PWM signal in milliseconds |
+| pulseWidth | double | no       | `undefined`   | PWM pulse width in milliseconds |
+| dutyCycle  | long   | no       | `undefined`   | the PWM duty cycle |
+
+The `write(value)` method runs the following steps:
+- The argument `value` MUST have at least 2 properties specified:
+  * `period` and `pulseWidth`, or
+  * `period` and `dutyCycle`, or
+  * `pulseWidth` and `dutyCycle`.
 The third property of `value` is calculated based on the other two. If all properties are specified, `dutyCycle` is recalculated based on the value of `period` and `pulseWidth`.
-The method runs the following steps:
 - If `value` has invalid values for the given board, throw `InvalidAccessError`.
 - Set up and enable the PWM signal based on `value`.
 
+<a name="stop">
 ##### The `stop()` method
-Disables the PWM signal on the pin. A new invocation of `write()` is needed.
+Disables the PWM signal on the pin. A new invocation of `write()` is needed to restart the signal.
 
+<a name="close">
 ##### The `close()` method
 Called when the application is no longer interested in the pin. It invokes the `stop()` method, then releases the pin.

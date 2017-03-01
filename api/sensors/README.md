@@ -149,40 +149,40 @@ The `reading` property of the [`Lightmeter`](https://w3c.github.io/ambient-light
 ### The data model for `ProximitySensor`
 The `reading` property of the [`ProximitySensor`](https://w3c.github.io/proximity/#proximity-sensor-interface) object is a dictionary that contains the following properties:
 
-| Property   | Type   | Optional | Default value | Represents |
-| ---        | ---    | ---      | ---           | ---        |
-| distance   | double | no       | undefined     | distance to object in cm |
-| max        | double | no       | undefined     | sensing range in cm      |
-| near       | boolean | no      | undefined     | if object in proximity   |
+| Property     | Type   | Optional | Default value | Represents |
+| ---          | ---    | ---      | ---           | ---        |
+| `distance`   | double | no       | undefined     | distance to object in cm |
+| `max`        | double | no       | undefined     | sensing range in cm      |
+| `near`       | boolean | no      | undefined     | if object in proximity   |
 
 ### The data model for `Accelerometer`
 The `reading` property of the sensor object [`Accelerometer`](https://w3c.github.io/accelerometer/#accelerometer-sensor-interface) object is a dictionary that contains the following properties:
 
-| Property | Type   | Optional | Default value | Represents |
-| ---      | ---    | ---      | ---           | ---        |
-| x        | double | no    | undefined  | acceleration along the X axis |
-| y        | double | no    | undefined  | acceleration along the Y axis |
-| z        | double | no    | undefined  | acceleration along the Z axis |
+| Property   | Type   | Optional | Default value | Represents |
+| ---        | ---    | ---      | ---           | ---        |
+| `x`        | double | no    | undefined  | acceleration along the X axis |
+| `y`        | double | no    | undefined  | acceleration along the Y axis |
+| `z`        | double | no    | undefined  | acceleration along the Z axis |
 
 The sensor contains one more additional property named `includesGravity` of type `boolean`. If it is `false`, then the `reading` property stores linear acceleration values (that don't take into account gravity).
 
 ### The data model for `Gyroscope`
 The `reading` property of the [`Gyroscope`](https://w3c.github.io/gyroscope/#gyroscope-sensor-interface) sensor object is a dictionary that contains the following properties that represent the current angular velocity around the X, Y or Z axis, expressed in radians per second:
 
-| Property | Type   | Optional | Default value | Represents |
-| ---      | ---    | ---      | ---           | ---        |
-| x        | double | no    | 0  | angular velocity along the X axis |
-| y        | double | no    | 0  | angular velocity along the Y axis |
-| z        | double | no    | 0  | angular velocity along the Z axis |
+| Property   | Type   | Optional | Default value | Represents |
+| ---        | ---    | ---      | ---           | ---        |
+| `x`        | double | no    | 0  | angular velocity along the X axis |
+| `y`        | double | no    | 0  | angular velocity along the Y axis |
+| `z`        | double | no    | 0  | angular velocity along the Z axis |
 
 ### The data model for `Magnetometer`
 The `reading` property of the [`Magnetometer`](https://w3c.github.io/magnetometer/#magnetometer-interface) sensor object is a dictionary that contains the following properties that represent the geomagnetic field force around the X, Y or Z axis, expressed in microTesla units:
 
-| Property | Type   | Optional | Default value | Represents |
-| ---      | ---    | ---      | ---           | ---        |
-| x        | double | no    | 0  | geomagnetic field along the X axis |
-| y        | double | no    | 0  | geomagnetic field along the Y axis |
-| z        | double | no    | 0  | geomagnetic field along the Z axis |
+| Property   | Type   | Optional | Default value | Represents |
+| ---        | ---    | ---      | ---           | ---        |
+| `x`        | double | no    | 0  | geomagnetic field along the X axis |
+| `y`        | double | no    | 0  | geomagnetic field along the Y axis |
+| `z`        | double | no    | 0  | geomagnetic field along the Z axis |
 
 ### The data model for geolocation
 Work in progress.
@@ -190,11 +190,11 @@ Work in progress.
 ### The data model for `TemperatureSensor`
 The `reading` property of the `TemperatureSensor` object is a dictionary that contains the following properties that represent the temperature given in Celsius, Kelvin, and Fahrenheit:
 
-| Property   | Type   | Optional | Default value | Represents |
-| ---        | ---    | ---      | ---           | ---        |
-| celsius    | double | no    | 0  | temperature in Celsius |
-| fahrenheit | double | no    | 0  | temperature in Fahrenheit |
-| kelvin     | double | no    | 0  | temperature in Kelvin |
+| Property     | Type   | Optional | Default value | Represents |
+| ---          | ---    | ---      | ---           | ---        |
+| `celsius`    | double | no    | 0  | temperature in Celsius |
+| `fahrenheit` | double | no    | 0  | temperature in Fahrenheit |
+| `kelvin`     | double | no    | 0  | temperature in Kelvin |
 
 
 ## Future additions

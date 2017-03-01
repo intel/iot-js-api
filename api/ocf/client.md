@@ -1,35 +1,40 @@
 Client API
 ==========
 
-- Structures
+- The [OcfClient](#ocfclient) object
   * The [ResourceId](#resourceid) dictionary
   * The [Resource](#resource) dictionary
   * The [ClientResource](#clientresource) interface
-    - The [update](#onresourceupdate) event
-    - The [delete](#onresourcelost) event
-- Client events
-  * [platformfound](#onplatformfound)
-  * [devicefound](#ondevicefound)
-  * [devicelost](#ondevicelost)
-  * [resourcefound](#onresourcefound)
-  * [error](#onerror)
-- Discovery methods
-  * [getPlatformInfo(deviceId)](#getplatforminfo)
-  * [getDeviceInfo(deviceId)](#getdeviceinfo)
-  * [findPlatforms(listener)](#findplatforms)
-  * [findDevices(listener)](#finddevices)
-  * [findResources(options, listener)](#findplatforms)
-- Client methods
-  * [create(target, resource)](#create)
-  * [retrieve(resourceId, options, listener)](#retrieve)
-  * [update(resource)](#update)
-  * [delete(resourceId)](#delete)
 
 Introduction
 ------------
+<a name="ocfclient"></a>
 The OCF Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality that enables remote access to resources on the network, as well as OCF discovery.
-
 The Client API object does not expose its own properties, only events and methods.
+
+| Event name                          | Event callback argument |
+| ---                                 | ---                     |
+| [`platformfound`](#onplatformfound) | [`Platform`](./README.md/#platform) object |
+| [`devicefound`](#ondevicefound)     | [`Device`](./README.md/#device) object |
+| [`devicelost`](#ondevicelost)       | [`Device`](./README.md/#device) object |
+| [`resourcefound`](#onresourcefound) | [`ClientResource`](#clientresource) object |
+| [`error`](#onerror)                 | [`Error`](../README.md/#ocferror) object |
+
+| Discovery method signature                     | Description                |
+| ---                                            | ---                        |
+| [`getPlatformInfo(deviceId)`](#getplatforminfo)  | fetch platform information |
+| [`getDeviceInfo(deviceId)`](#getdeviceinfo)      | fetch device information   |
+| [`findPlatforms(listener)`](#findplatforms)      | discover platforms         |
+| [`findDevices(listener)`](#finddevices)          | discover devices           |
+| [`findResources(options, listener)`](#findresources) | discover resources     |
+
+| Client method signature              | Description                |
+| ---                                  | ---                        |
+| [`create(target, resource)`](#create)                  | create a resource |
+| [`retrieve(resourceId, options, listener)`](#retrieve) | retrieve/observe a resource |
+| [`update(resource)`](#update)                          | update a resource |
+| [`delete(resourceId)`](#delete)                        | delete a resource |
+
 
 ## Structures
 <a name="resourceid"></a>
@@ -79,7 +84,7 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
 
  The `interfaces` property MUST at least contain `"oic.if.baseline"`.
 
- <a name="clientresource"></a>
+<a name="clientresource"></a>
 ### 1.3. The `ClientResource` object
 #### `ClientResource` properties
 `ClientResource` extends `Resource`. It has all the properties of [`Resource`](#resource), and in addition it has events.
@@ -91,8 +96,8 @@ Note that applications should not create `ClientResource` objects, as they are c
 
 | Event name | Event callback argument |
 | -----------| ----------------------- |
-| *update*   | partial `ClientResource` dictionary |
-| *delete*   | `ResourceId` dictionary |
+| `update`   | partial `ClientResource` dictionary |
+| `delete`   | `ResourceId` dictionary |
 
 <a name="onresourceupdate"></a>
 The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
@@ -103,15 +108,7 @@ The recommended way to observe and unobserve resources from applications is by u
 The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a [`ResourceId`](#resourceid) dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
 
 ## 2. Events
-The Client API supports the following events:
-
-| Event name        | Event callback argument |
-| --------------    | ----------------------- |
-| *platformfound*   | [`Platform`](./README.md/#platform) object |
-| *devicefound*     | [`Device`](./README.md/#device) object |
-| *devicelost*      | [`Device`](./README.md/#device) object |
-| *resourcefound*   | [`ClientResource`](#resource) object |
-| *error*           | [`Error`](../README.md/#ocferror) object |
+The Client API supports the following events.
 
 <a name="onplatformfound"></a>
 ##### 2.1. The `platformfound` event
@@ -121,7 +118,6 @@ client.on('platformfound', function(platform) {
   console.log("Platform found with id: " + platform.id);
 });
 ```
-
 <a name="ondevicefound"></a>
 ##### 2.2. The `devicefound` event
 Fired when a device is discovered. The event callback receives as argument a [`Device`](./README.md/#device) object.
@@ -130,7 +126,6 @@ client.on('devicefound', function(device) {
   console.log("Device found with id: " + device.uuid);
 });
 ```
-
 <a name="ondevicelost"></a>
 ##### 2.3. The `devicelost` event
 Fired when a device is lost. The event callback receives as argument a [`Device`](#./README.md/#device) object.
@@ -139,7 +134,6 @@ client.on('devicelost', function(device) {
   console.log("Device disappeared: " + device.uuid);
 });
 ```
-
 When the first listener is added to the `ondevicefound` or the `ondevicelost` event, implementations SHOULD enable [watching device status](#devicestatus), if supported by the underlying platform.
 
 When the last listener is removed from the `ondevicefound` and the `ondevicelost` event, implementations SHOULD disable watching device status.
@@ -227,7 +221,7 @@ The method runs the following steps:
 | `resourcePath` | string | yes      | `undefined`   | OCF resource path |
 | `timeout`      | number | yes      | `undefined`   | Timeout period for discovery |
 
-- The `listener` argument is optional, and is an event listener for the [`resourcefound`](#onresourcefound) event that receives as argument a [`ClientResource`](./README.md/#resource) object.
+- The `listener` argument is optional, and is an event listener for the [`resourcefound`](#onresourcefound) event that receives as argument a [`ClientResource`](#clientresource) object.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).

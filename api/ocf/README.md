@@ -4,10 +4,9 @@ OCF Web API
 * [OCF API object](#api-entry-point)
   - [OCF Client API](./client.md)
   - [OCF Server API](./server.md)
-* [Helper structures](#structures)
-  - The [OcfDevice](#ocfdevice) dictionary
-* - The [OcfPlatform](#ocfplatform) dictionary
-* - The [OcfError](#ocferror) interface
+* The [OcfDevice](#ocfdevice) dictionary
+* The [OcfPlatform](#ocfplatform) dictionary
+* The [OcfError](#ocferror) interface
 * [Web IDL](./webidl.md)
 * [Examples](./examples.md)
 
@@ -44,31 +43,32 @@ var ocf = require(module);
 If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
 
 When `require` is successful, it MUST return an object with the following read-only properties:
-- `client` is an object that implements the [OCF Client API](./client.md).
-- `server` is an object that implements the [OCF Server API](./server.md)
-- `device` is an [`OcfDevice`](#ocfdevice) object that represents properties of the current device
+- `client` is an object that implements the [OCF Client API](./client.md), i.e. CRUDN (Create, Retrieve, Update, Delete, Notify) functionality:
+  * remote access to resources on the network,
+  * listening to presence notifications in the OCF network, and
+  * discovery for platforms, devices and resources on the OCF network.
+- `server` is an object that implements the [OCF Server API](./server.md), i.e. the functionality to serve CRUDN requests on a device, to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
+- `device` is an [`OcfDevice`](#ocfdevice) object that represents properties of the current device.
 - `platform` is an [`OcfPlatform`](#ocfplatform) object that represents properties of the platform that hosts the current device.
 
-The Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality,
-  * enabling remote access to resources on the network,
-  * enabling listening to presence notifications in the OCF network, and
-  * implementing discovery for platforms, devices and resources on the OCF network.
+|Property   |Type     |Optional |Default value |
+| ---       | ---     | ---     | ---          |
+| `client`  | [OcfClient](./client.md#ocfclient) object | no | platform provided |
+| `server`  | [OcfServer](./server.md#ocfserver) object | no | platform provided |
+| `device`  | [OcfDevice](#ocfdevice) object | no | platform provided |
+| `platform` | [OcfPlatform](#ocfplatform) object | no | platform provided |
 
-The Server API implements the functionality to serve CRUDN requests on a device. It also provides the means to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
-
-Structures
-----------
 <a name="ocfdevice"></a>
 ### The `OcfDevice` object
 Exposes information about the OCF device that runs the current OCF stack instance.
 
-|Property   |Type     |Optional |Default value |Represents |
-| ---       | ---                  | --- | ---         | ---     |
-| `uuid`    | string  | no  | `undefined` | UUID of the device |
-| `url`     | string  | yes  | `undefined` | host:port  |
-| `name`    | string  | yes  | `undefined` | Name of the device |
-| `dataModels` | array of strings  | no  | `[]` | List of supported OCF data models |
-| `coreSpecVersion`    | string  | no  | `undefined` | OCF Core Specification version |
+|Property           |Type     |Optional |Default value |Represents |
+| ---               | ---     | ---     | ---          | ---       |
+| `uuid`            | string  | no      | `undefined` | UUID of the device |
+| `url`             | string  | yes     | `undefined` | host:port  |
+| `name`            | string  | yes     | `undefined` | Name of the device |
+| `dataModels`      | array of strings  | no  | `[]` | List of supported OCF data models |
+| `coreSpecVersion` | string  | no  | `undefined` | OCF Core Specification version |
 
 The `dataModels` property is in the following format: `vertical.major.minor` where `major` and `minor` are numbers and `vertical` is a string such as `"Smart Home"`.
 
@@ -76,17 +76,17 @@ The `dataModels` property is in the following format: `vertical.major.minor` whe
 ### The `OcfPlatform` object
 Exposes information about the OCF platform that hosts the current device.
 
-|Property   |Type              |Optional |Default value |Represents |
-| ---       | ---                  | --- | ---         | ---     |
-| `id`      | string  | no  | `undefined` | Platform identifier |
-| `osVersion` | string  | yes  | `undefined` | OS version  |
-| `model`    | string  | yes  | `undefined` | Model of the hardware |
+|Property            |Type     |Optional |Default value |Represents |
+| ---                | ---     | ---     | ---          | ---       |
+| `id`               | string  | no  | `undefined` | Platform identifier |
+| `osVersion`        | string  | yes  | `undefined` | OS version  |
+| `model`            | string  | yes  | `undefined` | Model of the hardware |
 | `manufacturerName` | string  | no  | `undefined` | Manufacturer name |
-| `manufacturerURL` | string  | no  | `undefined` | Manufacturer web page |
-| `manufacturerDate` | Date  | no  | `undefined` | Manufacturing date |
-| `platformVersion` | string  | no  | `undefined` | Platform version |
-| `firmwareVersion` | string  | no  | `undefined` | Firmware version |
-| `supportURL` | string  | no  | `undefined` | Product support web page |
+| `manufacturerURL`  | string  | no  | `undefined` | Manufacturer web page |
+| `manufacturerDate` | Date    | no  | `undefined` | Manufacturing date |
+| `platformVersion`  | string  | no  | `undefined` | Platform version |
+| `firmwareVersion`  | string  | no  | `undefined` | Firmware version |
+| `supportURL`       | string  | no  | `undefined` | Product support web page |
 
 <a name="ocferror"></a>
 ### Error handling

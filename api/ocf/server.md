@@ -1,23 +1,13 @@
 OCF Server API
 ==============
 
-- Helper structures
-  * The [OcfRequest](#ocfrequest) interface
-    - [`respond(data)`](#respond)
-    - [`respondWithError(error)`](#respondwitherror)
-  * The [ServerResource](#serverresource) interface
-    - [onretrieve(handler)](#onretrieve)
-    - [ontranslate(translateFunction)](#ontranslate)
-    - [onupdate(handler)](#onupdate)
-    - [notify()](#notify)
-    - [ondelete(handler)](#ondelete)
-    - [unregister(resourceId)](#unregister)
-- Server methods
-  * [register(resource)](#register)
-  * [oncreate(handler)](#oncreate)
+- The [OcfServer API object](#ocfserver)
+- The [ServerResource](#serverresource) interface
+- The [OcfRequest](#ocfrequest) interface
 
 Introduction
 ------------
+<a name="ocfserver">
 The Server API provides the means to
 - register and unregister resources,
 - register handlers that serve CRUDN requests on a device,
@@ -27,8 +17,93 @@ A device that implements the Server API may provide special resources to handle 
 
 The Server API object does not expose its own properties, only methods for registering handlers.
 
-1. Structures
--------------
+| Method signature                | Description                |
+| ---                             | ---                        |
+| [`register(resource)`](#register) | register a local resource with the OCF network |
+| [`oncreate(handler)`](#oncreate)  | save a handler for create requests on this device |
+
+<a name="register"></a>
+##### The `register(resource)` method
+Registers a resource in the OCF network.
+The `resource` argument is an object that should contain at least the following properties (other resource properties may also be specified):
+- `resourcePath` and string
+- `resourceTypes` as array of strings with at least one element
+- `interfaces` as array of strings with at least one element `"oic.if.baseline"`
+- `mediaTypes` as array of strings that can be empty
+- `discoverable` (by default `true`)
+- `observable` (by default `true`)
+- `secure` (by default `true`)
+- `slow` (by default `false`)
+- either `properties` as an object, or `links` as array of [`ResourceLink`](../client.md/#resourcelink) objects.
+
+See the [create example](#exampleoncreate).
+
+The method runs the following steps:
+- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Send a request to register the given `resource`, and wait for the answer.
+- If there is an error during the request, reject `promise` with that error.
+- When the answer is received, update `resource` to be a [`ServerResource`](#serverresource) object.
+- Resolve `promise` with `resource`.
+
+<a name="oncreate"></a>
+##### The `oncreate(handler)` method
+Registers a function to handle OCF `create resource` requests and returns `this` for chaining. If the provided `handler` argument is not a `Function`, throw `"TypeMismatchError"`.
+
+Whenever the underlying platform notifies the implementation about an OCF create request, implementations should run the following steps:
+- Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
+  * The value of `request.source` is the [ResourceId](./client.md/#resourceid) of the client resource requesting the operation.
+  * The value of `request.target` is the [ResourceId](./client.md/#resourceid) of the server resource responsible to create the requested resource, or `null` if not specified.
+  * The value of `request.options` is an object that contains a list of properties with values created by the implementation from the REST query options of the request. For instance this object may contain client hints on what measurement units should be used in the resource representation.
+  * The value of `request.data` is an object that contains at least the following properties of the [resource](./client.md/#resource) to be created: `resourcePath` and `resourceTypes`. In addition, other [resource](./client.md/#resource) properties may also be specified, such as `interfaces`, `mediaTypes`, and `properties` for resource representation initialization.
+- Let `handler` be `null`.
+- If `request.target` is not `null`, run the following sub-steps:
+  * Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
+  * If there is no such object, or if there is no registered create handler on `resource`, then invoke `request.respondWithError(error)` with `"NotFoundError"` and terminate these steps.
+  * Otherwise, let `handler` be the registered create handler on `resource`.
+- Otherwise, if `request.target` is `null`, and if there is a registered create handler on the server object, let `handler` be that function.
+- If `handler` is `null`, invoke `request.respondWithError(error)` with `"NotSupportedError"` and terminate these steps.
+- Invoke `handler` with `request` as argument.
+
+<a name="exampleoncreate"></a>
+```javascript
+var server = require('ocf').server;
+server.on('create', function(request) {
+  console.log("Client resource id: " + request.source.resourcePath);
+  console.log("Target resource id, responsible to create the resource: " + request.target.resourcePath);
+  console.log("Requested resource path: " + request.resource.resourcePath);
+  console.log("Requested resource type: " + request.resource.resourceType);
+
+  // Use a local function to create the resource.
+  let res = _createResource(request.target.resourcePath, request.resource);
+
+  // Use oneiota.org RAML definitions, the request options, and sensor documentation.
+  var translate = function (representation, requestOptions) {
+        switch (requestOptions.units) {
+          case "C" :
+            // use sensor-specific code to get Celsius units
+            representation.temperature = _getCelsiusFromSensorT1();
+            break;
+          case "F":
+            representation.temperature = _getFahrenheitFromSensorT1();
+            break;
+          case "K":
+            representation.temperature = _getKelvinFromSensorT1();
+            break;
+        }
+      }
+      return representation;
+  }
+
+  // Register the new resource and then respond to the request.
+  server.register(res)
+    .then(function(resource) {
+      resource.ontranslate(translate);
+      server.respond(request, null, resource);
+    }).catch(function(error) {
+      server.respond(request, error, res);
+    });
+});
+```
 
 <a name="ocfrequest"></a>
 ### The `OcfRequest` interface
@@ -42,6 +117,11 @@ Describes an object that is passed to server event listeners.
 | `data` | object   | no | `undefined` | Resource id or resource or resource representation |
 | `options` | object | yes | `undefined` | dictionary containing the request options |
 | `observe` | boolean | no | `undefined` | whether observation is to be on or off |
+
+| Method signature                | Description                |
+| ---                             | ---                        |
+| [`respond(data)`](#respond) | respond to the protocol request with OK or data |
+| [`respondWithError(error)`](#respondwitherror) | respond to the protocol request with error |
 
 <a name="requesttype"></a>
 The `type` property represents the OCF request type: `"create"`, `"retrieve"`, `"update"`, `"delete"`.
@@ -87,6 +167,15 @@ The method runs the following steps:
 <a name="serverresource"></a>
 ### The `ServerResource` interface
 `ServerResource` extends [`Resource`](./client.md/#resource), so it has all the properties of [`Resource`](#resource) as read-only, and in addition it has the following methods:
+
+| Method signature                        | Description                |
+| ---                                     | ---                        |
+| [`onretrieve(handler)`](#onretrieve)    | save a handler for retrieve requests |
+| [`ontranslate(translateFunction)`](#ontranslate) | save a handler for a translating resource representation |
+| [`onupdate(handler)`](#onupdate)        | save a handler for update requests |
+| [`ondelete(handler)`](#ondelete)        | save a handler for delete requests |
+| [`notify()`](#notify)                   | notify all OCF observers of this resource |
+| [`unregister(resourceId)`](#unregister) | unregister the resource from the OCF network |
 
 #### `ServerResource` methods
 
@@ -229,88 +318,3 @@ The method runs the following steps:
 - Send a request to unregister `this.resourcePath` on `this.deviceId` and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, resolve `promise`.
-
-2. Server Methods
------------------
-
-<a name="oncreate"></a>
-##### The `oncreate(handler)` method
-Registers a function to handle OCF `create resource` requests and returns `this` for chaining. If the provided `handler` argument is not a `Function`, throw `"TypeMismatchError"`.
-
-Whenever the underlying platform notifies the implementation about an OCF create request, implementations should run the following steps:
-- Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
-  * The value of `request.source` is the [ResourceId](./client.md/#resourceid) of the client resource requesting the operation.
-  * The value of `request.target` is the [ResourceId](./client.md/#resourceid) of the server resource responsible to create the requested resource, or `null` if not specified.
-  * The value of `request.options` is an object that contains a list of properties with values created by the implementation from the REST query options of the request. For instance this object may contain client hints on what measurement units should be used in the resource representation.
-  * The value of `request.data` is an object that contains at least the following properties of the [resource](./client.md/#resource) to be created: `resourcePath` and `resourceTypes`. In addition, other [resource](./client.md/#resource) properties may also be specified, such as `interfaces`, `mediaTypes`, and `properties` for resource representation initialization.
-- Let `handler` be `null`.
-- If `request.target` is not `null`, run the following sub-steps:
-  * Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
-  * If there is no such object, or if there is no registered create handler on `resource`, then invoke `request.respondWithError(error)` with `"NotFoundError"` and terminate these steps.
-  * Otherwise, let `handler` be the registered create handler on `resource`.
-- Otherwise, if `request.target` is `null`, and if there is a registered create handler on the server object, let `handler` be that function.
-- If `handler` is `null`, invoke `request.respondWithError(error)` with `"NotSupportedError"` and terminate these steps.
-- Invoke `handler` with `request` as argument.
-
-<a name="exampleoncreate"></a>
-```javascript
-var server = require('ocf').server;
-server.on('create', function(request) {
-  console.log("Client resource id: " + request.source.resourcePath);
-  console.log("Target resource id, responsible to create the resource: " + request.target.resourcePath);
-  console.log("Requested resource path: " + request.resource.resourcePath);
-  console.log("Requested resource type: " + request.resource.resourceType);
-
-  // Use a local function to create the resource.
-  let res = _createResource(request.target.resourcePath, request.resource);
-
-  // Use oneiota.org RAML definitions, the request options, and sensor documentation.
-  var translate = function (representation, requestOptions) {
-        switch (requestOptions.units) {
-          case "C" :
-            // use sensor-specific code to get Celsius units
-            representation.temperature = _getCelsiusFromSensorT1();
-            break;
-          case "F":
-            representation.temperature = _getFahrenheitFromSensorT1();
-            break;
-          case "K":
-            representation.temperature = _getKelvinFromSensorT1();
-            break;
-        }
-      }
-      return representation;
-  }
-
-  // Register the new resource and then respond to the request.
-  server.register(res)
-    .then(function(resource) {
-      resource.ontranslate(translate);
-      server.respond(request, null, resource);
-    }).catch(function(error) {
-      server.respond(request, error, res);
-    });
-});
-```
-<a name="register"></a>
-##### The `register(resource)` method
-Registers a resource in the OCF network.
-The `resource` argument is an object that should contain at least the following properties (other resource properties may also be specified):
-- `resourcePath` and string
-- `resourceTypes` as array of strings with at least one element
-- `interfaces` as array of strings with at least one element `"oic.if.baseline"`
-- `mediaTypes` as array of strings that can be empty
-- `discoverable` (by default `true`)
-- `observable` (by default `true`)
-- `secure` (by default `true`)
-- `slow` (by default `false`)
-- either `properties` as an object, or `links` as array of [`ResourceLink`](../client.md/#resourcelink) objects.
-
-See the [create example](#exampleoncreate).
-
-The method runs the following steps:
-- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- Send a request to register the given `resource`, and wait for the answer.
-- If there is an error during the request, reject `promise` with that error.
-- When the answer is received, update `resource` to be a [`ServerResource`](#serverresource) object.
-- Resolve `promise` with `resource`.

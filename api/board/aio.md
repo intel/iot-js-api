@@ -7,7 +7,7 @@ On some boards access to AIO may be asynchronous. This API uses synchronous read
 
 The API object
 --------------
-AIO functionality is exposed by the [`AIO`](#aio) object that can be obtained by using the [aio() method of the `Board` API](./README.md/#aio).
+AIO functionality is exposed by the [`AIO`](#aio) object that can be obtained by using the [aio() method of the `Board` API](./README.md/#aio). See also the [Web IDL](./webidl.md).
 
 Implementations MAY also support an explicit constructor that runs the [`AIO initialization`](#init) algorithm.
 
@@ -25,9 +25,13 @@ board.aio("A1").then(function(aio){
 });
 
 board.aio({pin: "A4", precision: 12 })
-.then(function(aio){
-  console.log("AIO pin 4 value: " + aio.read());
-  aio.close();
+.then(function(aio){  // read 10 samples, one every second
+  setTimeout(function() {
+    aio.close();
+  }, 10500);
+  setInterval(function() {
+    console.log("AIO pin 4 value: " + aio.read());
+  }, 1000);
 }).catch(function(err) {
   console.log("AIO error.");
 });
@@ -35,14 +39,19 @@ board.aio({pin: "A4", precision: 12 })
 
 <a name="aio">
 ### The `AIO` interface
-Represents the properties and methods that expose AIO functionality. The `AIO` object implements the [`EventEmitter`](../README/#events) interface, and extends the [`Pin`](./README.md/#pin) object, so it has all properties of [`Pin`](./README.md/#pin). In addition, it has the following properties:
+Represents the properties and methods that expose AIO functionality. The `AIO` object implements the [`EventEmitter`](../README.md/#events) interface, and extends the [`Pin`](./README.md/#pin) object, so it has all properties of [`Pin`](./README.md/#pin). In addition, it has the following properties:
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
+| `pin`      | String or Number | no | `undefined`   | board name for the pin |
+| `mode`     | String | no       | `undefined`   | I/O mode |
 | `channel`  | unsigned long | yes   | `undefined` | numeric index of the analog pin |
 | `precision` | unsigned long | yes | `undefined` | bit length of digital sample |
-| `read()`   | function | no | defined by implementation | synchronous read |
-| `close()`  | function | no | defined by implementation | close the pin |
+
+| Method signature    | Description      |
+| ---                 | ---              |
+| [`read()`](#read)   | synchronous read |
+| [`close()`](#close) | close the pin    |
 
 #### `AIO` properties
 The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board mapping, usually strings prefixed by `"A"`.
@@ -71,8 +80,10 @@ This internal algorithm is used by the [`Board.aio()`](./README.md/#aio) method.
 - Initialize the `aio.value` property with `undefined`.
 - Return the `aio` object.
 
+<a name="read">
 ##### The `unsigned long read()` method
 Performs a synchronous read operation for the pin value. It returns the pin value representing the last sampling.
 
+<a name="close">
 ##### The `close()` method
 Called when the application is no longer interested in the pin. Until the next [initialization](#init), invoking the `read()` method SHOULD throw `InvalidAccessError`.

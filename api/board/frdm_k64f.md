@@ -18,8 +18,8 @@ Supported pins are summarized in the following table:
 
 |Pin name |Supported modes (channel), [other]   |
 | ---     | ---                                 |
-| `D0`    | `"input"`, `"output"`, [UART3 RX]   |
-| `D1`    | `"input"`, `"output"`, [UART3 TX]   |
+| `D0`    | `"input"`, `"output"`, "uart-rx" (3)|
+| `D1`    | `"input"`, `"output"`, "uart-tx" (3)|
 | `D2`    | `"input"`, `"output"`               |
 | `D3`    | `"input"`, `"output"`, `"pwm"`(0)   |
 | `D4`    | `"input"`, `"output"`               |
@@ -29,17 +29,17 @@ Supported pins are summarized in the following table:
 | `D8`    | `"input"`, `"output"`, `"pwm"`(4)   |
 | `D9`    | `"input"`, `"output"`, `"pwm"`(5)   |
 | `D10`   | `"input"`, `"output"`, `"pwm"`(6)   |
-| `D11`   | `"input"`, `"output"`, `"pwm"`(7), [SPI MOSI] |
-| `D12`   | `"input"`, `"output"`, `"pwm"`(8), [SPI MISO] |
-| `D13`   | `"input"`, `"output"`, `"pwm"`(9), [SPI SCK]  |
-| `D14`   | `"input"`, [I2C SDA]                |
-| `D15`   | `"input"`, [I2C SCL]                |
-| `"A0"`  | `"analog"`(0)                       |
-| `"A1"`  | `"analog"`(1)                       |
-| `"A2"`  | `"analog"`(2)                       |
-| `"A3"`  | `"analog"`(3)                       |
-| `"A4"`  | `"analog"`(4), `"pwm"`              |
-| `"A5"`  | `"analog"`(5), `"pwm"`              |
+| `D11`   | `"input"`, `"output"`, `"pwm"`(7), `"spi-mosi"` |
+| `D12`   | `"input"`, `"output"`, `"pwm"`(8), `"spi-miso"` |
+| `D13`   | `"input"`, `"output"`, `"pwm"`(9), `"spi-sclk"` |
+| `D14`   | `"input"`, "i2c-sda"                |
+| `D15`   | `"input"`, "i2c-scl"                |
+| `"A0"`  | `"analog-in"`(0)                    |
+| `"A1"`  | `"analog-in"`(1)                    |
+| `"A2"`  | `"analog-in"`(2)                    |
+| `"A3"`  | `"analog-in"`(3)                    |
+| `"A4"`  | `"analog-in"`(4), `"pwm"`           |
+| `"A5"`  | `"analog-in"`(5), `"pwm"`           |
 | `"LED0"`| `"output"` (active on 1)            |
 | `"LED1"`| `"output"` (active on 0)            |
 | `"LED2"`| `"output"` (active on 0)            |

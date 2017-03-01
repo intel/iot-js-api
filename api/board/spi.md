@@ -1,11 +1,15 @@
 SPI API
 =======
 
-The SPI API supports the Serial Peripheral Interface, a synchronous serial protocol that allows multiple slave chips to communicate with a master chip. A single SPI bus uses 4 pins, SCK for clock, SS for slave select, MOSI (Master Out, Slave In) for write, and MISO (Master In, Slave Out) for read. Multiple SPI buses may be present on a board.
+The SPI API supports the Serial Peripheral Interface, a synchronous serial protocol that allows multiple slave chips to communicate with a master chip. A single SPI bus uses the following pins: SCLK for clock, MOSI (Master Out, Slave In) for write, MISO (Master In, Slave Out) for read, and one or more SS (Slave Select) for selecting the slave device.
+
 For each clock signal one bit is written from the master to the selected slave and one bit is read by the master from the selected slave, so there is no separate read and write, but one transceive operation.
+
 When a slave device's chip select is 0 (low), then it communicates with the master, otherwise it ignores the master. The master can select multiple slaves in a write-only configuration; in this case no slave is writing data, they only read.
 
-This API uses a [`Buffer`](../README.mk/#buffer) object for both read and write.
+Since the SS pins may be connected to slave chip select through a demultiplexer and thereby work as an address bus, slave devices are identified by an index in this API, rather than by SS pins. Also, since multiple SPI buses may be present on a board, these are identified by an index in this API. Implementations SHOULD encapsulate the mapping from SPI bus number and device number to the real SPI pins.
+
+This API uses a [`Buffer`](../README.md/#buffer) object for both read and write data.
 
 The API object
 --------------
@@ -34,7 +38,7 @@ try {
 }
 ```
 
-<a name="SPI">
+<a name="spi">
 ### The `SPI` interface
 Represents the properties and methods that expose SPI functionality. The `SPI` object has the following read-only properties:
 
@@ -48,6 +52,11 @@ Represents the properties and methods that expose SPI functionality. The `SPI` o
 | `phase`    | long   | yes      | 0             | clock phase, 0 or 1 |
 | `frameGap` | unsigned long | yes | `undefined` | inter-frame gap in nanoseconds |
 | `direction` | string | yes      | `undefined` | SPI master-slave transfer direction |
+
+| Method signature  | Description            |
+| ---               | ---                    |
+| [`transceive(device, buffer)`](#transceive) | read or write device(s) |
+| [`close()`](#close) | close the SPI bus |
 
 The `bus` property denotes the SPI bus number between 0 and 127.
 
@@ -81,28 +90,30 @@ The `direction` property describes the SPI master-slave connection type. This va
 #### SPI methods
 <a name="init">
 ##### SPI initialization
-This internal algorithm is used by the [`Board.spi()`](./README.md/#spi) method. It configures the SPI bus and bus speed provided by the `options` (first) dictionary argument on the [`board`](./README.md/#board) specified by the `board` (second) argument.
-- Let `spi` be an [SPI`](#spi) object.
+This internal algorithm is used by the [`Board.spi()`](./README.md/#spi) method. It configures the SPI bus and bus speed provided by the `options` dictionary argument.
+- Let `spi` be an [`SPI`](#spi) object.
 - If `options` is a dictionary and the `options.bus` property is a number between 0 and 127, let `spi.bus` be `options.bus`, otherwise select the platform default value, and if that is not available, set the value to 0.
 - If `options.speed` is not a number, let `spi.speed` be 10. Otherwise, set `spi.speed` to the closest matching value that is lower than `options.speed` and is supported by the platform.
 - If `options.msbFirst` is `false`, set `spi.msbFirst` to `false`, otherwise set it to `true`.
 - If `options.bits` is in the set {1, 2, 4, 8, 16 }, then set `spi.bits` to `option.bits`, otherwise set it to the value 4.
 - If `options.polarity` is 0, then set `spi.polarity` to 0, otherwise set `spi.polarity` to 2.
 - If `options.phase` is 0, then set `spi.phase` to 0, otherwise set `spi.phase` to 1.
-- Request the underlying platform to initialize the SPI `spi.bus` with `spi.speed` on `board`.
+- Request the underlying platform to initialize the SPI `spi.bus` with `spi.speed` on the board. The implementation will use the board mapping from the value of `bus` to the set of physical pins used for the bus.
 - In case of failure in any of the steps above, return `null`.
 - Set `spi.frameGap` to 0. Request the underlying platform to provide the SPI inter-frame delay value expressed in nanoseconds and if the request successfully completes, then set `spi.frameGap` to that value.
 - Set `spi.direction` to `"full-duplex"`. Request the underlying platform to provide the SPI transfer mode and if the request successfully completes, then set `spi.direction` to the corresponding value.
 - Return `spi`.
 
+<a name="transceive">
 ##### The `transceive(device, buffer)` method
-Writes a [`Buffer`](./README.md/#buffer) `buffer` using SPI to the slave `device`, and reads another [`Buffer`](./README.md/#buffer) from the slave device that is returned. The method runs the following steps:
+Writes a [`Buffer`](../README.md/#buffer) `buffer` using SPI to the slave identified by the `device` argument, and reads another [`Buffer`](../README.md/#buffer) from the slave device that is returned. The method runs the following steps:
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If `device` is not a number between 0 and 127, reject `promise` with `TypeError` and terminate these steps.
-- Create a [`Buffer`](./README.md/#buffer) from `buffer` (may be empty). If that fails, reject `promise` with `TypeError` and terminate these steps.
-- Request the underlying platform to write the specified `buffer` to the specified device and read another [`Buffer`](./README.md/#buffer) `readBuffer`.
+- Create a [`Buffer`](../README.md/#buffer) from `buffer` (may be empty). If that fails, reject `promise` with `TypeError` and terminate these steps.
+- Request the underlying platform to write the specified `buffer` to the specified device and read another [`Buffer`](../README.md/#buffer) `readBuffer`. The implementation maps the value of `device` to the physical SS (slave select) pins on the board, for instance as an index, the value of 0 mapping to SS0, and so forth.
 If the operation fails, reject `promise`.
 - Otherwise, resolve `promise` with `readBuffer`.
 
+<a name="close">
 ##### The `close()` method
 Closes the current [`SPI`](#spi) bus and interrupts all pending operations.

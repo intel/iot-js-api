@@ -2,7 +2,7 @@ UART API
 ========
 
 The UART API supports the Universal Asynchronous Receiver/Transmitter that allows the board to communicate with other external devices. It uses 2 pins, RX for receiving and TX for transmitting. UART ports are usually referred by string names (see board definitions), but numbers may also be accepted.
-This API uses a [`Buffer`](../README.mk/#buffer) object for both read and write.
+This API uses a [`Buffer`](../README.md/#buffer) object for both read and write.
 
 The API object
 --------------
@@ -34,15 +34,13 @@ try {
 }
 ```
 
-<a name="UART">
+<a name="uart">
 ### The `UART` interface
-Represents the properties and methods that expose UART functionality. The `UART` interface implements the [`EventEmitter`](../README/#events) interface and exposes one event named `onread`.
+Represents the properties and methods that expose UART functionality. The `UART` interface implements the [`EventEmitter`](../README.md/#events) interface and exposes one event.
 
 | Event name        | Event callback argument |
 | --------------    | ----------------------- |
-| `onread`          | [`Buffer`](../README.mk/#buffer) |
-
-The `UART` object has the following properties:
+| `data`            | [`Buffer`](../README.md/#buffer) |
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
@@ -52,6 +50,12 @@ The `UART` object has the following properties:
 | `stopBits` | number | yes      | 1             | number of stop bits |
 | `parity`   | enum   | yes      | `'none'`      | `'none'`, `'even'`, `'odd'` |
 | `flowControl` | boolean | yes  | `false`       | if flow control is on |
+
+| Method signature          | Description            |
+| ---                       | ---                    |
+| [`write(buffer)`](#write) | write a buffer |
+| [`setReadRange(min, max)`](#readrange) | set buffer sizes for read notifications |
+| [`close()`](#close)       | close the UART port |
 
 The `port` property denotes the UART port as a string defined by the board documentation, such as `"tty0"`, `"serialUSB0"`, etc.
 
@@ -68,7 +72,7 @@ The `flowControl` boolean property denotes if flow control is used. By default i
 #### UART methods
 <a name="init">
 ##### UART initialization
-This internal algorithm is used by the [`Board.uart()`](./README.md/#uart) method. Configures UART with the `options` (first) dictionary argument on the [`board`](./README.md/#board) specified by the `board` (second) argument.
+This internal algorithm is used by the [`Board.uart()`](./README.md/#uart) method. Configures UART with the `options` dictionary argument.
 - If `options.port` is not a string, return `null`.
 - Let `uart` be an [`UART`](#uart) object.
 - For all `uart` properties, if the `options` dictionary defines the same property with a valid value, let the `uart` property take that value, otherwise the default value.
@@ -77,16 +81,19 @@ This internal algorithm is used by the [`Board.uart()`](./README.md/#uart) metho
 - Invoke the `uart.setReadRange(min, max)` method with `min` = 1, and `max` taking a value determined by the platform that is greater than or equal to 1.
 - Return `uart`.
 
+<a name="write">
 ##### The `write(buffer)` method
-Transmits a [`Buffer`](./README.md/#buffer) using UART. The method runs the following steps:
+Transmits a [`Buffer`](../README.md/#buffer) using UART. The method runs the following steps:
 - Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- Create a [`Buffer`](./README.md/#buffer) from `buffer`. If that fails, reject `promise` with `TypeError` and terminate these steps.
+- Create a [`Buffer`](../README.md/#buffer) from `buffer`. If that fails, reject `promise` with `TypeError` and terminate these steps.
 - Request the underlying platform to send the specified bytes.
 If the operation fails, reject `promise`.
 - Otherwise, resolve `promise`.
 
+<a name="readrange">
 ##### The `setReadRange(min, max)` method
-Sets the minimum and maximum number of bytes for triggering the `onread` event. Whenever at least `min` number of bytes is available, a [`Buffer`](./README.md/#buffer) object containing a `max` number of bytes is sent with the `onread` event.
+Sets the minimum and maximum number of bytes for triggering the `onread` event. Whenever at least `min` number of bytes is available, a [`Buffer`](../README.md/#buffer) object containing a `max` number of bytes is sent with the `onread` event.
 
+<a name="close">
 ##### The `close()` method
 Closes the current [`UART`](#uart) port and interrupts all pending operations.
