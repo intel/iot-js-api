@@ -289,7 +289,7 @@ The method runs the following steps:
 - Send a request to retrieve the resource specified by `resourceId` with the OCF `observe` flag set to the value of `observe`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - If `observe` is `false`, resolve `promise` with `resource` updated from the retrieve response.
-- Otherwise, if `observe` is `true, for each OCF retrieve response received for resource representation change while `resource` is being observed, update `resource` with the new values, and fire the `ClientResource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed, in addition to `resourcePath` and `deviceId`.
+- Otherwise, if `observe` is `true`, for each OCF retrieve response received for resource representation change while `resource` is being observed, update `resource` with the new values, and fire the `ClientResource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed, in addition to `resourcePath` and `deviceId`.
 - If there is an OCF protocol error during observation, fire an [`error`](#onerror) event with a new [`OcfObserveError`](../README.md/#ocferror) object `error` with `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.resourcePath`.
 
 <a name="update"></a>
