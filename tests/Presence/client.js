@@ -12,16 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var server = require( process.argv[ 3 ] ).server;
+// The file names for client and server are reversed in this test, because the test suite uses the
+// file name to decide which to run first ("server.js"). In the case of presence, however, the
+// client must run first, because it must catch the announcement from the server when it comes up.
 
-console.log( JSON.stringify( { assertionCount: 2 } ) );
+var ocf = require( process.argv[ 3 ] );
 
-console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof server.register, "function", "server.register is a function"
-] } ) );
+console.log( JSON.stringify( { assertionCount: 0 } ) );
 
-console.log( JSON.stringify( { assertion: "strictEqual", arguments: [
-	typeof server.oncreate, "function", "server.oncreate is a function"
-] } ) );
-
-console.log( JSON.stringify( { finished: 0 } ) );
+ocf.device.name = "test-device-" + process.argv[ 2 ];

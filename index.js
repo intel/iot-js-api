@@ -52,7 +52,7 @@ function spawnOne( assert, options ) {
 	var temporary;
 	var commandLine = [ options.path, options.uuid, options.location ];
 	var theChild;
-	var accumulator = "";
+	var accumulator;
 
 	if ( "preamble" in options ) {
 		var temporary = tmp.fileSync();
@@ -63,6 +63,7 @@ function spawnOne( assert, options ) {
 	}
 
 	theChild = options.spawn( options.interpreter, commandLine );
+	theChild.path = options.path;
 
 	runningProcesses.push( theChild );
 
@@ -87,16 +88,15 @@ function spawnOne( assert, options ) {
 
 	// The stdout of the child is a sequence of \n-separated stringified JSON objects.
 	theChild.stdout.on( "data", function serverStdoutData( data ) {
-		data = data.toString().split( "\n" );
-		data[ 0 ] = accumulator + data[ 0 ];
-		if ( data[ data.length - 1 ] !== "" ) {
-			accumulator = data[ data.length - 1 ];
-			data.splice( data.length - 1, 1 );
-		} else {
-			accumulator = "";
-		}
+		var lastNewline;
 
-		_.each( data, function( value ) {
+		data = Buffer.concat( ( accumulator ? [ accumulator ] : [] ).concat( [ data ] ) );
+		for ( lastNewline = data.length - 1;
+				lastNewline >= 0 && data[ lastNewline ] !== 10;
+				lastNewline-- ) {}
+		accumulator = data.slice( lastNewline + 1 );
+
+		_.each( data.slice( 0, lastNewline ).toString().split( "\n" ), function( value ) {
 			var jsonObject;
 
 			value = options.lineFilter( value, options.path );
@@ -170,22 +170,37 @@ var actualOptions = {
 		_.map( options.tests, function( item ) {
 			return path.join( __dirname, "tests", item );
 		} ) :
-		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) )
+		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) ).map( path.normalize )
 };
 
 if ( actualOptions.tests.length === 0 ) {
 	console.log( "*** No tests were requested ***" );
 }
 
+getQUnit().module( "OCF tests", {
+	beforeEach: function() {
+		this.children = [];
+	},
+	afterEach: function() {
+		this.children.forEach( function( childProcess ) {
+			console.log( "Killing child process " + childProcess.path );
+			childProcess.removeAllListeners();
+			childProcess.kill( "SIGKILL" );
+		} );
+	}
+} );
+
 _.each( actualOptions.tests, function( item ) {
 	var clientPathIndex,
-		clientPaths = glob.sync( path.join( item, "client*.js" ) ),
+		clientPaths = glob.sync( path.join( item, "client*.js" ) ).map( path.normalize ),
 		serverPath = path.join( item, "server.js" );
 
 	if ( fs.lstatSync( item ).isFile() && !actualOptions.single.skip ) {
 		getQUnit()
 			.test( path.basename( item ).replace( /\.js$/, "" ), function( assert ) {
-				spawnOne( assert,
+				var done = assert.async();
+				var children = this.children;
+				children.push( spawnOne( assert,
 					_.extend( {}, actualOptions.single, {
 						uuid: uuid.v4(),
 						name: "Test",
@@ -193,9 +208,12 @@ _.each( actualOptions.tests, function( item ) {
 						teardown: function( error, sourceProcess ) {
 							sourceProcess.kill( "SIGINT" );
 						},
-						maybeQuit: assert.async(),
+						maybeQuit: function() {
+							children.pop();
+							done();
+						},
 						reportAssertions: _.bind( assert.expect, assert )
-					} ) );
+					} ) ) );
 			} );
 		return;
 	}
@@ -218,7 +236,7 @@ _.each( actualOptions.tests, function( item ) {
 		var totalChildren = clientPaths.length + 1,
 
 			// Track the child processes involved in this test in this array
-			children = [],
+			children = this.children,
 
 			// Turn this test async
 			done = assert.async(),
