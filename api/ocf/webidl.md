@@ -127,10 +127,6 @@ interface OcfServer {
   Promise<ServerResource> register(Resource resource);
 
   void oncreate(RequestHandler handler);
-
-  // Enable/disable presence for this device.
-  Promise<void> enablePresence(optional unsigned long timeToLive);  // in ms
-  Promise<void> disablePresence();
 };
 
 [NoInterfaceObject]  // ServerResource can only be created by register().

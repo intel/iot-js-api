@@ -117,7 +117,7 @@ The OCF error objects MAY contain two additional optional properties.
 - The `resourcePath` property is a string that represents the resource path of the [resource](./client.md/#resource) causing the error. If `deviceId` is `undefined`, then the value of `resourcePath` should also be set to `undefined`.
 - The `message` property is inherited from `Error`.
 
-The constructor of `OcfDiscoveryError`, `OcfObserveError` and `OcfPresenceError` takes the following parameters:
+The constructor of `OcfDiscoveryError` and `OcfObserveError` takes the following parameters:
 - the `message` parameter is a string representing an error message, as with `Error`
 - the `deviceId` parameter instantiates the `deviceId` property
 - the `resourcePath` parameter instantiates `the resourcePath`.
