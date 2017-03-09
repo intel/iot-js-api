@@ -60,15 +60,18 @@ When `require` is successful, it MUST return an object with the following read-o
 
 <a name="ocfdevice"></a>
 ### The `OcfDevice` object
-Exposes information about the OCF device that runs the current OCF stack instance.
+Exposes information about the OCF device that runs the current OCF stack instance. All properties are read-only. Future versions of this specification will support configuring some of the values.
 
 |Property           |Type     |Optional |Default value |Represents |
 | ---               | ---     | ---     | ---          | ---       |
 | `uuid`            | string  | no      | `undefined` | UUID of the device |
 | `url`             | string  | yes     | `undefined` | host:port  |
 | `name`            | string  | yes     | `undefined` | Name of the device |
+| `types`           | array of strings  | no  | `[]` | List of supported OCF device types |
 | `dataModels`      | array of strings  | no  | `[]` | List of supported OCF data models |
 | `coreSpecVersion` | string  | no  | `undefined` | OCF Core Specification version |
+
+The `types` property is a list of the OCF Device types that are supported. It comforms to the same syntax constraints as [resource](./client.md/#resource) types. OCF mandates that every device supports at least the properties defined in the `"oic.wk.d"` resource type, that represents a resource for a "basic device". Other specifications, such as the OCF Smart Home Device Specification can define more device types, for instance `"oic.d.fan"`, `"oic.d.thermostat"`, `"oic.d.light"`, `"oic.d.airconditioner"`, etc. The properties exposed by these device types are defined in [oneiota.org](http://wwww.oneiota.org). [Device discovery](./client.md/#finddevices) may use filters based upon device types.
 
 The `dataModels` property is in the following format: `vertical.major.minor` where `major` and `minor` are numbers and `vertical` is a string such as `"Smart Home"`.
 

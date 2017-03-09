@@ -195,14 +195,22 @@ The method runs the following steps:
 - When a platform is discovered, fire a `platformfound` event that contains a property named `platform`, whose value is a [`Platform`](./README.md/#platform) object.
 
 <a name="finddevices"></a>
-##### 3.4. The `findDevices(listener)` method
+##### 3.4. The `findDevices(options, listener)` method
 - Initiates a device discovery network operation.
 - Returns a [`Promise`](./README.md/#promise) object.
+- The `options` parameter is optional, and its value is an object that contains one or more of the following properties:
+
+| Property        | Type       | Optional | Default value | Represents      |
+| ---             | ---             | --- | ---           | ---             |
+| `deviceTypes`   | array of string | yes | `undefined`   | OCF device type |
+| `resourceTypes` | array of string | yes | `undefined`   | OCF device type |
+
 - The `listener` argument is optional, and is an event listener for the [`devicefound`](#ondevicefound) event that receives as argument a [`Device`](./README.md/#device) object.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- Send a multicast request for retrieving `/oic/d` and wait for the answer.
+  - If `options.deviceTypes` is an array, include every string element in the `rt` parameter in a new OCF discovery request.
+- Send the OCF discovery request and wait for the answer.
 - If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
 - If there is an error during the discovery protocol, fire an `error` event.
 - If the `listener` argument is specified, add it as a listener to the [`devicefound`](#ondevicefound) event.
@@ -214,12 +222,13 @@ The method runs the following steps:
 - Returns a [`Promise`](./README.md/#promise) object.
 - The `options` parameter is optional, and its value is an object that contains one or more of the following properties:
 
-| Property       | Type   | Optional | Default value | Represents        |
-| ---            | ---    | ---      | ---           | ---               |
-| `deviceId`     | string | yes      | `undefined`   | OCF device UUID   |
-| `resourceType` | string | yes      | `undefined`   | OCF resource type |
-| `resourcePath` | string | yes      | `undefined`   | OCF resource path |
-| `timeout`      | number | yes      | `undefined`   | Timeout period for discovery |
+| Property        | Type   | Optional | Default value | Represents        |
+| ---             | ---    | ---      | ---           | ---               |
+| `deviceId`      | string | yes      | `undefined`   | OCF device UUID   |
+| `deviceTypes`   | array of string | yes | `undefined` | OCF device type |
+| `resourceTypes` | array of string | yes | `undefined` | OCF device type |
+| `resourcePath`  | string | yes      | `undefined`   | OCF resource path |
+| `timeout`       | number | yes      | `undefined`   | Timeout for discovery |
 
 - The `listener` argument is optional, and is an event listener for the [`resourcefound`](#onresourcefound) event that receives as argument a [`ClientResource`](#clientresource) object.
 
@@ -227,12 +236,13 @@ The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Configure an OCF resource discovery request as follows:
   - If `options.deviceId` is specified, make a direct resource discovery request to that device
-  - If `options.resourceType` is specified, include it as the `rt` parameter in a new endpoint multicast discovery request `GET /oic/res` to "All CoAP nodes" (`224.0.1.187` for IPv4 and `FF0X::FD` for IPv6, port `5683`).
+  - If `options.deviceTypes` is an array, include every string element in the `rt` parameter in a new OCF discovery request.
+  - If `options.resourceTypes` is an array, include every string element in the `rt` parameter in the OCF resource discovery request.
   - If `options.resourcePath` is specified, filter results locally.
   - If the `listener` argument is specified, add it as a listener to the [`resourcefound`](#resourcefound) event.
 - If `timeout` is a positive number, start a timer with `timeout`. When it expires, discard any further discovery responses matching this query.
 - Execute the following sub-steps:
-  * Send the discovery request.
+  * Send the OCF discovery request.
   * If sending the request fails, reject `promise` with `"NetworkError"`, otherwise resolve `promise`.
   * Wait for discovery responses. If there is an error during the discovery protocol, fire an `error` event. Whenever a resource `resource` is discovered, fire the [`resourcefound`](#resourcefound) event with `resource` as an argument to the listener function.
 
