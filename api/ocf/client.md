@@ -96,7 +96,7 @@ Note that applications should not create `ClientResource` objects, as they are c
 
 | Event name | Event callback argument |
 | -----------| ----------------------- |
-| `update`   | partial `ClientResource` dictionary |
+| `update`   | partial `Resource` dictionary |
 | `delete`   | `ResourceId` dictionary |
 
 <a name="onresourceupdate"></a>
@@ -105,7 +105,7 @@ The `update` event is fired on a `ClientResource` object when the implementation
 The recommended way to observe and unobserve resources from applications is by using the [`retrieve()`](#retrieve) method, in order to be able to specify OCF retrieve options. However, for convenience, when the first listener function `listener` is added to the `update` event of `resource`, implementations SHOULD call [`retrieve(resource, null, listener)](#retrieve). When the last listener is removed, the implementations SHOULD call [`retrieve(resource)`](#retrieve), i.e. make an OCF retrieve request with the observe flag off.
 
 <a name="onresourcelost"></a>
-The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a [`ResourceId`](#resourceid) dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
+The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
 
 ## 2. Events
 The Client API supports the following events.
