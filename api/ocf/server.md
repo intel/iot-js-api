@@ -26,10 +26,10 @@ The Server API object does not expose its own properties, only methods for regis
 ##### The `register(resource)` method
 Registers a resource in the OCF network.
 The `resource` argument is an object that should contain at least the following properties (other resource properties may also be specified):
-- `resourcePath` and string
+- `resourcePath` as string
 - `resourceTypes` as array of strings with at least one element
-- `interfaces` as array of strings with at least one element `"oic.if.baseline"`
-- `mediaTypes` as array of strings that can be empty
+- `interfaces` as array of strings (if not specified, then by default `"oic.if.baseline"` is added)
+- `mediaTypes` as array of strings that can be empty (by default empty)
 - `discoverable` (by default `true`)
 - `observable` (by default `true`)
 - `secure` (by default `true`)

@@ -253,19 +253,15 @@ The method runs the following steps:
 - Creates a remote resource on a given device, and optionally specifies a target resource that is supposed to create the new resource. The device's [`oncreate`](./server.md/#oncreate) event handler takes care of dispatching the request to the target resource that will handle creating the resource, and responds with the created resource, or with an error.
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
 - The optional `target` argument is a [ResourceId](#resourceid) object that contains at least a device UUID and a resource path that identifies the target resource responsible for creating the requested resource.
-- The `resource` argument is a [Resource](#resource) object. It should contain at least the following properties (other resource properties may also be specified):
-
-| Property       | Type   | Optional | Default value | Represents            |
-| ---            | ---    | ---      | ---           | ---                   |
-| `resourcePath` | string | no       | `undefined`   | OCF resource URI path |
-| `resourceType` | string | no       | `undefined`   | OCF resource type     |
+- The `resource` argument is a [Resource](#resource) object. It should contain at least the properties that don't have default values in the [resource registration steps](./server.md/#register): `resourcePath` and `resourceTypes`.
 
 The method sends a request to the device specified in `target` and the device's `create` event handler takes care of creating the resource and replying with the created resource, or with an error.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - If `target` is not specified, let `target.deviceId` be `resource.deviceId` and `target.resourcePath` be `null`.
-- Send a request to the OCF network to create the resource described by `resource` to the device specified by `target.deviceId` and the target resource on the device specified by `target.resourcePath`. Wait for the answer.
+- If `target.deviceId` is `undefined`, reject `promise` with `TypeError`.
+- Send a request to create the resource described by `resource` to the device specified by `target.deviceId` and the target resource on the device specified by `target.resourcePath`. Wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="retrieve"></a>
