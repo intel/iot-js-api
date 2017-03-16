@@ -10,7 +10,10 @@ Introduction
 ------------
 <a name="ocfclient"></a>
 The OCF Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) functionality that enables remote access to resources on the network, as well as OCF discovery.
-The Client API object does not expose its own properties, only events and methods.
+
+|Property    |Type     |Optional |Default value |
+| ---        | ---     | ---     | ---          |
+| `device`   | [`OcfDevice`](./README.md/#ocfdevice) object | no | implementation provided |
 
 | Event name                          | Event callback argument |
 | ---                                 | ---                     |
@@ -34,7 +37,7 @@ The Client API object does not expose its own properties, only events and method
 | [`retrieve(resourceId, options, listener)`](#retrieve) | retrieve/observe a resource |
 | [`update(resource)`](#update)                          | update a resource |
 | [`delete(resourceId)`](#delete)                        | delete a resource |
-
+| [`configure(deviceId, options)`](#configure)           | configure a remote device |
 
 ## Structures
 <a name="resourceid"></a>
@@ -102,7 +105,7 @@ Note that applications should not create `ClientResource` objects, as they are c
 <a name="onresourceupdate"></a>
 The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
 
-The recommended way to observe and unobserve resources from applications is by using the [`retrieve()`](#retrieve) method, in order to be able to specify OCF retrieve options. However, for convenience, when the first listener function `listener` is added to the `update` event of `resource`, implementations SHOULD call [`retrieve(resource, null, listener)](#retrieve). When the last listener is removed, the implementations SHOULD call [`retrieve(resource)`](#retrieve), i.e. make an OCF retrieve request with the observe flag off.
+The recommended way to observe and unobserve resources from applications is by using the [`retrieve()`](#retrieve) method, in order to be able to specify OCF retrieve options. However, for convenience, when the first listener function `listener` is added to the `update` event of `resource`, implementations SHOULD call [`retrieve(resource, null, listener)`](#retrieve). When the last listener is removed, the implementations SHOULD call [`retrieve(resource)`](#retrieve), i.e. make an OCF retrieve request with the observe flag off.
 
 <a name="onresourcelost"></a>
 The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
@@ -312,4 +315,22 @@ The method runs the following steps:
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Send a request to delete the resource specified by `resourceId`, and wait for the answer.
+- If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
+
+<a name="configure"></a>
+##### 4.4. The `configure(deviceId, options)` method
+Configures a remote device using its `/oic/con` resource with the properties defined by the `options` argument. The following properties are supported:
+
+|Property            |Type     |Optional |Default value |Represents |
+| ---                | ---     | ---     | ---          | ---       |
+| `deviceName`       | string  | no      | `undefined`  | User provided device name |
+| `location`         | a [`Coordinates`](https://www.w3.org/TR/geolocation-API/#coordinates_interface) object | yes | `undefined` | Device coordinates |
+| `locationName`     | string  | yes     | `undefined` | User provided location name |
+| `region`           | string  | yes     | `undefined` | User provided region name |
+| `currency`         | string  | yes     | `undefined` | User provided currency name |
+
+The method runs the following steps:
+- Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- If `options` is not a dictionary, or `options.deviceName` is not a string, reject `promise` with `TypeError` and abort these steps.
+- Send a request to update the `/oic/con` resource on the device specified by the `deviceId` argument with the dictionary specified by `options` argument, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.

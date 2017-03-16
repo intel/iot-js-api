@@ -14,10 +14,19 @@ OCF API entry point
 
 interface OCF {
   readonly attribute Device device;  // getter for local device info
-  readonly attribute Platform platform;  // getter for local platform info
+  readonly attribute DOMString mode;
 
-  readonly attribute OCFClient client;
-  readonly attribute OCFServer server;
+  Promise<OcfClient or OcfServer or OcfServient>
+      start(optional OcfMode mode, optional OcfOptions options);
+
+  Promise<void> stop();
+};
+
+enum OcfMode { "client", "server", "client-server" };
+
+dictionary OcfOptions {
+  Device device;
+  Platform platform;
 };
 
 [NoInterfaceObject]
@@ -50,6 +59,8 @@ OCF Client API
 
 ```javascript
 interface OcfClient {
+  readonly attribute Device device;
+
   Promise<void> findResources(optional DiscoveryOptions options,
                               optional ResourceCallback listener);
   Promise<void> findDevices(optional DeviceCallback listener);
@@ -123,11 +134,19 @@ OCF Server API
 ```javascript
 
 interface OcfServer {
+  readonly attribute Device device;
+  readonly attribute Platform platform;
+
   // Register a resource with the OCF network and get a resource Id.
   Promise<ServerResource> register(Resource resource);
 
   void oncreate(RequestHandler handler);
 };
+
+interface OcfServient: OcfServer {
+};
+
+OcfServient implements OcfClient;
 
 [NoInterfaceObject]  // ServerResource can only be created by register().
 interface ServerResource: Resource {

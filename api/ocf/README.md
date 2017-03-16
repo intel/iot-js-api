@@ -1,9 +1,9 @@
 OCF Web API
 ===========
 
-* [OCF API object](#api-entry-point)
-  - [OCF Client API](./client.md)
-  - [OCF Server API](./server.md)
+* [OCF API object](#api-object)
+  - [OCF Client API](./client.md) to access remote resources
+  - [OCF Server API](./server.md) to implement local resources
 * The [OcfDevice](#ocfdevice) dictionary
 * The [OcfPlatform](#ocfplatform) dictionary
 * The [OcfError](#ocferror) interface
@@ -32,9 +32,10 @@ This version of the API supports OCF Resource, Device, and Platform related func
 
 Since implementations may run on constrained hardware, examples use [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/).
 
+<a name="api-object"></a>
 The API object
 --------------
-The API object is exposed in a platform-specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be exposed as a property of a global object.
+The API object represents an OCF stack (device) and is exposed in a platform-specific manner. As an example, on Node.js it can be obtained by requiring the package that implements this API. On other platforms, it can be exposed as a property of a global object.
 
 ```javascript
 let module = 'ocf';  // use your own implementation's name
@@ -42,21 +43,48 @@ var ocf = require(module);
 ```
 If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
 
-When `require` is successful, it MUST return an object with the following read-only properties:
-- `client` is an object that implements the [OCF Client API](./client.md), i.e. CRUDN (Create, Retrieve, Update, Delete, Notify) functionality:
-  * remote access to resources on the network,
-  * listening to presence notifications in the OCF network, and
-  * discovery for platforms, devices and resources on the OCF network.
-- `server` is an object that implements the [OCF Server API](./server.md), i.e. the functionality to serve CRUDN requests on a device, to register and unregister resources, to notify of resource changes, and to enable and disable presence functionality on the device.
-- `device` is an [`OcfDevice`](#ocfdevice) object that represents properties of the current device.
-- `platform` is an [`OcfPlatform`](#ocfplatform) object that represents properties of the platform that hosts the current device.
+When `require` is successful, it MUST return an object with the following methods.
 
-|Property   |Type     |Optional |Default value |
-| ---       | ---     | ---     | ---          |
-| `client`  | [OcfClient](./client.md#ocfclient) object | no | platform provided |
-| `server`  | [OcfServer](./server.md#ocfserver) object | no | platform provided |
-| `device`  | [OcfDevice](#ocfdevice) object | no | platform provided |
-| `platform` | [OcfPlatform](#ocfplatform) object | no | platform provided |
+| Method signature                | Description                |
+| ---                             | ---                        |
+| [`start(mode, options)`](#ocfstart)| start the OCF stack     |
+| [`stop()`](#ocfstop)            | stop the OCF stack         |
+
+<a name="ocfstart"></a>
+The `start(options)` method initializes the underlying platform and resolves with an API object providing OCF client, or server, or both client-server functionality.
+
+The `mode` optional parameter is a string that can be `"client-server"` (by default), or `"client"`, or `"server"`.
+
+The `options` optional parameter is an object that may contain the following properties:
+
+|Property    |Type     |Optional |Default value |
+| ---        | ---     | ---     | ---          |
+| `device`   | [OcfDevice](#ocfdevice) object | yes | `undefined` |
+| `platform` | [OcfPlatform](#ocfplatform) object | yes | `undefined` |
+
+The method runs the following steps:
+- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
+- Let `ocf` denote the API object (equal to the `this` property of `start()`).
+- If the `mode` argument is `undefined`, let `mode` be `"client-server"`.
+- Otherwise if the `mode` argument is not `"client"`, or `"server"`, or `"client-server"`, reject `promise` with a `TypeError` and abort these steps.
+- If the `mode` parameter is `"client"`, then run the following sub-steps:
+  * If `options` or `options.device` or `options.platform` are not `undefined`, reject `promise` with `NotSupportedError` and abort these steps. (Client-only device has no `platform` property, and its `device` property cannot be configured).
+  * Initialize the underlying OCF stack in client mode.
+  * If there is an error, reject `promise` with `OcfDeviceError` and abort these steps.
+  * Let `result` be an object that implements [`OcfClient`](./client.md#ocfclient). Let `result.device` be an [`OcfDevice`](#ocfdevice) object initialized from the underlying platform.
+- Otherwise if the `mode` parameter is `"server"`, then run the following sub-steps.
+  * Initialize the underlying OCF stack in server mode. If `options.device` is defined, use the defined properties for initializing the OCF stack. If `options.platform` is defined, use the defined properties for initializing the OCF stack.
+  * If there is an error, reject `promise` with `OcfDeviceError` and abort these steps.
+  * Let `result` be a new object that implements [`OcfServer`](./server.md#ocfserver). Initialize the `result.device` and `result.platform` properties from the underlying OCF stack.
+ - Otherwise if the `mode` parameter is `client-server`, then run the following sub-steps.
+   * Initialize the underlying OCF stack in client-server mode. If `options.device` is defined, use the defined properties for initializing the OCF stack. If `options.platform` is defined, use the defined properties for initializing the OCF stack.
+   * If there is an error, reject `promise` with `OcfDeviceError` and abort these steps.
+   * Let `result` be a new object that implements both [`OcfServer`](./server.md#ocfserver) and [`OcfClient`](./client.md#ocfclient).
+   * Initialize the `result.device` and `result.platform` properties from the underlying OCF stack.
+- Resolve `promise` with `result`.
+
+<a name="ocfstop"></a>
+The `stop()` method frees resources in the underlying platform, so that a next invocation to `start()` is able to start the device from a clean state. After the `stop()` method returns, all properties of `ocf` should be `undefined`.
 
 <a name="ocfdevice"></a>
 ### The `OcfDevice` object
@@ -71,7 +99,7 @@ Exposes information about the OCF device that runs the current OCF stack instanc
 | `dataModels`      | array of strings  | no  | `[]` | List of supported OCF data models |
 | `coreSpecVersion` | string  | no  | `undefined` | OCF Core Specification version |
 
-The `types` property is a list of the OCF Device types that are supported. It comforms to the same syntax constraints as [resource](./client.md/#resource) types. OCF mandates that every device supports at least the properties defined in the `"oic.wk.d"` resource type, that represents a resource for a "basic device". Other specifications, such as the OCF Smart Home Device Specification can define more device types, for instance `"oic.d.fan"`, `"oic.d.thermostat"`, `"oic.d.light"`, `"oic.d.airconditioner"`, etc. The properties exposed by these device types are defined in [oneiota.org](http://wwww.oneiota.org). [Device discovery](./client.md/#finddevices) may use filters based upon device types.
+The `types` property is a list of the OCF Device types that are supported. It comforms to the same syntax constraints as [resource](./client.md/#resource) types. OCF mandates that every device supports at least the properties defined in the `"oic.wk.d"` resource type, that represents a resource for a "basic device". Other specifications, such as the OCF Smart Home Device Specification can define more device types, for instance `"oic.d.fan"`, `"oic.d.thermostat"`, `"oic.d.light"`, `"oic.d.airconditioner"`, etc. The properties exposed by these device types are defined in [oneiota.org](http://www.oneiota.org). The values in `types` may be used in [device discovery](./client.md/#finddevices) filters. For a client-only device `types` is an empty array.
 
 The `dataModels` property is in the following format: `vertical.major.minor` where `major` and `minor` are numbers and `vertical` is a string such as `"Smart Home"`.
 
@@ -96,7 +124,7 @@ Exposes information about the OCF platform that hosts the current device.
 
 Errors during OCF network operations are exposed via `onerror` events and `Promise` rejections.
 
-OCF errors (see also [these notes](../README.md#errors)) are represented as augmented instances of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects.
+[OCF errors](../README.md#error) are represented as augmented instances of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects.
 
 The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling OCF issues:
 - `OcfResourceNotFound` used if the resource cannot be located in the OCF network, or when an observed resource is deleted from the network.

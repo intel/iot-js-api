@@ -13,14 +13,23 @@ The Server API provides the means to
 - register handlers that serve CRUDN requests on a device,
 - notify of resource changes.
 
-A device that implements the Server API may provide special resources to handle CRUDN requests.
+A device that implements the `OcfServer` API may provide special resources to handle CRUDN requests.
 
-The Server API object does not expose its own properties, only methods for registering handlers.
+The `OcfServer` API object exposed the following properties and methods.
+
+|Property    |Type     |Optional |Default value |
+| ---        | ---     | ---     | ---          |
+| `platform` | [`OcfPlatform`](./README.md/#ocfplatform) object | no | implementation provided |
+| `device`   | [`OcfDevice`](./README.md/#ocfdevice) object | no | implementation provided |
 
 | Method signature                | Description                |
 | ---                             | ---                        |
 | [`register(resource)`](#register) | register a local resource with the OCF network |
 | [`oncreate(handler)`](#oncreate)  | save a handler for create requests on this device |
+
+The `platform` property is an [`OcfPlatform`](./README.md/#ocfplatform) object that represents properties of the hardware platform that hosts the current device.
+
+The `device` property is an [`OcfDevice`](./README.md/#ocfdevice) object that represents properties of the device (OCF stack).
 
 <a name="register"></a>
 ##### The `register(resource)` method
@@ -51,8 +60,8 @@ Registers a function to handle OCF `create resource` requests and returns `this`
 
 Whenever the underlying platform notifies the implementation about an OCF create request, implementations should run the following steps:
 - Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
-  * The value of `request.source` is the [ResourceId](./client.md/#resourceid) of the client resource requesting the operation.
-  * The value of `request.target` is the [ResourceId](./client.md/#resourceid) of the server resource responsible to create the requested resource, or `null` if not specified.
+  * The value of `request.source` is the [`ResourceId`](./client.md/#resourceid) of the client resource requesting the operation.
+  * The value of `request.target` is the [`ResourceId`](./client.md/#resourceid) of the server resource responsible to create the requested resource, or `null` if not specified.
   * The value of `request.options` is an object that contains a list of properties with values created by the implementation from the REST query options of the request. For instance this object may contain client hints on what measurement units should be used in the resource representation.
   * The value of `request.data` is an object that contains at least the following properties of the [resource](./client.md/#resource) to be created: `resourcePath` and `resourceTypes`. In addition, other [resource](./client.md/#resource) properties may also be specified, such as `interfaces`, `mediaTypes`, and `properties` for resource representation initialization.
 - Let `handler` be `null`.
@@ -66,43 +75,44 @@ Whenever the underlying platform notifies the implementation about an OCF create
 
 <a name="exampleoncreate"></a>
 ```javascript
-var server = require('ocf').server;
-server.on('create', function(request) {
-  console.log("Client resource id: " + request.source.resourcePath);
-  console.log("Target resource id, responsible to create the resource: " + request.target.resourcePath);
-  console.log("Requested resource path: " + request.resource.resourcePath);
-  console.log("Requested resource type: " + request.resource.resourceType);
+require('ocf').start("server").then(function(server) {
+  server.on('create', function(request) {
+    console.log("Client resource id: " + request.source.resourcePath);
+    console.log("Target resource id, responsible to create the resource: " + request.target.resourcePath);
+    console.log("Requested resource path: " + request.resource.resourcePath);
+    console.log("Requested resource type: " + request.resource.resourceType);
 
-  // Use a local function to create the resource.
-  let res = _createResource(request.target.resourcePath, request.resource);
+    // Use a local function to create the resource.
+    let res = _createResource(request.target.resourcePath, request.resource);
 
-  // Use oneiota.org RAML definitions, the request options, and sensor documentation.
-  var translate = function (representation, requestOptions) {
-        switch (requestOptions.units) {
-          case "C" :
-            // use sensor-specific code to get Celsius units
-            representation.temperature = _getCelsiusFromSensorT1();
-            break;
-          case "F":
-            representation.temperature = _getFahrenheitFromSensorT1();
-            break;
-          case "K":
-            representation.temperature = _getKelvinFromSensorT1();
-            break;
+    // Use oneiota.org RAML definitions, the request options, and sensor documentation.
+    var translate = function (representation, requestOptions) {
+          switch (requestOptions.units) {
+            case "C" :
+              // use sensor-specific code to get Celsius units
+              representation.temperature = _getCelsiusFromSensorT1();
+              break;
+            case "F":
+              representation.temperature = _getFahrenheitFromSensorT1();
+              break;
+            case "K":
+              representation.temperature = _getKelvinFromSensorT1();
+              break;
+          }
         }
-      }
-      return representation;
-  }
+        return representation;
+    }
 
-  // Register the new resource and then respond to the request.
-  server.register(res)
-    .then(function(resource) {
-      resource.ontranslate(translate);
-      server.respond(request, null, resource);
-    }).catch(function(error) {
-      server.respond(request, error, res);
-    });
-});
+    // Register the new resource and then respond to the request.
+    server.register(res)
+      .then(function(resource) {
+        resource.ontranslate(translate);
+        server.respond(request, null, resource);
+      }).catch(function(error) {
+        server.respond(request, error, res);
+      });
+  });
+}).catch(function(error) { console.log("Error: " + error.message); });
 ```
 
 <a name="ocfrequest"></a>
@@ -193,8 +203,8 @@ Registers the function `handler` to handle OCF `retrieve resource` requests and 
 
 Whenever the underlying platform notifies the implementation about an OCF retrieve request, implementations should run the following steps:
 - Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
-  * The value of the `source` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
-  * The value of the `target` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource to be retrieved.
+  * The value of the `source` property of `request` is the [`ResourceId`](./client.md/#resourceid) of the resource requesting the operation.
+  * The value of the `target` property of `request` is the [`ResourceId`](./client.md/#resourceid) of the resource to be retrieved.
   * The value of the `data` property of `request` is `undefined`.
   * The value of the boolean `request.observe` property of `request` tells if the client wants to also observe the resource for changes.
 - Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
@@ -204,28 +214,29 @@ Whenever the underlying platform notifies the implementation about an OCF retrie
 - Otherwise, if `request.observe` is `false`, reset change notifications sent to the client identified by the `request.source` property.
 
 ```javascript
-var server = require('ocf').server;
-server.onretrieve(function(request) {
-  console.log("Client resource id: " + request.source);
-  console.log("Target resource id, to be retrieved: " + request.target.resourcePath);
+require('ocf').start("server").then(function(server) {
+  server.onretrieve(function(request) {
+    console.log("Client resource id: " + request.source);
+    console.log("Target resource id, to be retrieved: " + request.target.resourcePath);
 
-  // Retrieve resource in a device-specific way.
-  let res = _getResource(request.target);
-  let err = res ? null : new Error('retrieving resource failed');
+    // Retrieve resource in a device-specific way.
+    let res = _getResource(request.target);
+    let err = res ? null : new Error('retrieving resource failed');
 
-  let res = _getResource(request.target);  // private function
-  if (!res) {
-    request.respondWithError(new Error('retrieving resource failed'));
-    return;
-  }
-  request.respond(res);
+    let res = _getResource(request.target);  // private function
+    if (!res) {
+      request.respondWithError(new Error('retrieving resource failed'));
+      return;
+    }
+    request.respond(res);
 
-  if (request.observe) {
-    console.log("Enabled change notifications for the resource.");
-  } else {
-    console.log("Disabled change notifications for the resource.");
-  }
-});
+    if (request.observe) {
+      console.log("Enabled change notifications for the resource.");
+    } else {
+      console.log("Disabled change notifications for the resource.");
+    }
+  });
+}).catch(function(error) { console.log("Error: " + error.message); });
 ```
 
 <a name="onupdate"></a>
@@ -234,30 +245,31 @@ Registers the function `handler` to handle OCF `update resource` requests and re
 
 Whenever the underlying platform notifies the implementation about an OCF update request, implementations should run the following steps:
 - Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
-  * The value of the `source` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
-  * The value of the `target` property of `request` is the [ResourceId](./client.md/#resourceid) of the resource to be updated.
+  * The value of the `source` property of `request` is the [`ResourceId`](./client.md/#resourceid) of the resource requesting the operation.
+  * The value of the `target` property of `request` is the [`ResourceId`](./client.md/#resourceid) of the resource to be updated.
   * The `data` property of `request` should be an object that contains the *resource representation* properties that should be updated, according to the data model of the given resource.
 - Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
 - If there is no such object, invoke `request.respondWithError(error)` with a new `NotFoundError` and terminate these steps.
 - If there is a registered update handler on `resource`, invoke that function with `request` as argument.
 
-It is the responsibility of the application to call [`notify()](#notify) after the resource is updated.
+It is the responsibility of the application to call [`notify()`](#notify) after the resource is updated.
 
 <a name="exampleonupdate"></a>
 ```javascript
-var server = require('ocf').server;
-server.on('update', function(request) {
-  console.log("Client resource path: " + request.source.resourcePath);
-  console.log("Resource path to be updated: " + request.target.resourcePath);
+require('ocf').start("server").then (function(server) {
+  server.on('update', function(request) {
+    console.log("Client resource path: " + request.source.resourcePath);
+    console.log("Resource path to be updated: " + request.target.resourcePath);
 
-  let res = _updateResource(request.target, request.data);  // private function
-  if (!res) {
-    request.respondWithError(new Error('updating resource failed'));
-    return;
-  }
-  request.respond(res);
-  server.notify(res);
-});
+    let res = _updateResource(request.target, request.data);  // private function
+    if (!res) {
+      request.respondWithError(new Error('updating resource failed'));
+      return;
+    }
+    request.respond(res);
+    server.notify(res);
+  });
+}).catch(function(error) { console.log("Error: " + error.message); });
 ```
 
 <a name="ondelete"></a>
@@ -266,24 +278,25 @@ Registers the `handler` function to handle OCF `delete resource` requests and re
 
 Whenever the underlying platform notifies the implementation about an OCF delete request, implementations should run the following steps:
 - Create an [`OcfRequest`](#ocfrequest) object `request` as follows:
-  * The value of the `source` property of the request is the [ResourceId](./client.md/#resourceid) of the resource requesting the operation.
-  * The value of the `target` property of the request is the [ResourceId](./client.md/#resourceid) of the resource to be deleted.
+  * The value of the `source` property of the request is the [`ResourceId`](./client.md/#resourceid) of the resource requesting the operation.
+  * The value of the `target` property of the request is the [`ResourceId`](./client.md/#resourceid) of the resource to be deleted.
   * The rest of `request` properties are `undefined`.
 - Find the `ServerResource` object `resource` for which `resource.resourcePath` is equal to `request.target.resourcePath`.
 - If there is no such object, invoke `request.respondWithError(error)` with a new `NotFoundError` and terminate these steps.
 - If there is a registered delete handler on `resource`, invoke that function with `request` as argument.
 
 ```javascript
-var server = require('ocf').server;
-server.ondelete(function(request) {
-  console.log("Client resource id: " + request.source);
-  console.log("Resource to be deleted: " + request.target.resourcePath);
+require('ocf').start("server").then(function(server) {
+  server.ondelete(function(request) {
+    console.log("Client resource id: " + request.source);
+    console.log("Resource to be deleted: " + request.target.resourcePath);
 
-  if(_deleteResource(request.target))  // private function
-    request.respond();
-  else
-    request.respondWithError(new Error('deleting resource failed'));
-});
+    if(_deleteResource(request.target))  // private function
+      request.respond();
+    else
+      request.respondWithError(new Error('deleting resource failed'));
+  });
+}).catch(function(error) { console.log("Error: " + error.message); });
 ```
 
 <a name="notify"></a>
@@ -304,14 +317,14 @@ The method runs the following steps:
 Unregisters the given resource from the OCF network and returns a [`Promise`](./README.md/#promise) object.
 
 ```javascript
-let server = require('ocf').server;
-
-server.unregister(resource)
-  .then(resource) {
-    console.log("Successfully unregistered resource " + resource.resourcePath)
-  }.catch(error) {
-    console.log("Error: " + error.message)
-  };
+require('ocf').start("server").then(function(server) {
+  server.unregister(resource)
+    .then(resource) {
+      console.log("Successfully unregistered resource " + resource.resourcePath)
+    }.catch(error) {
+      console.log("Error: " + error.message)
+    };
+}).catch(function(error) { console.log("Error: " + error.message); });
 ```
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
