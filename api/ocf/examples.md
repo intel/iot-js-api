@@ -46,7 +46,7 @@ require('ocf').start("client").then(function(client) {
 var deviceInit = {
   name: "led",
   types: [ "oic.wk.d", "oic.wk.p", "oic.wk.res", "oic.d.light" ],
-  dataModels: [“res.1.1.0”],
+  dataModels: ["res.1.1.0"],
   coreSpecVersion: "OIC 1.1"
 };
 

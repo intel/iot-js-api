@@ -52,6 +52,7 @@ The method runs the following steps:
 - Send a request to register the given `resource`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - When the answer is received, update `resource` to be a [`ServerResource`](#serverresource) object.
+- Update the [device's](./README.md/#ocfdevice) `types` property, if `resourceType` of `resource` is not in `types`.
 - Resolve `promise` with `resource`.
 
 <a name="oncreate"></a>
