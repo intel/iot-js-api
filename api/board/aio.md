@@ -7,9 +7,49 @@ On some boards access to AIO may be asynchronous. This API uses synchronous read
 
 The API object
 --------------
-AIO functionality is exposed by the [`AIO`](#aio) object that can be obtained by using the [aio() method of the `Board` API](./README.md/#aio). See also the [Web IDL](./webidl.md).
+AIO functionality is exposed by the [`AIO`](#aio) object that can be obtained by using the [`aio()`](./README.md/#aio) method of the [`Board` API](./README.md/#board). See also the [Web IDL](./webidl.md).
 
-Implementations MAY also support an explicit constructor that runs the [`AIO initialization`](#init) algorithm.
+<a name="aio"></a>
+### The `AIO` interface
+Represents the properties and methods that expose AIO functionality. The `AIO` object implements the [`EventEmitter`](../README.md/#events) interface, and extends the [`Pin`](./README.md/#pin) object. It has the following properties and methods:
+
+| Property   | Type   | Optional | Default value | Represents |
+| ---        | ---    | ---      | ---           | ---        |
+| `pin`      | String or Number | no | `undefined`   | board name for the pin |
+| `precision` | unsigned long | yes | `undefined` | bit length of digital sample |
+
+| Method signature    | Description      |
+| ---                 | ---              |
+| [`read()`](#read)   | synchronous read |
+| [`close()`](#close) | close the pin    |
+
+The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board documentation, usually strings prefixed by `"A"`, but it can also be specified as the numeric index of the analog pin, where pin 0 corresponding to the first analog pin and so forth.
+
+The `precision` property represents the bit length of the digital sample. It is usually 10 or 12 bits, depending on board.
+
+<a name="init"></a>
+#### AIO initialization
+This internal algorithm is used by the [`Board.aio()`](./README.md/#aio) method. Configures the AIO pin provided by the `options` argument. It involves the following steps:
+- If `options` is a string, create a dictionary 'init' and use the value of `options` to initialize the `init.pin` property.
+- Otherwise if `options` is a number, create a dictionary 'init' and use the value of `options` to initialize the `init.pin` property.
+- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`AIO`](#aio) properties, where at least `pin` MUST be specified:
+  * `pin` for board pin name with the valid values defined by the board, or for the numeric index of the analog pin;
+  * `precision` for the bit width of a sample (if the board supports setting the sampling rate).
+- If any property of `init` is specified and has an invalid value on the given board, as defined by the board documentation,  throw `TypeError`.
+- Request the underlying platform to initialize AIO on `init.pin` (if defined) or otherwise `init.channel`.
+- In case of failure, throw `InvalidAccessError`.
+- Let `aio` be the `AIO`](#aio) object that represents the hardware pin identified by `init.pin`, as defined by the board documentation.
+- If `init.precision` is defined, request the board to set the precision and initialize the `aio.precision` property with the value supported by the board. If there is an error, throw `InvalidAccessError`.
+- Initialize the `aio.value` property with `undefined`.
+- Return the `aio` object.
+
+<a name="read"></a>
+#### The `unsigned long read()` method
+Performs a synchronous read operation for the pin value. It returns the pin value representing the last sampling.
+
+<a name="close"></a>
+#### The `close()` method
+Called when the application is no longer interested in the pin. Until the next [initialization](#init), invoking the `read()` method SHOULD throw `InvalidAccessError`.
 
 ### Examples
 ```javascript
@@ -36,54 +76,3 @@ board.aio({pin: "A4", precision: 12 })
   console.log("AIO error.");
 });
 ```
-
-<a name="aio">
-### The `AIO` interface
-Represents the properties and methods that expose AIO functionality. The `AIO` object implements the [`EventEmitter`](../README.md/#events) interface, and extends the [`Pin`](./README.md/#pin) object, so it has all properties of [`Pin`](./README.md/#pin). In addition, it has the following properties:
-
-| Property   | Type   | Optional | Default value | Represents |
-| ---        | ---    | ---      | ---           | ---        |
-| `pin`      | String or Number | no | `undefined`   | board name for the pin |
-| `mode`     | String | no       | `undefined`   | I/O mode |
-| `channel`  | unsigned long | yes   | `undefined` | numeric index of the analog pin |
-| `precision` | unsigned long | yes | `undefined` | bit length of digital sample |
-
-| Method signature    | Description      |
-| ---                 | ---              |
-| [`read()`](#read)   | synchronous read |
-| [`close()`](#close) | close the pin    |
-
-#### `AIO` properties
-The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board mapping, usually strings prefixed by `"A"`.
-
-The `mode` property inherited from [`Pin`](./README.md/#pin) takes the value `"analog-input"`.
-
-The `channel` property is initialized by implementation and provides the numeric index of the analog pin, e.g. it is 0 for pin `"A0"` and 5 for pin `"A5"`.
-
-The `precision` property represents the bit length of the digital sample. It is usually 10 or 12 bits, depending on board.
-
-#### `AIO` methods
-<a name="init">
-##### AIO initialization
-This internal algorithm is used by the [`Board.aio()`](./README.md/#aio) method. Configures the AIO pin provided by the `options` argument. It involves the following steps:
-- If `options` is a string, create a dictionary 'init' and use the value of `options` to initialize the `init.pin` property.
-- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`AIO`](#aio) properties:
-  * `pin` for board pin name with the valid values defined by the board
-  * `precision` for the bit width of a sample (if the board supports setting the sampling rate).
-- If any of the `init` properties has an invalid value on the given board, as defined by the board documentation, throw `InvalidAccessError`.
-- Request the underlying platform to initialize AIO on the given board for the given pin `init.pin`.
-- In case of failure, throw `InvalidAccessError`.
-- Let `aio` be the `AIO`](#aio) object that represents the hardware pin identified by `init.pin`, as defined by the board documentation.
-- Initialize the `aio.channel` property with the numeric index of the analog pin, as defined by the board documentation.
-- Initialize the `aio.mode` property with `"analog-input"`.
-- If `init.precision` is defined, request the board to set the precision and initialize the `aio.precision` property with the value supported by the board. If there is an error, throw `InvalidAccessError`.
-- Initialize the `aio.value` property with `undefined`.
-- Return the `aio` object.
-
-<a name="read">
-##### The `unsigned long read()` method
-Performs a synchronous read operation for the pin value. It returns the pin value representing the last sampling.
-
-<a name="close">
-##### The `close()` method
-Called when the application is no longer interested in the pin. Until the next [initialization](#init), invoking the `read()` method SHOULD throw `InvalidAccessError`.

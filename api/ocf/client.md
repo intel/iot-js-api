@@ -206,7 +206,7 @@ The method runs the following steps:
 | Property        | Type       | Optional | Default value | Represents      |
 | ---             | ---             | --- | ---           | ---             |
 | `deviceTypes`   | array of string | yes | `undefined`   | OCF device type |
-| `resourceTypes` | array of string | yes | `undefined`   | OCF device type |
+| `resourceTypes` | array of string | yes | `undefined`   | OCF resource type |
 
 - The `listener` argument is optional, and is an event listener for the [`devicefound`](#ondevicefound) event that receives as argument a [`Device`](./README.md/#device) object.
 

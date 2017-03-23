@@ -20,27 +20,19 @@ typedef (long or unsigned long or double or unrestricted double) Number;
 typedef (DOMString or USVString) String;
 typedef (Number or String) PinName;  // implementation uses board specific mapping
 
-enum { "input", "output", "analog-in", "analog-out",
-       "pwm", "uart-tx", "uart-rx", "i2c-scl", "i2c-sda",
-       "spi-sclk", "spi-mosi", "spi-miso", "spi-ss"
-} PinMode;
-
 interface Pin {
     readonly attribute PinName pin;  // board number/name of the pin
-    readonly attribute PinMode mode;
 };
 
 // AIO
 
 dictionary AIOOptions {
   PinName pin;
-  unsigned long rate;
   unsigned long precision;
 };
 
 [NoInterfaceObject]
 interface AIO: Pin {
-    readonly attribute unsigned long channel;  // analog channel
     readonly attribute unsigned long precision;  // 10 or 12 bits
 
     unsigned long read();
@@ -50,13 +42,17 @@ interface AIO: Pin {
 AIO implements EventEmitter;
 
 // GPIO
+enum GPIOMode { "input", "output" };
+enum GPIOEdge { "none", "rising", "falling", "any" };
+enum GPIOState { "pull-up", "pull-down", "high-impedance" };
+
 dictionary GPIOOptions {
     PinName pin;
     sequence<PinName> port; // GPIO Ports (8, 16 or 32 pins)
-    PinMode mode = "input";
+    GPIOMode mode = "input";
     boolean activeLow = false;
-    String edge = "any";  // "none", "rising", "falling", "any"
-    String state = "high-impedance"; // "high-impedance", "pull-up", "pull-down"
+    GPIOEdge edge = "any";
+    GPIOState state = "high-impedance";
 };
 
 [NoInterfaceObject]
@@ -80,7 +76,6 @@ dictionary PWMOptions {
 
 [NoInterfaceObject]
 interface PWM: Pin {
-    readonly attribute unsigned long channel;
     readonly attribute boolean reversePolarity;
     void write(PWMOptions value);
     void stop();
@@ -105,7 +100,7 @@ interface I2C {
 
 // SPI
 
-enum SPIDirection { "full-duplex", "single-write", "single-read", "daisy-chain" };
+enum SPITopology { "full-duplex", "single-write", "single-read", "daisy-chain" };
 
 dictionary SPIOptions {
   unsigned long bus = 0;
@@ -114,7 +109,7 @@ dictionary SPIOptions {
   boolean msbFirst = 1;  // 1: MSB first, 0: LSB first
   unsigned long bits = 8; // 1, 2, 4, 8, 16
   double speed = 20;  // in MHz, usually 10..66 MHz
-  SPIDirection direction = "full-duplex";
+  SPITopology topology = "full-duplex";
   unsigned long frameGap = 0;  // in nanoseconds
 };
 

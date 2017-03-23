@@ -43,27 +43,10 @@ Represents a hardware pin on the board.
 | Property  | Type   | Optional | Default value | Represents |
 | ---       | ---    | ---      | ---           | ---     |
 | `pin`     | String or Number | no | `undefined`   | board name for the pin |
-| `mode`    | String | no       | `undefined`   | I/O mode |
 
-All properties are read-only.
+The read-only `pin` property is the board-specific name or numeric value of a pin, as defined in the board documentation.
 
-The `pin` property is the board-specific name of a pin defined in the pin mapping of the board.
-
-<a name="pinmode">
-The `mode` property can take the following values:
-- `"input"` for digital input (GPIO). The pin value can be 0 or 1.
-- `"output"` for digital output (GPIO). The pin value can be 0 or 1.
-- `"analog-in"` for analog input (AIO) that is converted to digital value.
-- `"analog-out"` for analog output (AIO) that is converted from digital value.
-- `"pwm"` for PWM analog output.
-- `"uart-rx"` for serial receive pin.
-- `"uart-tx"` for serial transmit pin.
-- `"i2c-scl"` for I2C clock.
-- `"i2c-sda"` for I2C data.
-- `"spi-sclk"` for SPI clock.
-- `"spi-ss"` for SPI Slave Select.
-- `"spi-mosi"` for SPI Master Out Slave In.
-- `"spi-miso"` for SPI Master In Slave Out.
+In future versions of the API the `Pin` object may be extended.
 
 <a name="board"></a>
 ### The `Board` interface
