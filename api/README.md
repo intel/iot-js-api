@@ -77,7 +77,7 @@ Examples:
 ```
 var error = new SecurityError("No permissions");
 
-if (SecurityError instanceof Error) {  // true
+if ((error instanceof Error) && (error instanceof SecurityError)) {  // true
   console.log(error.name);  // "SecurityError"
   console.log(error.message);  // "No permissions"
 }

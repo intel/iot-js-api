@@ -3,17 +3,14 @@ Web IDL for Board and IO APIs
 ```javascript
 
 interface Board {
+    readonly attribute String name;  // board name, e.g. "arduino101"
     attribute EventHandler onerror;
 
-    Pin pin(PinName);  // board-specific dictionary for mapping pins
-    sequence<PinName> pins();  // get all board pin names
-
-    AIO aio(PinName pin);
-    GPIO gpio(GPIOInit init);
-    PWM pwm( (PinName or PWMOptions) options);
-
-    Promise<I2C> i2c(I2COptions options);
-    Promise<SPI> spi(SPIOptions options);
+    Promise<AIO>  aio(PinName pin);
+    Promise<GPIO> gpio(PinName or GPIOOptions options);
+    Promise<PWM>  pwm( (PinName or PWMOptions) options);
+    Promise<I2C>  i2c(I2COptions options);
+    Promise<SPI>  spi(SPIOptions options);
     Promise<UART> uart(UARTOptions options);
 };
 
@@ -23,84 +20,66 @@ typedef (long or unsigned long or double or unrestricted double) Number;
 typedef (DOMString or USVString) String;
 typedef (Number or String) PinName;  // implementation uses board specific mapping
 
-enum { "input", "output", "analog", "pwm" } PinMode;
-
 interface Pin {
     readonly attribute PinName pin;  // board number/name of the pin
-    readonly attribute PinName address;  // platform number/name of the pin
-    readonly attribute PinMode mode;
-    readonly attribute Number value;  // provides a synchronous read()
-    readonly attribute sequence<PinMode> supportedModes;
-};
-
-// GPIO
-dictionary GPIOOptions {
-    PinName name;
-    sequence<PinName> port;
-    PinMode mode = "input";
-    boolean activeLow = false;
-    String edge = "any";  // "none", "rising", "falling", "any"
-    String pull = "none"; // "none", "pull-up", "pull-down"
-};
-
-typedef (PinName or sequence<PinName> or GPIOOptions) GPIOInit;
-
-[NoInterfaceObject]
-interface GPIO: Pin {
-    void write(long value);
-    void close();
-    attribute EventHandler<long> onchange;
-};
-
-GPIO implements EventEmitter;
-
-// GPIO Ports (8, 16 or 32 pins configured together)
-[Constructor(GPIOInit init, optional Board board)]
-interface GPIOPort: GPIO {
-   sequence<PinName> pins();
 };
 
 // AIO
 
 dictionary AIOOptions {
   PinName pin;
-  unsigned long rate;
+  unsigned long precision;
 };
 
-[Constructor( (PinName or AIOOptions) pin, optional Board board)]
+[NoInterfaceObject]
 interface AIO: Pin {
-    readonly attribute unsigned long channel;  // analog channel
-    readonly attribute unsigned long rateLimit;     // rate limit for ondata
     readonly attribute unsigned long precision;  // 10 or 12 bits
 
-    Promise<unsigned long> read();  // one-shot async read
+    unsigned long read();
     void close();
-
-    attribute EventHandler<unsigned long> ondata;
 };
 
 AIO implements EventEmitter;
+
+// GPIO
+enum GPIOMode { "input", "output" };
+enum GPIOEdge { "none", "rising", "falling", "any" };
+enum GPIOState { "pull-up", "pull-down", "high-impedance" };
+
+dictionary GPIOOptions {
+    PinName pin;
+    sequence<PinName> port; // GPIO Ports (8, 16 or 32 pins)
+    GPIOMode mode = "input";
+    boolean activeLow = false;
+    GPIOEdge edge = "any";
+    GPIOState state = "high-impedance";
+};
+
+[NoInterfaceObject]
+interface GPIO: Pin {
+    unsigned long read();
+    void write(long value);
+    void close();
+    attribute EventHandler<unsigned long> ondata;
+};
+
+GPIO implements EventEmitter;
 
 // PWM
 dictionary PWMOptions {
   PinName pin;
   boolean reversePolarity = false;
-};
-
-[Constructor(PWMOptions options, optional Board board)]
-interface PWM: Pin {
-    readonly attribute unsigned long channel;
-    readonly attribute boolean reversePolarity;
-    // 'value' returns PWMOptions
-    void write(PWMOptions value);
-    void stop();
-    void close();
-};
-
-dictionary PWMOptions {
   double period;
   double pulseWidth;
   double dutyCycle;
+};
+
+[NoInterfaceObject]
+interface PWM: Pin {
+    readonly attribute boolean reversePolarity;
+    void write(PWMOptions value);
+    void stop();
+    void close();
 };
 
 // I2C
@@ -120,20 +99,18 @@ interface I2C {
 };
 
 // SPI
-enum SPIMode {
 
-  "mode0",  // polarity normal, phase 0, i.e. sampled on leading clock
-  "mode1",  // polarity normal, phase 1, i.e. sampled on trailing clock
-  "mode2",  // polarity inverse, phase 0, i.e. sampled on leading clock
-  "mode3"   // polarity inverse, phase 1, i.e. sampled on trailing clock
-};
+enum SPITopology { "full-duplex", "single-write", "single-read", "daisy-chain" };
 
 dictionary SPIOptions {
   unsigned long bus = 0;
-  SPIMode mode = "mode0";
-  boolean msb = 1;  // 1: MSB first, 0: LSB first
+  unsigned long polarity = 0;  // 0 or 2
+  unsigned long phase = 0;  // 0 or 1
+  boolean msbFirst = 1;  // 1: MSB first, 0: LSB first
   unsigned long bits = 8; // 1, 2, 4, 8, 16
   double speed = 20;  // in MHz, usually 10..66 MHz
+  SPITopology topology = "full-duplex";
+  unsigned long frameGap = 0;  // in nanoseconds
 };
 
 [NoInterfaceObject]
@@ -160,7 +137,7 @@ interface UART {
   // has all the properties of UARTInit as read-only attributes
   Promise<void> write(Buffer data);
   void setReadRange(long minBytes, long maxBytes);
-  attribute EventHandler<Buffer> onread;
+  attribute EventHandler<Buffer> ondata;
   void close();
 };
 
