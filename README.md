@@ -1,191 +1,85 @@
-<a href="https://travis-ci.org/01org/iot-js-api/">
-	<img alt="Build Status" src="https://travis-ci.org/01org/iot-js-api.svg?branch=master"></img>
-</a>
+IoT Web APIs
+============
 
-## Description
-This repository provides [Javascript API specifications](./api) for a variety of APIs necessary for creating and communicating with Internet-of-Things(IoT) devices.
+<a name="introduction"></a>
+Introduction
+------------
+The following JavaScript APIs are aimed for handling Internet of Things (IoT) applications on a given device:
+* [Open Connect Foundation (OCF) API](./ocf/README.md), exposing OCF Client and Server APIs
+  - [OCF API Test Suite](./ocf/test-suite/README.md)
+* [Bluetooth Smart API](./ble/README.md), exposing functionality for Bluetooth Peripheral mode
+* [Sensor API](./sensors/README.md), exposing sensor functionality supported on the device
+* [Board API](./board/README.md) provides low level interfaces for I/O operations supported by the device board, so that applications could implement support for new types of sensors that are not supported by the Sensor API.
 
-It also contains a collection of [test scripts](./tests) which serve both as example code illustrating the usage of the APIs specified, and as test cases which can be executed given an implementation. The test cases can be conveyed to an implementation using a flexible [test runner](#running-the-test-suite) provided herein both as a [npm][] package and as a [grunt][] plugin.
+Since implementations of these APIs exist also on constrained hardware, they might not support the latest [ECMAScript](http://www.ecma-international.org) versions. However, implementations should support at least [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/). Examples are limited to ECMAScript 5.1 with the exception of using [Promises](#promise).
 
-Currently, the test suite is restricted to cases covering the Javascript API for OCF communication.
+<a name="structures"></a>
+Structures
+----------
+The following structures SHOULD be implemented in a constrained environment:
+  - [Promise](#promise)
+  - [Buffer](#buffer)
+  - [EventEmitter](#events)
+  - [Error](#error).
 
-<a name="running-the-test-suite">
-## Running the test suite
+<a name="promise"></a>
+### Promises
+The API uses [Promises](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects). In constrained implementations, at least the following [`Promise`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-objects) methods MUST be implemented:
+- the [`Promise` constructor](http://www.ecma-international.org/ecma-262/6.0/#sec-promise-constructor)
+- the [`then(onFulfilled, onRejected)`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise.prototype.then) method
+- the [`catch(onRejected)`](http://www.ecma-international.org/ecma-262/6.0/#sec-promise.prototype.catch) method.
 
-The test suite requires Node.js to run. Note, however, that the tests themselves do not require Node.js. The test suite runs each test script in its own process, and the test scripts output a sequence of JSON objects to standard output which the test suite then collects. The name of the interpreter responsible for running the test script, the preamble to add to the test script (if necessary), and even the Node.js code for spawning the child process that runs the test script can be [configured](#options). Thus, you can run the test scripts using a different Javascript interpreter than node, and you can even modify them before your interpreter receives them.
+<a name="buffer"></a>
+### Buffer
+Buffer is a [node.js API](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html)
+to read and write binary data accurately from JavaScript. This API supports a subset that will be expanded as needed:
+- constructor with a number argument `size`
+- the `length` property
+- the [`readUint8(offset)`](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html#buffer_buf_readuint8_offset_noassert) method
+- the [`writeUint8(value, offset)`](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html#buffer_buf_writeuint8_value_offset_noassert) method
+- the [`toString(encoding)`](https://nodejs.org/dist/latest-v6.x/docs/api/buffer.html#buffer_buf_tostring_encoding_start_end) method.
 
-To start using the test suite from your project:
-  0. Make sure you have a recent version of Node.js installed.
+<a name="events"></a>
+### Events
+The API uses Node.js-style [events](https://nodejs.org/api/events.html#events_events). In constrained implementations, at least the following subset of the [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter) interface MUST be supported:
+- the [`on(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener) method
+- the [`addListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener) method, as an alias to the `on()` method
+- the [`removeListener(eventName, callback)`](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener) method
+- the [`removeAllListeners`](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname) method.
 
-  0. Turn your project into a npm package by running `npm init .` in the root of your project. Follow the prompts to create an appropriate `package.json` file which defines your npm package. The defaults offered are most often satisfactory.
+Note that in order to make sure only one entity responds to a request, server request handling is done with registering callbacks at the serving objects (end points), rather than using events. Also, when subscribing to notifications requires options or filters, callbacks are used instead of events.
 
-  0. Run `npm install --save-dev iot-js-api`. This will install this repository and append it to the list of development dependencies for your npm package, and will allow you to load the suite via `require( "iot-js-api" )` from a Node.js script.
+In the future events may be replaced by [`Observables`](https://github.com/tc39/proposal-observable) with signal semantics.
 
-  0. Add `package.json` to your project. If you purge your project's intermediate files, you will need to run `npm install` from your project root to re-install this package before you can run the test suite.
+<a name="error"></a>
+### Error handling
+Errors are exposed via `onerror` events and `Promise` rejections, using augmented instances of a minimal subset of [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects with added properties.
 
-### Running as a npm package
+The `Error` object MUST contain at least the following properties:
 
-Create a script for running your tests. The following example illustrates basic usage. Fill out `options` as appropriate. The available options and their possible values are documented [below](#options).
+| Property        | Type    | Optional | Default value | Represents |
+| ---             | ---     | ---      | ---           | ---     |
+| name            | string  | no       | "Error"       | The standard name of the error |
+| message         | string  | yes      | ""            | The error reason |
 
-```JS
-// Load the test suite
-var testSuite = require( "iot-js-api" );
+The following error names may be used by all APIs:
+- `SecurityError` for lack of permission or invalid access.
+- `NotSupportedError` for features not implemented.
+- `SyntaxError` for broken JavaScript and `eval` errors. Use it sparingly.
+- `TypeError` for invalid types, parameters, etc.
+- `RangeError` for parameters out of permitted range.
+- `TimeoutError` for timeouts.
+- `NetworkError` for generic connection or protocol related errors.
+- `SystemError` for generic platform errors, including reference errors.
 
-// Run the test suite
-testSuite( options );
+Further errors may be defined in specific APIs.
+
+Examples:
 ```
+var error = new SecurityError("No permissions");
 
-### Running as a grunt plugin
-This repository provides a grunt multitask named `iot-js-api-ocf`.
-
-Add the following to your Gruntfile.js:
-
-```JS
-grunt.task.loadNpmTasks( "iot-js-api" );
-grunt.initConfig( {
-	"iot-js-api-ocf": {
-		plain: options
-	}
-} );
-
-```
-
-where `options` is a hash as documented [below](#options). You can then run the test suite with the command `grunt iot-js-api-ocf:plain` and build it into your grunt-based workflow.
-
-<a name="options">
-### Options
-In the above example, `options` is a hash containing four properties:  `tests`, `client`, `server`, and `single`. Briefly illustrated with default values:
-```JS
-testSuite( {
-	client: {
-		interpreter: "node",
-		lineFilter: function( line, /* fileName */ ) { return line; },
-		location: "ocf",
-		/* preamble: function not provided, meaning run the test as is */
-		/* spawn: function not provided, meaning spawn the endpoint in the default fashion */
-	},
-	server: {
-		interpreter: "node",
-		lineFilter: function( line, /* fileName */ ) { return line; },
-		location: "ocf",
-		/* preamble: function not provided, meaning run the test as is */
-		/* spawn: function not provided, meaning spawn the endpoint in the default fashion */
-	},
-	single: {
-		interpreter: "node",
-		lineFilter: function( line, /* fileName */ ) { return line; },
-		location: "ocf",
-		skip: false,
-		/* preamble: function not provided, meaning run the test as is */
-		/* spawn: function not provided, meaning spawn the endpoint in the default fashion */
-	}
-	/* tests: array not provided, meaning run all available tests */
-} );
-```
-
-`tests` is an array listing the tests to run. If absent, all tests in the `tests/` subdirectory will be run. When specified, the `tests` option can look like this:
-```JS
-options.tests = [ "Structure - OCF.js", "Retrieve - Resource", "Structure - Device.js" ];
-```
-Each string in the list is the name of a file or a directory in the `tests/` subdirectory of this package.
-
-The other three options are each a hash pertaining to one of the endpoints of the test. Separating the options for launching a client from those for launching a server makes it possible to test one implementation of the API against another. `single` refers to the launch options for tests that have only a single endpoint, e.g. the structural tests.
-
-The `single` hash may contain the property `skip` which, when set to `true`, will cause the test suite to skip all single-endpoint tests. This is useful when testing two different implementations against one another.
-
-Each of `client`, `server`, and `single` is a hash where the following properties are recognized:
-
-#### `interpreter`
-The JS interpreter to use. The default value is `"node"`. If you choose to specify the `spawn` option instead, then this value will be passed to the function you specify therein as its first parameter. The interpreter is invoked with the following command line arguments, in the order given:
-* the name of the test file. This will be a temporary file if the `preamble()` option is present, otherwise it will be the absolute file name of the test.
-* a UUID. This will be shared by client/server tests and helps clients find their test server counterparts on the network.
-* the string that the endpoint should pass to `require()` in order to load the OCF device.
-
-#### `lineFilter( line, fileName )`
-A function that receives a line from the output of the child process and returns it, potentially with modifications. By default, the output interpreter ignores empty lines, so if the function returns `""`, the line will be ignored. The output of the child process is expected to be a sequence of JSON objects. The test prints these objects to standard output, but if the runtime produces additional output, this will cause the test suite to throw an exception. This hook provides you with an opportunity to filter out all output lines except the ones produced by the test. For example:
-
-```JS
-// Ignore lines that do not start with a brace.
-function ignoreNonBraceLines( line /*, fileName */ ) {
-	return line.match( /^{/ ) ? line : "";
+if ((error instanceof Error) && (error instanceof SecurityError)) {  // true
+  console.log(error.name);  // "SecurityError"
+  console.log(error.message);  // "No permissions"
 }
 ```
-
-You can also use this hook to save all output from the child process to a file, or to output it to the terminal. Since the majority of tests involve a client/server pair, the file name is provided in the second parameter so you can distinguish the output of the client from the output of the server. For example:
-```JS
-// Print all lines to the terminal and ignore lines that do not start with a brace.
-function ignoreNonBraceLines( line, fileName ) {
-
-	// Strip carriage returns
-	line = line.replace( /\r/g, "" );
-
-	// Output the line, prefixed by the name of the test. We assume that all tests are rooted in a
-	// directory called "tests", so we match the rest of the path and use it to prefix the line we
-	// have received from the child process. This can result in output like this:
-	//
-	// Discovery - Resource/server.js: 
-	// Discovery - Resource/server.js: 
-	// Discovery - Resource/server.js: zjs_ocf_register_resources()
-	// Discovery - Resource/server.js: oc_main: Stack successfully initialized
-	// Discovery - Resource/server.js: 
-	// Discovery - Resource/server.js: {"assertionCount":1}
-	// Discovery - Resource/server.js: {"ready":true}
-	// Discovery - Resource/server.js: 
-	// Discovery - Resource/client.js: 
-	// Discovery - Resource/client.js: 
-	// Discovery - Resource/client.js: zjs_ocf_register_resources()
-	// Discovery - Resource/client.js: oc_main: Stack successfully initialized
-	// Discovery - Resource/client.js: 
-	// Discovery - Resource/client.js: {"assertionCount":3}
-	// ...
-	console.log( ( childPath.match( /tests[/](.*)$/ ) || [])[1] + ": " + line );
-
-	// Return an empty string if the line doesn't start with an opening brace
-	return ( line[ 0 ] === "{" ) ? line : "";
-}
-```
-
-#### `location`
-A string which will be passed to `require()` in order to load the OCF device.
-
-#### `preamble( uuid )`
-A function which returns a string and receives as its argument the uuid that the child process(es) in the test instance will be given. When `preamble()` is given, for each child process a temporary file is created consisting of the string returned by `preamble()` followed by the body of the test. This file is then launched in a child process.
-
-The tests make two assumptions about the environment in which they run:
-
-  0. `console.log()` is a function that writes to standard output.
-  0. `process.argv[]` is an array containing the command line arguments passed by the suite. These are:
-      <dl>
-      <dt><code>process.argv[ 0 ]</code></dt><dd>The interpreter</dd>
-      <dt><code>process.argv[ 1 ]</code></dt><dd>The filename of the test</dd>
-      <dt><code>process.argv[ 2 ]</code></dt><dd>A UUID that helps a client distinguish its server counterpart from other devices that may be present on the network.</dd>
-      <dt><code>process.argv[ 3 ]</code></dt><dd>The argument the test file should pass to ```require()``` (the <code>location</code> option).</dd>
-      </dl>
-
-Thus, if the environment in which you wish to run the tests does not provide these values, you can use the `preamble()` option to prepend code to the file. For example:
-
-```JS
-	options.preamble = function( uuid ) {
-		return [
-			"var process = { argv: [",
-
-			// The tests do not make use of these parameters
-			"null, null,",
-
-			// The UUID that was passed in
-			"\"" + uuid + "\",",
-
-			// This will result in the test performing require( "ocf" ) to acquire the OCF device
-			"\"ocf\"",
-			"] };"
-		].join( "\n" ) + "\n";
-	};
-```
-
-#### `spawn( interpreter, commandLine )`
-A function responsible for creating the child process that contains the endpoint. This function returns an object such as the one produced by node's [spawn()][]. This option gives you finer control over the process of launching a test endpoint than the `interpreter` and `preamble` options alone, since you can precede the launch of the child process with any number of custom actions, such as setting up the file system in preparation for the child process, or passing it custom environment variables.
-
-[OCF JS API]: ./api/ocf
-[spawn()]: https://nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options
-[npm]: https://npmjs.com/
-[grunt]: http://gruntjs.com/

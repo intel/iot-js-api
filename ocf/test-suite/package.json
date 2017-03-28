@@ -1,14 +1,14 @@
 {
-  "name": "iot-js-api",
-  "version": "0.0.1",
-  "description": "OCF JS API Implementation Test Suite",
+  "name": "iot-js-api-ocf-test-suite",
+  "version": "0.1.0",
+  "description": "OCF JS API Test Suite",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/01org/iot-js-api-test-suite.git"
+    "url": "git+https://github.com/01org/iot-js-api.git"
   },
   "keywords": [
     "OCF",
@@ -18,9 +18,9 @@
   "author": "Gabriel Schulhof <gabriel.schulhof@intel.com>",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/01org/iot-js-api-test-suite/issues"
+    "url": "https://github.com/01org/iot-js-api/issues"
   },
-  "homepage": "https://github.com/01org/iot-js-api-test-suite#readme",
+  "homepage": "https://github.com/01org/iot-js-api#readme",
   "devDependencies": {
     "eslint-config-jquery": "0.1.2",
     "grunt": "^0.4.5",

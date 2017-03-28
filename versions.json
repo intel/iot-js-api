@@ -1,0 +1,23 @@
+{
+  "name": "iot-js-api",
+  "description": "OCF JS API specifications and test suites",
+
+  "version": "1.0",
+  "ocfApiVersion": "oic1.1.0-0",
+  "bleApiVersion": "1.0",
+  "boardApiVersion": "1.0",
+  "sensorApiVersion": "1.0",
+
+  "license": "Apache-2.0",
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/01org/iot-js-api.git"
+  },
+
+  "bugs": {
+    "url": "https://github.com/01org/iot-js-api/issues"
+  },
+
+  "homepage": "https://github.com/01org/iot-js-api#readme",
+}
