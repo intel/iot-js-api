@@ -9,7 +9,7 @@ The following JavaScript APIs are aimed for handling Internet of Things (IoT) ap
   - [OCF API Test Suite](./ocf/test-suite/README.md)
 * [Bluetooth Smart API](./ble/README.md), exposing functionality for Bluetooth Peripheral mode
 * [Sensor API](./sensors/README.md), exposing sensor functionality supported on the device
-* [Board API](./board/README.md) provides low level interfaces for I/O operations supported by the device board, so that applications could implement support for new types of sensors that are not supported by the Sensor API.
+* [Board API](./board/README.md) providing low-level interfaces for I/O operations supported by the device board, so that applications could implement support for new types of sensors that are not supported by the Sensor API.
 
 Since implementations of these APIs exist also on constrained hardware, they might not support the latest [ECMAScript](http://www.ecma-international.org) versions. However, implementations should support at least [ECMAScript 5.1](http://www.ecma-international.org/ecma-262/5.1/). Examples are limited to ECMAScript 5.1 with the exception of using [Promises](#promise).
 

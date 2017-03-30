@@ -3,10 +3,12 @@
   "description": "OCF JS API specifications and test suites",
 
   "version": "1.0",
-  "ocfApiVersion": "oic1.1.0-0",
-  "bleApiVersion": "1.0",
-  "boardApiVersion": "1.0",
-  "sensorApiVersion": "1.0",
+  "versions": {
+    "ocf": "oic1.1.0-0",
+    "ble": "1.0",
+    "board": "1.0",
+    "sensor": "1.0",
+  },
 
   "license": "Apache-2.0",
 

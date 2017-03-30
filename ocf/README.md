@@ -43,12 +43,18 @@ var ocf = require(module);
 ```
 If the functionality is not supported by the platform, `require` should throw `NotSupportedError`. If there is no permission for using the functionality, `require` should throw `SecurityError`.
 
-When `require` is successful, it MUST return an object with the following methods.
+When `require` is successful, it MUST return an object with the following properties and methods.
+
+|Property    |Type     |Optional |Default value | Represents  |
+| ---        | ---     | ---     | ---          |
+| `version`  | string  | no      | `versions.ocf` in [`package.json`](../package.json) | API version |
 
 | Method signature                | Description                |
 | ---                             | ---                        |
 | [`start(mode, options)`](#ocfstart)| start the OCF stack     |
 | [`stop()`](#ocfstop)            | stop the OCF stack         |
+
+The `version` property is read only and provides the the OCF API specification, as specified in the `versions.ocf` property of [`package.json`](../package.json).
 
 <a name="ocfstart"></a>
 The `start(options)` method initializes the underlying platform and resolves with an API object providing OCF client, or server, or both client-server functionality.
