@@ -46,6 +46,7 @@ This object is created and returned by `require`. It has the following read-only
 | `name`      | String | yes | `undefined` | the Bluetooth Device Name in scan responses |
 | `enabled`   | boolean | no | false | whether Bluetooth is enabled |
 | `services`  | array of [service objects](#service) | no | [] | Primary services on the device |
+| `version`   | string  | no      | `version` in[`package.json`](../package.json) | API version |
 
 | Event name        | Event callback argument |
 | ---               | ---                     |
@@ -79,6 +80,9 @@ The `enabled` property MUST be set to `true` if the Bluetooth Smart functionalit
 
 <a name="bd_services">
 The `services` property is a read-only array (sequence) of [`BluetoothService`](#service) objects that represents the primary GATT services on the device. A primary service is visible at device root level, and it may contain other services.
+
+<a name="version"></a>
+The `version` property is read-only, and provides the master API version, as specified in the `version` property of [`package.json`](../package.json).
 
 #### `BluetoothPeripheralDevice` events
 

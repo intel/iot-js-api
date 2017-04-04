@@ -51,6 +51,6 @@ Arduino 101 pins are summarized in the following table (channel means the index 
 | `"A3"`   | ANALOG_IN(3)                   |
 | `"A4"`   | ANALOG_IN(4)                   |
 | `"A5"`   | ANALOG_IN(5)                   |
-| `"LED0"` | active on 1                    |
-| `"LED1"` | active on 0                    |
-| `"LED2"` | active on 0                    |
+| `"LED0"` | alias for GPIO connected LED, active on 1    |
+| `"LED1"` | alias for GPIO connected LED, active on 0    |
+| `"LED2"` | alias for GPIO connected LED, active on 0    |

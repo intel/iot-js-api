@@ -55,6 +55,7 @@ Represents a hardware board.
 | Property          | Type   | Optional | Default value | Represents |
 | ---               | ---    | ---      | ---           | ---        |
 | [`name`](#name)   | String | no       | `undefined`   | board name |
+| [`version`](#version) | String | no   | `versions.board` in [`package.json`](../package.json) | API version |
 
 | Method signature  | Description            |
 | ---               | ---                    |
@@ -71,6 +72,9 @@ Represents a hardware board.
 
 <a name="name"></a>
 The `name` property is read-only, and provides the board name.
+
+<a name="version"></a>
+The `version` property is read-only, and provides the provides the Board API version, as specified in the `versions.board` property of [`package.json`](../package.json).
 
 <a name="error"></a>
 Board errors are represented as augmented [`Error`](https://nodejs.org/api/errors.html#errors_class_error) objects. The following [`Error` names](https://nodejs.org/api/errors.html) are used for signaling issues:
