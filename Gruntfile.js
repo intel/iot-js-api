@@ -1,3 +1,4 @@
+//
 // Copyright 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,27 +12,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+//
 module.exports = function( grunt ) {
+"use strict";
 
-var _ = require( "lodash" ),
-	testSuite = require( "../index" );
-	path = require( "path" );
+var path = require( "path" );
 
-grunt.task.registerMultiTask( "iot-js-api-ocf", "Run the OCF test suite", function() {
-	var done = this.async();
-
-	testSuite.defaultCallbacks.done = ( function( originalDone ) {
-		return function( status ) {
-			if ( originalDone ) {
-				originalDone.apply( this, arguments );
-			}
-			done( status.failed === 0 );
-			testSuite.defaultCallbacks.done = originalDone;
-		};
-	} )( testSuite.defaultCallbacks.done );
-
-	testSuite( this.data );
+require( "load-grunt-config" )( grunt, {
+	configPath: [
+		path.join( __dirname, "infra", "build", "tasks", "options" ),
+		path.join( __dirname, "infra", "build", "tasks" )
+	],
+	init: true
 } );
+
+require( "load-grunt-tasks" )( grunt );
 
 };

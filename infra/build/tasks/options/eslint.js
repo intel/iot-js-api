@@ -1,4 +1,3 @@
-//
 // Copyright 2016 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-module.exports = function( grunt ) {
-"use strict";
 
-var path = require( "path" );
-
-require( "load-grunt-config" )( grunt, {
-	configPath: [
-		path.join( __dirname, "build", "tasks", "options" ),
-		path.join( __dirname, "build", "tasks" )
-	],
-	init: true
-} );
-
-require( "load-grunt-tasks" )( grunt );
-
+module.exports = {
+	build: {
+		options: {
+			rules: {
+				"no-restricted-globals": [ 2, "console" ]
+			}
+		},
+		src: [ "Gruntfile.js", "build/**/*.js" ]
+	},
+	lib: {
+		src: [ "infra/**/*.js" ]
+	},
+	tests: {
+		src: Object.keys( require( "../../../../package.json" ).versions )
+			.map( function( item ) {
+				return require( "path" ).join( item, "tests", "**", "*" );
+			} )
+	}
 };

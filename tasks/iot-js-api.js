@@ -12,19 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module.exports = {
-	build: {
-		options: {
-			rules: {
-				"no-restricted-globals": [ 2, "console" ]
+module.exports = function( grunt ) {
+
+var _ = require( "lodash" );
+var path = require( "path" );
+var testSuite = require( "../infra/index" );
+
+grunt.task.registerMultiTask( "iot-js-api", "Run a test suite", function() {
+	var done = this.async();
+
+	testSuite.defaultCallbacks.done = ( function( originalDone ) {
+		return function( status ) {
+			if ( originalDone ) {
+				originalDone.apply( this, arguments );
 			}
-		},
-		src: [ "Gruntfile.js", "build/**/*.js" ]
-	},
-	lib: {
-		src: [ "index.js", "lib/**/*.js" ]
-	},
-	tests: {
-		src: [ "tests/**/*.js" ]
-	}
+			done( status.failed === 0 );
+			testSuite.defaultCallbacks.done = originalDone;
+		};
+	} )( testSuite.defaultCallbacks.done );
+
+	testSuite( this.data );
+} );
+
 };

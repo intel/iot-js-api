@@ -162,15 +162,21 @@ var defaultEndpointOptions = {
 	spawn: spawn
 };
 
+if ( !( options.api || options.apiVersion ) ) {
+	throw new Error( "The options must contain both api and apiVersion" );
+}
+
+var testsBasePath = path.join( __dirname, "..", options.api, "tests", options.apiVersion );
+
 var actualOptions = {
 	client: _.extend( {}, defaultEndpointOptions, options.client || {} ),
 	server: _.extend( {}, defaultEndpointOptions, options.server || {} ),
 	single: _.extend( {}, defaultEndpointOptions, options.single || {} ),
 	tests: ( ( options.tests && Array.isArray( options.tests ) ) ?
 		_.map( options.tests, function( item ) {
-			return path.join( __dirname, "tests", item );
+			return path.join( testsBasePath, item );
 		} ) :
-		( glob.sync( path.join( __dirname, "tests", "*" ) ) ) ).map( path.normalize )
+		( glob.sync( path.join( testsBasePath, "*" ) ) ) ).map( path.normalize )
 };
 
 if ( actualOptions.tests.length === 0 ) {
