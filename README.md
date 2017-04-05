@@ -85,5 +85,6 @@ if ((error instanceof Error) && (error instanceof SecurityError)) {  // true
 ```
 
 <a name="testing"></a>
-### Testing
+Testing
+------------
 A test runner is provided in this repository. It is designed to launch a series of tests for each API specified here, each test in its own process. [test-runner.md](./test-runner.md) provides more details on launching tests.
