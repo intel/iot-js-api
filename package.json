@@ -1,7 +1,7 @@
 {
   "name": "iot-js-api",
   "description": "OCF JS API specifications and test suites",
-  "main": "infra/index.js",
+  "main": "scripts/index.js",
   "version": "1.0.0",
   "versions": {
     "ocf": "oic1.1.0-0",

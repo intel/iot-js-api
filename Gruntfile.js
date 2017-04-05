@@ -20,8 +20,8 @@ var path = require( "path" );
 
 require( "load-grunt-config" )( grunt, {
 	configPath: [
-		path.join( __dirname, "infra", "build", "tasks", "options" ),
-		path.join( __dirname, "infra", "build", "tasks" )
+		path.join( __dirname, "scripts", "build", "tasks", "options" ),
+		path.join( __dirname, "scripts", "build", "tasks" )
 	],
 	init: true
 } );

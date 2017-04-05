@@ -16,7 +16,7 @@ module.exports = function( grunt ) {
 
 var _ = require( "lodash" );
 var path = require( "path" );
-var testSuite = require( "../infra/index" );
+var testSuite = require( "../scripts/index" );
 
 grunt.task.registerMultiTask( "iot-js-api", "Run a test suite", function() {
 	var done = this.async();

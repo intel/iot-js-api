@@ -22,7 +22,7 @@ module.exports = {
 		src: [ "Gruntfile.js", "build/**/*.js" ]
 	},
 	lib: {
-		src: [ "infra/**/*.js" ]
+		src: [ "scripts/**/*.js" ]
 	},
 	tests: {
 		src: Object.keys( require( "../../../../package.json" ).versions )
