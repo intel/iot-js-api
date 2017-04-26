@@ -4,17 +4,31 @@ UART API
 The UART API supports the Universal Asynchronous Receiver/Transmitter that allows the board to communicate with other external devices. It uses 2 pins, RX for receiving and TX for transmitting. UART ports are usually referred by string names, but numbers may also be accepted, as defined in the board documentation.
 This API uses a [`Buffer`](../README.md/#buffer) object for both read and write.
 
-The API object
---------------
-UART functionality is exposed by the [`UART`](#uart) object that can be obtained by using the [uart() method of the `Board` API](./README.md/#uart). See also the [Web IDL](./webidl.md).
+<a name="apiobject"></a>
+### The UART API object
+UART functionality is exposed by an object that can be obtained by using the [`uart()`](./README.md/#uart) method of the [`Board` API](./README.md/#board). See also the [Web IDL](./webidl.md). The API object exposes the following method:
+
+| Method              | Description      |
+| ---                 | ---              |
+| [`open()`](#open)   | synchronous open |
+
+<a name="open"></a>
+#### The `UART open(options)` method
+Configures an UART port using data provided by the `options` argument. It runs the following steps:
+- Let `uart` be an [`UART`](#uart) object.
+- For all `uart` properties, if the `options` dictionary defines the same property with a valid value, let the `uart` property take that value, otherwise the default value.
+- Request the underlying platform to initialize the UART with the parameters provided by `uart`.
+- In case of failure, throw `SystemError` and abort these steps.
+- Invoke the `uart.setReadRange(min, max)` method with `min` = 1, and `max` taking a value determined by the platform that is greater than or equal to 1.
+- Return `uart`.
 
 <a name="uart"></a>
 ### The `UART` interface
-Represents the properties and methods that expose UART functionality. The `UART` interface implements the [`EventEmitter`](../README.md/#events) interface and exposes one event.
+Represents the properties, methods and event that expose UART functionality. The `UART` interface implements the [`EventEmitter`](../README.md/#events) interface.
 
 | Event name        | Event callback argument |
 | --------------    | ----------------------- |
-| `data`            | [`Buffer`](../README.md/#buffer) |
+| `read`            | [`Buffer`](../README.md/#buffer) |
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
@@ -25,10 +39,10 @@ Represents the properties and methods that expose UART functionality. The `UART`
 | `parity`   | enum   | yes      | `'none'`      | `'none'`, `'even'`, `'odd'` |
 | `flowControl` | boolean | yes  | `false`       | if flow control is on |
 
-| Method signature          | Description            |
+| Method                    | Description            |
 | ---                       | ---                    |
-| [`write(buffer)`](#write) | write a buffer |
-| [`setReadRange(min, max)`](#readrange) | set buffer sizes for read notifications |
+| [`write()`](#write)       | write a buffer |
+| [`setReadRange()`](#readrange) | set buffer sizes for read notifications |
 | [`close()`](#close)       | close the UART port |
 
 The `port` property denotes the UART port as a string defined by the board documentation, such as `"tty0"`, `"serialUSB0"`, etc.
@@ -43,29 +57,14 @@ The `parity` property can take the following values: `"none"` (by default), `"ev
 
 The `flowControl` boolean property denotes if flow control is used. By default it is `false`.
 
-<a name="init"></a>
-#### UART initialization
-This internal algorithm is used by the [`Board.uart()`](./README.md/#uart) method. Configures UART with the `options` dictionary argument.
-- If `options.port` is not a string, return `null`.
-- Let `uart` be an [`UART`](#uart) object.
-- For all `uart` properties, if the `options` dictionary defines the same property with a valid value, let the `uart` property take that value, otherwise the default value.
-- Request the underlying platform to initialize the UART with the parameters provided by `uart`.
-- In case of failure, return `null`.
-- Invoke the `uart.setReadRange(min, max)` method with `min` = 1, and `max` taking a value determined by the platform that is greater than or equal to 1.
-- Return `uart`.
-
 <a name="write"></a>
 #### The `write(buffer)` method
 Transmits a [`Buffer`](../README.md/#buffer) using UART. The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- Create a [`Buffer`](../README.md/#buffer) from `buffer`. If that fails, reject `promise` with `TypeError` and terminate these steps.
-- Request the underlying platform to send the specified bytes.
-If the operation fails, reject `promise`.
-- Otherwise, resolve `promise`.
+- Request the underlying platform to send the bytes specified in `buffer`. If the operation fails, throw `SystemError` and abort these steps.
 
 <a name="readrange"></a>
 #### The `setReadRange(min, max)` method
-Sets the minimum and maximum number of bytes for triggering the `onread` event. Whenever at least `min` number of bytes is available, a [`Buffer`](../README.md/#buffer) object containing a `max` number of bytes is sent with the `onread` event.
+Sets the minimum and maximum number of bytes for triggering the `onread` event. Whenever at least `min` number of bytes is available, the `read` event is fired with a [`Buffer`](../README.md/#buffer) containing at maximum `max` number of bytes.
 
 <a name="close"></a>
 #### The `close()` method
@@ -75,26 +74,24 @@ Closes the current [`UART`](#uart) port and interrupts all pending operations.
 
 ```javascript
 try {
-  var board = require("board");
+  var uart = require("board").uart("serialUSB0");
 
-  board.uart("serialUSB0").then(function(uart) {
-    console.log("UART port " + uart.port);
-    console.log("Speed [bps]: " + uart.speed);
-    console.log("Data bits: " + uart.dataBits);
-    console.log("Stop bits: " + uart.stopBits);
-    console.log("Parity: " + uart.parity);
-    console.log("Flow control " + (uart.flowControl ? "on." : "off.");
+  console.log("UART port " + uart.port);
+  console.log("Speed [bps]: " + uart.speed);
+  console.log("Data bits: " + uart.dataBits);
+  console.log("Stop bits: " + uart.stopBits);
+  console.log("Parity: " + uart.parity);
+  console.log("Flow control " + (uart.flowControl ? "on." : "off.");
 
-    uart.setReadRange(8, 16);  // min 8 byes, max 16 bytes in one read event
+  uart.setReadRange(8, 16);  // min 8 byes, max 16 bytes in one read event
 
-    uart.on("read", function(buffer) {
-      console.log("UART received: " + buffer.toString());
-    });
-
-    uart.write([1, 2, 3]);
-
-  }).catch(function(err) {
-    console.log("UART error: " + err.message);
+  uart.on("read", function(buffer) {
+    console.log("UART received: " + buffer.toString());
   });
+
+  uart.write([1, 2, 3]);
+
+} catch(err) {
+  console.log("UART error: " + err.message);
 }
 ```

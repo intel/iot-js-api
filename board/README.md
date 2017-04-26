@@ -57,7 +57,7 @@ Represents a hardware board.
 | [`name`](#name)   | String | no       | `undefined`   | board name |
 | [`version`](#version) | String | no   | `versions.board` in [`package.json`](../package.json) | API version |
 
-| Method signature  | Description            |
+| Method            | Description            |
 | ---               | ---                    |
 | [`aio()`](#aio)   | request an AIO object  |
 | [`gpio()`](#gpio) | request a GPIO object  |
@@ -85,57 +85,43 @@ Board errors are represented as augmented [`Error`](https://nodejs.org/api/error
 #### `Board` methods
 
 <a name="aio"></a>
-##### The `aio(options)` method
-Configures an AIO pin. The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If the AIO functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the internal [`AIO initialization`](./aio.md/#init) algorithm with `options` as argument and let `aio` be the returned result.
-- If it throws an error, reject promise with that error.
-- Resolve `promise` with the `aio` object.
+##### The `aio()` method
+Provides the AIO API object. The method runs the following steps:
+- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- Initialize AIO functionality on the board. If it fails, throw `"SystemError"`.
+- Let `aio` be the [AIO API object](./aio.md/#apiobject). Return `aio`.
 
 <a name="gpio"></a>
-##### The `gpio(options)` method
-Configures a GPIO pin or GPIO port. The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If the GPIO functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the internal [`GPIO initialization`](./gpio.md/#init) algorithm with `options` as argument and let `gpio` be the returned result.
-- If it throws an error, reject promise with that error.
-- Resolve `promise` with the `gpio` object.
+##### The `gpio()` method
+Provides the GPIO API object. The method runs the following steps:
+- If the GPIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- Initialize GPIO functionality on the board. If it fails, throw `"SystemError"`.
+- Let `gpio` be the [GPIO API object](./gpio.md/#apiobject). Return `gpio`.
 
 <a name="pwm"></a>
-##### The `pwm(options)` method
-Configures a PWM pin. The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If the PWM functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the internal [`PWM initialization`](./pwm.md/#init) algorithm with `options` as argument and let `pwm` be the returned result.
-- If it throws an error, reject promise with that error.
-- Resolve `promise` with the `pwm` object.
+##### The `pwm()` method
+Provides the PWM API object. The method runs the following steps:
+- If the PWM functionality is not supported on the board, throw `"NotSupportedError"`.
+- Initialize PWM functionality on the board. If it fails, throw `"SystemError"`.
+- Let `pwm` be the [PWM API object`](./pwm.md/#apiobject). Return `pwm`.
 
 <a name="i2c"></a>
-##### The `i2c(options)` method
-Configures I2C communication. The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If the I2C functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the internal [`I2C initialization`](./i2c.md/#init) algorithm with `options` as argument and let `i2c` be the returned result.
-- If it throws an error, reject promise with that error.
-- Resolve `promise` with the `i2c` object.
+##### The `i2c()` method
+Provides the I2C API object. The method runs the following steps:
+- If the I2C functionality is not supported on the board, throw `"NotSupportedError"`.
+- Initialize I2C functionality on the board. If it fails, throw `"SystemError"`.
+- Let `i2c` be the [I2C API Object](./i2c.md/#apiobject). Return `pwm`.
 
 <a name="spi"></a>
-##### The `spi(options)` method
-Configures SPI communication.
-The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If the SPI functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the [`SPI init`](./spi.md/#init) steps with `options` as argument and let `spi` be the returned result.
-- If it throws an error, reject promise with that error.
-- Resolve `promise` with the `spi` object.
+##### The `spi()` method
+Provides the SPI API object. The method runs the following steps:
+- If the SPI functionality is not supported on the board, throw `"NotSupportedError"`.
+- Initialize SPI functionality on the board. If it fails, throw `"SystemError"`.
+- Let `spi` be the [SPI API object](./spi.md/#apiobject). Return `spi`.
 
 <a name="uart"></a>
-##### The `uart(options)` method
-Configures UART communication. It takes a dictionary object as argument.
-The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If the UART functionality is not supported, reject `promise` with `"NotSupportedError"`.
-- Run the [`UART init`](./uart.md/#init) steps with `options` as argument and let `uart` be the returned result.
-- If it throws an error, reject promise with that error.
-- Resolve `promise` with the `uart` object.
+##### The `uart()` method
+Provides the UART API object. The method runs the following steps:
+- If the UART functionality is not supported on the board, throw `"NotSupportedError"`.
+- Initialize UART functionality on the board. If it fails, throw `"SystemError"`.
+- Let `uart` be the [UART API object](./uart.md/#apiobject) object. Return `uart`.

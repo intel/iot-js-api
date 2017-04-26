@@ -8,9 +8,26 @@ For instance, a LED that is driven with a PWM signal with 50% duty cycle will be
 
 The term "channel" is used as the numeric index of a PWM pin relative to the PWM controller, as described in the board documentation.
 
-The API object
---------------
-PWM functionality is exposed by the [`PWM`](#pwm) object that can be obtained by using the [pwm() method of the `Board` API](./README.md/#pwm). See also the [Web IDL](./webidl.md).
+<a name="apiobject"></a>
+### The PWM API object
+PWM functionality is exposed by an object that can be obtained by using the [`pwm()`](./README.md/#pwm) method of the [`Board` API](./README.md/#board). See also the [Web IDL](./webidl.md). The API object exposes the following method:
+
+| Method              | Description      |
+| ---                 | ---              |
+| [`open()`](#open)   | synchronous open |
+
+<a name="open"></a>
+#### The `PWM open(options)` method
+Configures a PWM pin using data provided by the `options` argument. It runs the following steps:
+- If `options` is a string or number, create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
+- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`PWM`](#pwm) properties, but at least `pin`
+  * `pin` for board pin name, or PWM channel number, as defined by the board documentation
+  * `reversePolarity`, with a default value `false`.
+- If any of the `init` properties is specified, but has invalid value on the board, throw `InvalidAccessError`.
+- Let `pwm` be the [`PWM`](#pwm) object representing the pin identified by the `init.pin` and request the underlying platform to initialize PWM for the given pin. In case of failure, throw `InvalidAccessError`.
+- Initialize the `pwm.pin` property with `init.pin`.
+- Initialize the `pwm.reversePolarity` property with `init.reversePolarity`.
+- Return the `pwm` object.
 
 <a name="pwm"></a>
 ### The `PWM` interface
@@ -24,28 +41,15 @@ Represents the properties and methods that expose PWM functionality. The `PWM` o
 | `stop()`   | function | no | defined by implementation | stop the PWM signal |
 | `close()`  | function | no | defined by implementation | release the pin |
 
-| Method signature         | Description                |
+| Method                   | Description                |
 | ---                      | ---                        |
-| [`write(value)`](#write) | set and start a PWM signal |
+| [`write()`](#write) | set and start a PWM signal |
 | [`stop()`](#stop)        | stop the PWM signal        |
 | [`close()`](#close)      | close the pin              |
 
 The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board documentation, either a pin name, or a channel number.
 
 The `reversePolarity` property tells whether the PWM signal is active on 0. The default value is `false`.
-
-<a name="init"></a>
-#### PWM initialization
-This internal algorithm is used by the [`Board.pwm()`](./README.md/#pwm) method. Configures the PWM pin provided by the `options` argument. It runs the following steps:
-- If `options` is a string or number, create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
-- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`PWM`](#pwm) properties, but at least `pin`
-  * `pin` for board pin name, or PWM channel number, as defined by the board documentation
-  * `reversePolarity`, with a default value `false`.
-- If any of the `init` properties is specified, but has invalid value on the board, throw `InvalidAccessError`.
-- Let `pwm` be the [`PWM`](#pwm) object representing the pin identified by the `init.pin` and request the underlying platform to initialize PWM for the given pin. In case of failure, throw `InvalidAccessError`.
-- Initialize the `pwm.pin` property with `init.pin`.
-- Initialize the `pwm.reversePolarity` property with `init.reversePolarity`.
-- Return the `pwm` object.
 
 <a name="write"></a>
 #### The `write(value)` method
@@ -78,18 +82,18 @@ Called when the application is no longer interested in the pin. It invokes the `
 ### Examples
 
 ```javascript
-var board = require("board");
+try {
+  var pwm = require("board").pwm();
 
-board.pwm(6)  // configure pin 6 as PWM
-  .then(function(pwm){
-    pwm.write({ period: 2.5, pulseWidth: 1.5 });  // duty cycle is 60%
-    console.log("PWM duty cycle: " + pwm.dutyCycle);
-    setTimeout(function(){
-      pwm.stop();  // stop the PWM signal
-      pwm.close();
-    }, 2000);
-  }).catch(function(error) {
-    console.log("PWM error: " + error.message);
-  });
+  var pwm6 = pwm.open(6);  // configure pin 6 as PWM
+  pwm6.write({ period: 2.5, pulseWidth: 1.5 });  // duty cycle is 60%
+  console.log("PWM duty cycle: " + pwm6.dutyCycle);
+  setTimeout(function(){
+    pwm6.stop();  // stop the PWM signal
+    pwm6.close();
+  }, 2000);
+}.catch (error) {
+  console.log("PWM error: " + error.message);
+};
 
 ```

@@ -6,12 +6,12 @@ interface Board {
     readonly attribute String name;  // board name, e.g. "arduino101"
     attribute EventHandler onerror;
 
-    Promise<AIO>  aio(PinName pin);
-    Promise<GPIO> gpio(PinName or GPIOOptions options);
-    Promise<PWM>  pwm( (PinName or PWMOptions) options);
-    Promise<I2C>  i2c(I2COptions options);
-    Promise<SPI>  spi(SPIOptions options);
-    Promise<UART> uart(UARTOptions options);
+    AIO aio();
+    GPIO gpio();
+    PWM pwm();
+    I2C i2c();
+    SPI spi();
+    UART uart();
 };
 
 Board implements EventEmitter;
@@ -25,6 +25,9 @@ interface Pin {
 };
 
 // AIO
+interface AIOObject {
+  AIO open((PinName or AIOOptions) options);
+};
 
 dictionary AIOOptions {
   PinName pin;
@@ -39,9 +42,11 @@ interface AIO: Pin {
     void close();
 };
 
-AIO implements EventEmitter;
-
 // GPIO
+interface GPIOObject {
+  GPIO open((PinName or GPIOOptions) options);
+};
+
 enum GPIOMode { "input", "output" };
 enum GPIOEdge { "none", "rising", "falling", "any" };
 enum GPIOState { "pull-up", "pull-down", "high-impedance" };
@@ -56,16 +61,21 @@ dictionary GPIOOptions {
 };
 
 [NoInterfaceObject]
-interface GPIO: Pin {
+interface GPIO {
+    PinName pin;
     unsigned long read();
     void write(long value);
     void close();
     attribute EventHandler<unsigned long> ondata;
 };
 
-GPIO implements EventEmitter;
+GPIOAccess implements EventEmitter;
 
 // PWM
+interface PWMObject {
+  PWM open((PinName or PWMOptions) options);
+};
+
 dictionary PWMOptions {
   PinName pin;
   boolean reversePolarity = false;
@@ -83,6 +93,10 @@ interface PWM: Pin {
 };
 
 // I2C
+interface I2CObject {
+  I2C open(I2COptions options);
+};
+
 dictionary I2COptions {
   octet bus;
   unsigned long speed;  // 10, 100, 400, 1000, 3400 kbps
@@ -93,12 +107,15 @@ interface I2C {
   readonly attribute octet bus;
   readonly attribute unsigned long speed;
 
-  Promise<Buffer> read(octet device, unsigned long size);
-  Promise write(octet device, Buffer data);
+  Buffer read(octet device, unsigned long size);
+  void write(octet device, Buffer data);
   void close();
 };
 
 // SPI
+interface SPIObject {
+  SPI open(SPIOptions options);
+};
 
 enum SPITopology { "full-duplex", "single-write", "single-read", "daisy-chain" };
 
@@ -116,11 +133,15 @@ dictionary SPIOptions {
 [NoInterfaceObject]
 interface SPI {
   // has all the properties of SPIOptions as read-only attributes
-  Promise<Buffer> transfer(octet device, Buffer txData);
+  Buffer transfer(octet device, Buffer txData);
   void close();
 };
 
 // UART
+interface UARTObject {
+  UART open(UARTOptions options);
+};
+
 enum UARTParity { "none", "even", "odd" };
 
 dictionary UARTOptions {
@@ -135,7 +156,7 @@ dictionary UARTOptions {
 [NoInterfaceObject]
 interface UART {
   // has all the properties of UARTInit as read-only attributes
-  Promise<void> write(Buffer data);
+  void write(Buffer data);
   void setReadRange(long minBytes, long maxBytes);
   attribute EventHandler<Buffer> ondata;
   void close();
