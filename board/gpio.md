@@ -104,13 +104,13 @@ try {
   gpio6 = gpio.open({pin: 6, edge: "any"});
   gpio6.on("data", function(value) {
     console.log("GPIO pin 6 has changed; value: " + value);
-  };
+  });
   setTimeout(function(){
     gpio6.close();
   }, 2000);
 
 } catch (err) {
-  console.log("GPIO error: " + error.message);
+  console.log("GPIO error: " + err.message);
 };
 ```
 
