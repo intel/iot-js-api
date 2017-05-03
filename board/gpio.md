@@ -9,32 +9,51 @@ On certain boards, analog pins can also be used as GPIO.
 
 <a name="apiobject"></a>
 ### The GPIO API object
-GPIO pin functionality is exposed by an object that can be obtained by using the [`gpio()`](./README.md/#gpio) method of the [`Board` API](./README.md/#board). See also the [Web IDL](./webidl.md). The API object exposes the following method:
+When requiring `"gpio"`, the following steps are run:
+- If there is no permission for using the functionality, throw `SecurityError`.
+- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- Return an object that implements the following methods.
 
 | Method              | Description      |
 | ---                 | ---              |
-| [`open()`](#open)   | synchronous open |
+| [`open()`](#open)   | open GPIO pin    |
+| [`port()`](#port)   | open GPIO port   |
+
+See also the [Web IDL](./webidl.md) definition.
 
 <a name="open"></a>
 #### The `GPIO open(options)` method
-Configures a GPIO pin or port using data provided by the `options` argument. It involves the following steps:
-- If `options` is a number or string, create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
-- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`GPIO`](#gpio) properties:
-  * `pin` for the GPIO pin or port name defined by the board
-  * `port` for the array of GPIO pins that define the port
+Configures a GPIO pin using data provided by the `options` argument, that may contain the following properties:
+<a name="gpiooptions"></a>
+  * `name` for pin name, either a number or string, by default `undefined`
+  * `mapping` for either `"board"` or `"os"` pin mapping, by default `"os"`
   * `mode` with valid values `"input"` or `"output"`, by default `"input"`
   * `activeLow`, by default `false`
   * `edge`, by default `"any"`
   * `state`, by default `undefined`.
-- If any of the `init` properties has an invalid value, throw `TypeError`.
-- If `init.port` is defined and matches a GPIO port name defined by the board, run the following sub-steps:
-  * request the underlying platform to initialize the GPIO port on the given board with the `init` properties. In case of failure, throw `InvalidAccessError`.
-  * Let `gpio` be the [`GPIO`](#gpio) object representing the requested port initialized by `init`.
-- Otherwise, if `init.pin` is defined, run the following sub-steps:
-  * Let `gpio` be the [`GPIO`](#gpio) object representing the requested pin initialized by `init`. For the [`GPIO`](#gpio) properties missing from the `init` dictionary, use the default values of the `GPIO` object properties.
-  * Initialize the `gpio.pin` property with `init.pin`.
-- Return the `gpio` object.
 
+The method runs the following steps:
+- If `options` is a number or string, let `init` be a [GPIOOptions](#gpiooptions) object, let `init.name` be `options` and let the other [GPIOOptions](#gpiooptions) properties take the default values.
+- If `options` is a dictionary and if `options.name` is not defined, throw `TypeError`. If any of the `options` properties has an invalid value, throw `TypeError`. Let the the missing [GPIOOptions](#gpiooptions) properties take the default values. Let `init` be `options`.
+- Let `gpio` be the [`GPIO`](#gpio) object that represents the requested pin corresponding to `init.name`, by matching `init.name` in the pin namespace specified by `mapping`, then in the other pin namespace. If there is no match in either namespaces, throw `InvalidAccessError`.
+- Initialize `gpio` with the properties of `init` and return `gpio`.
+
+<a name="port"></a>
+#### The `GPIO port(port, options)` method
+Configures a GPIO pin or port using data provided by the `options` argument that can take the same properties as in the [`open()`](#open) method.
+A GPIO port can be identified either by a symbolic name defined by the OS or the board, or a sequence of pin names the implementation binds together and are written and read together.
+The `port()` method runs the following steps:
+- If `port` is not a string or an array with at least one element, throw `TypeError`.
+- Let `init` be a [GPIOOptions](#gpiooptions) object with all properties not defined in `options` take default values. If any of the `init` properties has an invalid value, throw `TypeError`.
+- If `port` is a string, match it to the supported GPIO port names in the pin namespace specified by `mapping`, or then in the other pin namespace. If there is no match in either namespaces, throw `InvalidAccessError`. Otherwise let `gpio` be the [`GPIO`](#gpio) object representing the requested port and initialize it with `init`. Let `gpio.name` be `port` and let `gpio.port` be `undefined`.
+- Otherwise if `port` is an array, run the following sub-steps for aggregating pins in the implementation:
+  * Let `gpio.name` take the string value `"port"` and `gpio.port` be the sequence of pin names that form the GPIO port.
+  * For each pin name in the `port` sequence, run the [`open()`](#open) method with `init` as argument, associate the returned [`GPIO`](#gpio) object with the `gpio` object and make it represent a bit in the value returned by `gpio.read()`, with the first element in the sequence representing the most significant bit. If any of the opens fail, close the other pins and throw `InvalidAccessError`.
+  * Initialize [`gpio.write()`](#write) with a function that obtains the corresponding bit values for each pin participating in the port and writes the pin values. Re-throw any errors.
+  * Initialize [`gpio.read()`](#read) with a function that reads the corresponding bit values from each pin participating in the port and returns the assembled value. Re-throw any errors.
+  * Initialize [`gpio.close()`](#close) with a function that closes each participating pin. Re-throw any errors.
+  * For any listener on the `data` event, on notification from the underlying platform on a value change on any participating pin, implementations SHOULD wait a platform-dependent short time and then fire the `data` event with the value assembled from the participating pins.
+  * Return the `gpio` object.
 
 <a name="gpio"></a>
 ### The `GPIO` interface
@@ -42,7 +61,8 @@ The `GPIO` interface extends the [`Pin`](./README.md/#pin) object and implements
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
-| `pin`      | String or Number | no | `undefined`   | board name for the pin |
+| `name`     | String or Number | no | `undefined`   | pin name |
+| `mapping`  | String | no | `"os"`   | pin mapping |
 | `mode`     | String | no       | `undefined`   | I/O mode |
 | `port`     | array  | yes      | `undefined`   | array of pin names representing the ports
 | `activeLow` | boolean | yes   | `false` | whether the pin is active on logical low |
@@ -59,7 +79,7 @@ The `GPIO` interface extends the [`Pin`](./README.md/#pin) object and implements
 | -----------| ----------------------- |
 | `data`     | unsigned long (the pin value) |
 
-The `data` event listener callback receives the current value of the pin (0 or 1 for single pins, and positive integer for GPIO ports).
+The `data` event listener callback receives the current value of the pin (0 or 1 for single pins, and positive integer for GPIO ports). Implementations SHOULD use a platform-dependent minimum time interval between firing two consecutive events.
 
 The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board documentation, usually positive integers.
 
@@ -91,17 +111,18 @@ Called when the application is no longer interested in the pin. This also remove
 
 ```javascript
 try {
-  var gpio = require("board").gpio();
+  var board = require("board");
+  var gpio = require("gpio");
 
   var gpio3 = gpio.open(3);  // GPIO input pin with default configuration.
   console.log(board.name + " GPIO pin 3 value: " + gpio3.read());
   gpio3.close();
 
-  var gpio5 = gpio.open({ pin: 5, mode: "output", activeLow: true });
+  var gpio5 = gpio.open({ name: 5, mode: "output", activeLow: true });
   gpio5.write(0);  // activate pin
   gpio5.close();
 
-  gpio6 = gpio.open({pin: 6, edge: "any"});
+  gpio6 = gpio.open({ pin: 6, edge: "any"});
   gpio6.on("data", function(value) {
     console.log("GPIO pin 6 has changed; value: " + value);
   };
@@ -120,7 +141,7 @@ try {
 try {
   var gpio = require("board").gpio();
   // Configure a GPIO port using default configuration
-  var gport1 = gpio.open({ port: [3,4,5,6,7,8]});
+  var gport1 = gpio.port([3,4,5,6,7,8]);
 
   // Set up a change listener on the port value.
   gport1.on("data", function(value) {
@@ -132,9 +153,15 @@ try {
   }, 2000);
 
   // Initialize and write an output port
-  var gport2 = gpio.open({ port: [5,6,7,8], mode: "output", activeLow: true });
+  var gport2 = gpio.port([5,6,7,8], { mode: "output", activeLow: true });
   gport2.write(0x21);
   gport2.close();
+
+  // Configure a GPIO port supported in the platform under a symbolic name
+  var gport3 = gpio.port("gpio-port-1", { mode: "output", activeLow: true });
+  gport3.write(0x21);
+  gport3.close();
+
 } catch (err) {
   console.log("GPIO port error: " + error.message);
 };

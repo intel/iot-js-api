@@ -13,11 +13,16 @@ This API uses a [`Buffer`](../README.md/#buffer) object for both read and write 
 
 <a name="apiobject"></a>
 ### The SPI API object
-SPI functionality is exposed by an object that can be obtained by using the [`spi()`](./README.md/#spi) method of the [`Board` API](./README.md/#board). See also the [Web IDL](./webidl.md). The API object exposes the following method:
+When requiring `"spi"`, the following steps are run:
+- If there is no permission for using the functionality, throw `SecurityError`.
+- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- Return an object that implements the following method.
 
 | Method              | Description      |
 | ---                 | ---              |
 | [`open()`](#open)   | synchronous open |
+
+See also the [Web IDL](./webidl.md) definition.
 
 <a name="open"></a>
 #### The `SPI open(options)` method
@@ -99,7 +104,7 @@ Closes the current [`SPI`](#spi) bus and cancels all pending operations.
 
 ```javascript
 try {
-  var spi = require("board").spi().open();
+  var spi = require("spi").open();  // open the default SPI bus
 
   console.log("SPI bus " + spi.bus + " opened with bus speed " + spi.speed);
   console.log("SPI mode: " + spi.mode);

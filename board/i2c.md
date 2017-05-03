@@ -13,11 +13,16 @@ This API uses a [`Buffer`](../README.md/#buffer) object for both read and write.
 
 <a name="apiobject"></a>
 ### The I2C API object
-I2C functionality is exposed by an object that can be obtained by using the [`i2c()`](./README.md/#i2c) method of the [`Board` API](./README.md/#board). See also the [Web IDL](./webidl.md). The API object exposes the following method:
+When requiring `"i2c"`, the following steps are run:
+- If there is no permission for using the functionality, throw `SecurityError`.
+- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- Return an object that implements the following method.
 
 | Method              | Description      |
 | ---                 | ---              |
 | [`open()`](#open)   | synchronous open |
+
+See also the [Web IDL](./webidl.md) definition.
 
 <a name="open"></a>
 #### The `I2C open(options)` method
@@ -70,7 +75,7 @@ Closes the current [`I2C`](#i2c) bus and cancels all pending operations.
 
 ```javascript
 try {
-  var i2c = require("board").i2c().open();
+  var i2c = require("i2c").open();  // open the default I2C bus
   console.log("I2C bus " + i2c.bus + " opened with bus speed " + i2c.speed);
 
   i2c.write(0x02, [1, 2, 3]);

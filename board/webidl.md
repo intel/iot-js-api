@@ -4,38 +4,33 @@ Web IDL for Board and IO APIs
 
 interface Board {
     readonly attribute String name;  // board name, e.g. "arduino101"
-    attribute EventHandler onerror;
+    readonly attribute String os;    // OS name, e.g. "Zephyr-1.0"
 
-    AIO aio();
-    GPIO gpio();
-    PWM pwm();
-    I2C i2c();
-    SPI spi();
-    UART uart();
+    readonly attribute EventHandler onerror;
 };
 
 Board implements EventEmitter;
 
 typedef (long or unsigned long or double or unrestricted double) Number;
 typedef (DOMString or USVString) String;
-typedef (Number or String) PinName;  // implementation uses board specific mapping
+typedef (Number or String) PinName;
 
-interface Pin {
-    readonly attribute PinName pin;  // board number/name of the pin
-};
+enum PinMapping { "board", "os" };
 
 // AIO
 interface AIOObject {
-  AIO open((PinName or AIOOptions) options);
+  AIO open((PinName or AIOOptions) init);
 };
 
 dictionary AIOOptions {
-  PinName pin;
-  unsigned long precision;
+  PinName name;
+  PinMapping mapping = "os";
+  unsigned long precision = 10;
 };
 
 [NoInterfaceObject]
-interface AIO: Pin {
+interface AIO {
+    readonly attribute PinName name;
     readonly attribute unsigned long precision;  // 10 or 12 bits
 
     unsigned long read();
@@ -44,40 +39,45 @@ interface AIO: Pin {
 
 // GPIO
 interface GPIOObject {
-  GPIO open((PinName or GPIOOptions) options);
+  GPIO open((PinName or GPIOOptions) init);
+  GPIO port((PinName or sequence<PinName>) port, optional GPIOOptions options);
+};
+
+[NoInterfaceObject]
+interface GPIO: {
+  // has all the properties of GPIOOptions as readonly attributes
+
+  unsigned long read();
+  void write(long value);
+  void close();
+
+  attribute EventHandler<unsigned long> ondata;
+
+};
+
+GPIO implements EventEmitter;
+
+dictionary GPIOOptions {
+  PinName name;
+  PinMapping mapping = "os";
+  GPIOMode mode = "input";
+  boolean activeLow = false;
+  GPIOEdge edge = "any";
+  GPIOState state = "high-impedance";
 };
 
 enum GPIOMode { "input", "output" };
 enum GPIOEdge { "none", "rising", "falling", "any" };
 enum GPIOState { "pull-up", "pull-down", "high-impedance" };
 
-dictionary GPIOOptions {
-    PinName pin;
-    sequence<PinName> port; // GPIO Ports (8, 16 or 32 pins)
-    GPIOMode mode = "input";
-    boolean activeLow = false;
-    GPIOEdge edge = "any";
-    GPIOState state = "high-impedance";
-};
-
-[NoInterfaceObject]
-interface GPIO {
-    PinName pin;
-    unsigned long read();
-    void write(long value);
-    void close();
-    attribute EventHandler<unsigned long> ondata;
-};
-
-GPIOAccess implements EventEmitter;
-
 // PWM
 interface PWMObject {
-  PWM open((PinName or PWMOptions) options);
+  PWM open((PinName or PWMOptions) init);
 };
 
 dictionary PWMOptions {
-  PinName pin;
+  PinName name;
+  PinMapping mapping = "os";
   boolean reversePolarity = false;
   double period;
   double pulseWidth;
@@ -85,11 +85,19 @@ dictionary PWMOptions {
 };
 
 [NoInterfaceObject]
-interface PWM: Pin {
-    readonly attribute boolean reversePolarity;
-    void write(PWMOptions value);
-    void stop();
-    void close();
+interface PWM {
+  readonly attribute PinName name;
+  readonly attribute boolean reversePolarity;
+
+  void write(PWMValue value);
+  void stop();
+  void close();
+};
+
+dictionary PWMValue {
+  double period;
+  double pulseWidth;
+  double dutyCycle;
 };
 
 // I2C

@@ -6,36 +6,43 @@ The PWM API supports writing analog values to pins using Pulse Width Modulation.
 PWM is characterized by a repeating digital signal of given pulse width (duration for value 1 in normal polarity and for value 0 in reverse polarity) and a total duration of the signal (period). Also, PWM is characterized by a duty cycle that is the ratio between the pulse width and the total signal period.
 For instance, a LED that is driven with a PWM signal with 50% duty cycle will be approximately half-bright.
 
-The term "channel" is used as the numeric index of a PWM pin relative to the PWM controller, as described in the board documentation.
+The term "channel" is used as the numeric index of a PWM pin relative to the PWM controller starting with 1.
 
 <a name="apiobject"></a>
 ### The PWM API object
-PWM functionality is exposed by an object that can be obtained by using the [`pwm()`](./README.md/#pwm) method of the [`Board` API](./README.md/#board). See also the [Web IDL](./webidl.md). The API object exposes the following method:
+When requiring `"pwm"`, the following steps are run:
+- If there is no permission for using the functionality, throw `SecurityError`.
+- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- Return an object that implements the following method.
 
 | Method              | Description      |
 | ---                 | ---              |
-| [`open()`](#open)   | synchronous open |
+| [`open()`](#open)   | open a PWM pin   |
+
+See also the [Web IDL](./webidl.md) definition.
 
 <a name="open"></a>
 #### The `PWM open(options)` method
 Configures a PWM pin using data provided by the `options` argument. It runs the following steps:
 - If `options` is a string or number, create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
-- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`PWM`](#pwm) properties, but at least `pin`
-  * `pin` for board pin name, or PWM channel number, as defined by the board documentation
-  * `reversePolarity`, with a default value `false`.
+- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`PWM`](#pwm) properties, but at least `name`
+  * `name` for pin name
+  * `mapping` for pin mapping, by default `"os"`
+  * `reversePolarity`, by default `false`.
 - If any of the `init` properties is specified, but has invalid value on the board, throw `InvalidAccessError`.
-- Let `pwm` be the [`PWM`](#pwm) object representing the pin identified by the `init.pin` and request the underlying platform to initialize PWM for the given pin. In case of failure, throw `InvalidAccessError`.
-- Initialize the `pwm.pin` property with `init.pin`.
+- Let `pwm` be the [`PWM`](#pwm) object representing the pin identified by the `init.name` in the `mapping` pin namespace and request the underlying platform to initialize PWM for the given pin. In case of failure, throw `InvalidAccessError`.
+- Initialize the `pwm.name` property with `init.name`.
 - Initialize the `pwm.reversePolarity` property with `init.reversePolarity`.
 - Return the `pwm` object.
 
 <a name="pwm"></a>
 ### The `PWM` interface
-Represents the properties and methods that expose PWM functionality. The `PWM` object extends the [`Pin`](./README.md/#pin) object.
+Represents the properties and methods that expose PWM functionality.
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
-| `pin`     | String or Number | no | `undefined`   | board name for the pin, or channel number |
+| `name`     | String or Number | no | `undefined`   | pin name |
+| `mapping`  | String | no | `"os"`   | pin mapping |
 | `reversePolarity` | boolean | yes |   `false`   | PWM polarity |
 | `write()`  | function | no | defined by implementation | set and enable PWM signal |
 | `stop()`   | function | no | defined by implementation | stop the PWM signal |
@@ -47,7 +54,9 @@ Represents the properties and methods that expose PWM functionality. The `PWM` o
 | [`stop()`](#stop)        | stop the PWM signal        |
 | [`close()`](#close)      | close the pin              |
 
-The `pin` property inherited from [`Pin`](./README.md/#pin) can take values defined by the board documentation, either a pin name, or a channel number.
+The `name` property is an opaque number or string, representing a pin name.
+
+The `mapping` property represents the pin namespace, either `"board"` or `"os"`.
 
 The `reversePolarity` property tells whether the PWM signal is active on 0. The default value is `false`.
 
@@ -83,7 +92,7 @@ Called when the application is no longer interested in the pin. It invokes the `
 
 ```javascript
 try {
-  var pwm = require("board").pwm();
+  var pwm = require("pwm");
 
   var pwm6 = pwm.open(6);  // configure pin 6 as PWM
   pwm6.write({ period: 2.5, pulseWidth: 1.5 });  // duty cycle is 60%

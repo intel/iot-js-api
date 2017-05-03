@@ -1,6 +1,8 @@
 Board Support for FRDM-K64F
 ===========================
 
+This document defines the pin values that are accepted by implementations on board namespace.
+
 The FRDM-K64F board pin names and locations are shown [here](https://developer.mbed.org/platforms/FRDM-K64F/).
 
 There are 16 general purpose I/O pins, `D0` - `D15`. `D14` and `D15` can currently be used as GPIO_INs but not as outputs.

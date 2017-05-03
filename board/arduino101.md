@@ -1,7 +1,7 @@
 Board Support for Arduino 101
 =============================
 
-This document defines the pin values that are accepted by implementations.
+This document defines the pin values that are accepted by implementations on board namespace.
 
 The board labels are described in the [Arduino 101](https://www.arduino.cc/en/Main/ArduinoBoard101) board documentation. Also, for each board pin, the supported modes of each pin is described.
 
