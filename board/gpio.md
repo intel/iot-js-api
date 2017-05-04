@@ -27,10 +27,10 @@ Configures a GPIO pin using data provided by the `options` argument, that may co
 <a name="gpiooptions"></a>
   * `name` for pin name, either a number or string, by default `undefined`
   * `mapping` for either `"board"` or `"os"` pin mapping, by default `"os"`
-  * `mode` with valid values `"input"` or `"output"`, by default `"input"`
+  * `mode` with valid values `"in"` or `"out"`, by default `"out"`
   * `activeLow`, by default `false`
-  * `edge`, by default `"any"`
-  * `state`, by default `undefined`.
+  * `edge`, with  valid values: `"rising"`, `"falling"`, `"any"`, `"none"`, by default `"none"`
+  * `state`, by default `undefined`, supported values: `"pull-up"`, `"pull-down"`, `"high-impedance"`.
 
 The method runs the following steps:
 - If `options` is a number or string, let `init` be a [GPIOOptions](#gpiooptions) object, let `init.name` be `options` and let the other [GPIOOptions](#gpiooptions) properties take the default values.
@@ -115,14 +115,14 @@ try {
   var gpio = require("gpio");
 
   var gpio3 = gpio.open(3);  // GPIO input pin with default configuration.
-  console.log(board.name + " GPIO pin 3 value: " + gpio3.read());
+  gpio3.write(1);  // activate pin
   gpio3.close();
 
-  var gpio5 = gpio.open({ name: 5, mode: "output", activeLow: true });
+  var gpio5 = gpio.open({ name: 5, mode: "out", activeLow: true });
   gpio5.write(0);  // activate pin
   gpio5.close();
 
-  gpio6 = gpio.open({ pin: 6, edge: "any"});
+  gpio6 = gpio.open({ pin: 6, mode: "in", edge: "any"});
   gpio6.on("data", function(value) {
     console.log("GPIO pin 6 has changed; value: " + value);
   });
@@ -141,7 +141,7 @@ try {
 try {
   var gpio = require("board").gpio();
   // Configure a GPIO port using default configuration
-  var gport1 = gpio.port([3,4,5,6,7,8]);
+  var gport1 = gpio.port([3,4,5,6,7,8], { mode: "in"});
 
   // Set up a change listener on the port value.
   gport1.on("data", function(value) {
@@ -153,12 +153,12 @@ try {
   }, 2000);
 
   // Initialize and write an output port
-  var gport2 = gpio.port([5,6,7,8], { mode: "output", activeLow: true });
+  var gport2 = gpio.port([5,6,7,8], { activeLow: true });
   gport2.write(0x21);
   gport2.close();
 
   // Configure a GPIO port supported in the platform under a symbolic name
-  var gport3 = gpio.port("gpio-port-1", { mode: "output", activeLow: true });
+  var gport3 = gpio.port("gpio-port-1", { activeLow: true });
   gport3.write(0x21);
   gport3.close();
 

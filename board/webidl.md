@@ -45,8 +45,6 @@ interface GPIOObject {
 
 [NoInterfaceObject]
 interface GPIO: {
-  // has all the properties of GPIOOptions as readonly attributes
-
   unsigned long read();
   void write(long value);
   void close();
@@ -60,13 +58,13 @@ GPIO implements EventEmitter;
 dictionary GPIOOptions {
   PinName name;
   PinMapping mapping = "os";
-  GPIOMode mode = "input";
+  GPIOMode mode = "out";
   boolean activeLow = false;
-  GPIOEdge edge = "any";
+  GPIOEdge edge = "none";
   GPIOState state = "high-impedance";
 };
 
-enum GPIOMode { "input", "output" };
+enum GPIOMode { "in", "out" };
 enum GPIOEdge { "none", "rising", "falling", "any" };
 enum GPIOState { "pull-up", "pull-down", "high-impedance" };
 
