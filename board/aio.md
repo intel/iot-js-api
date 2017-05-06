@@ -22,13 +22,13 @@ See also the [Web IDL](./webidl.md) definition.
 #### The `AIO open(options)` method
 Configures an AIO pin using data provided by the `options` argument. It involves the following steps:
 - If `options` is a string, create a dictionary 'init' and use the value of `options` to initialize the `init.pin` property.
-- Otherwise if `options` is a number, create a dictionary 'init' and let `init.name` be `options`.
-- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`AIO`](#aio) properties, where at least `name` MUST be specified:
-  * `name` for board pin name with the valid values defined by the board, or for the numeric index of the analog pin;
-  * `mapping` to specify if OS or board namespace is to be used with the pin (by default `"os"`).
+- Otherwise if `options` is a number, create a dictionary 'init' and let `init.pin` be `options`.
+- Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`AIO`](#aio) properties, where at least `pin` MUST be specified:
+  * `pin` for board pin name with the valid values defined by the board, or for the numeric index of the analog pin;
+  * `mapping` to specify if OS or board namespace is to be used with the pin (by default `"system"`).
   * `precision` for the bit width of a sample (if the board supports setting the sampling rate).
 - If any property of `init` is specified and has an invalid value,  throw `TypeError`.
-- Request the underlying platform to initialize AIO on the pin identified by `init.name` in the namespace specified by `init.mapping`, or if not found, then in the other namespace. In case of failure, throw `InvalidAccessError`.
+- Request the underlying platform to initialize AIO on the pin identified by `init.pin` in the namespace specified by `init.mapping` if that is defined. If not found, throw `InvalidAccessError`. If `init.mapping is not defined, then search `init.pin` first in the OS namespace, then in board namespace. In case of failure, throw `InvalidAccessError`.
 - Let `aio` be the `AIOPin`](#aiopin) object that represents the hardware pin identified by `init.name`.
 - If `init.precision` is defined, request the board to set the precision and initialize the `aio.precision` property with the value supported by the underlying platform. If there is an error, throw `InvalidAccessError`.
 - Initialize the `aio.value` property with `undefined`.
@@ -39,8 +39,8 @@ Configures an AIO pin using data provided by the `options` argument. It involves
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
-| `name`      | String or Number | no | `undefined`  | pin name |
-| `mapping`   | enum | no | `"os"`  | pin mapping, `"os"` or `"board"` |
+| `pin`      | String or Number | no | `undefined`  | pin name |
+| `mapping`   | enum | no | `"system"`  | pin mapping, `"system"` or `"board"` |
 | `precision` | unsigned long | yes | `undefined` | bit length of digital sample |
 
 | Method              | Description      |

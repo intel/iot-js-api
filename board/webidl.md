@@ -15,7 +15,7 @@ typedef (long or unsigned long or double or unrestricted double) Number;
 typedef (DOMString or USVString) String;
 typedef (Number or String) PinName;
 
-enum PinMapping { "board", "os" };
+enum PinMapping { "board", "system" };
 
 // AIO
 interface AIOObject {
@@ -23,14 +23,14 @@ interface AIOObject {
 };
 
 dictionary AIOOptions {
-  PinName name;
-  PinMapping mapping = "os";
+  PinName pin;
+  PinMapping mapping = "system";
   unsigned long precision = 10;
 };
 
 [NoInterfaceObject]
 interface AIO {
-    readonly attribute PinName name;
+    readonly attribute PinName pin;
     readonly attribute unsigned long precision;  // 10 or 12 bits
 
     unsigned long read();
@@ -40,7 +40,7 @@ interface AIO {
 // GPIO
 interface GPIOObject {
   GPIO open((PinName or GPIOOptions) init);
-  GPIO port((PinName or sequence<PinName>) port, optional GPIOOptions options);
+  GPIO port((PinName or sequence<PinName>) port, optional GPIOOptions init);
 };
 
 [NoInterfaceObject]
@@ -50,14 +50,13 @@ interface GPIO: {
   void close();
 
   attribute EventHandler<unsigned long> ondata;
-
 };
 
 GPIO implements EventEmitter;
 
 dictionary GPIOOptions {
-  PinName name;
-  PinMapping mapping = "os";
+  PinName pin;
+  PinMapping mapping = "system";
   GPIOMode mode = "out";
   boolean activeLow = false;
   GPIOEdge edge = "none";
@@ -74,8 +73,8 @@ interface PWMObject {
 };
 
 dictionary PWMOptions {
-  PinName name;
-  PinMapping mapping = "os";
+  PinName pin;
+  PinMapping mapping = "system";
   boolean reversePolarity = false;
   double period;
   double pulseWidth;
@@ -84,7 +83,7 @@ dictionary PWMOptions {
 
 [NoInterfaceObject]
 interface PWM {
-  readonly attribute PinName name;
+  readonly attribute PinName pin;
   readonly attribute boolean reversePolarity;
 
   void write(PWMValue value);

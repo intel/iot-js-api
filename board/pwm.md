@@ -26,13 +26,14 @@ See also the [Web IDL](./webidl.md) definition.
 Configures a PWM pin using data provided by the `options` argument. It runs the following steps:
 - If `options` is a string or number, create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`PWM`](#pwm) properties, but at least `name`
-  * `name` for pin name
-  * `mapping` for pin mapping, by default `"os"`
+  * `pin` for pin name
+  * `mapping` for pin mapping, either `"system"` or `"board"`, by default `"system"`
   * `reversePolarity`, by default `false`.
 - If any of the `init` properties is specified, but has invalid value on the board, throw `InvalidAccessError`.
-- Let `pwm` be the [`PWM`](#pwm) object representing the pin identified by the `init.name` in the `mapping` pin namespace and request the underlying platform to initialize PWM for the given pin. In case of failure, throw `InvalidAccessError`.
-- Initialize the `pwm.name` property with `init.name`.
-- Initialize the `pwm.reversePolarity` property with `init.reversePolarity`.
+- Let `mapping` be `init.mapping`.
+- Let the missing `init` properties take the default value.
+- Request the underlying platform to initialize PWM on the pin identified by `init.pin` in the namespace specified by `mapping` if that is defined. If not found, throw `InvalidAccessError`. If `mapping is not defined, then search `init.pin` first in the OS namespace, then in board namespace. In case of failure, throw `InvalidAccessError`.
+- Let `pwm` be the [`PWM`](#pwm) object representing the pin identified by the `init.pin` initialized by `init`.
 - Return the `pwm` object.
 
 <a name="pwm"></a>
@@ -41,8 +42,8 @@ Represents the properties and methods that expose PWM functionality.
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
-| `name`     | String or Number | no | `undefined`   | pin name |
-| `mapping`  | String | no | `"os"`   | pin mapping |
+| `pin`      | String or Number | no | `undefined`   | pin name |
+| `mapping`  | String | no | `"system"`   | pin mapping |
 | `reversePolarity` | boolean | yes |   `false`   | PWM polarity |
 | `write()`  | function | no | defined by implementation | set and enable PWM signal |
 | `stop()`   | function | no | defined by implementation | stop the PWM signal |
@@ -54,9 +55,9 @@ Represents the properties and methods that expose PWM functionality.
 | [`stop()`](#stop)        | stop the PWM signal        |
 | [`close()`](#close)      | close the pin              |
 
-The `name` property is an opaque number or string, representing a pin name.
+The `pin` property is an opaque number or string, representing a pin name.
 
-The `mapping` property represents the pin namespace, either `"board"` or `"os"`.
+The `mapping` property represents the pin namespace, either `"board"` or `"system"`.
 
 The `reversePolarity` property tells whether the PWM signal is active on 0. The default value is `false`.
 
