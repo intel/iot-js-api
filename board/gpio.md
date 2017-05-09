@@ -11,7 +11,7 @@ On certain boards, analog pins can also be used as GPIO.
 ### The GPIO API object
 When requiring `"gpio"`, the following steps are run:
 - If there is no permission for using the functionality, throw `SecurityError`.
-- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- If the GPIO functionality is not supported on the board, throw `"NotSupportedError"`.
 - Return an object that implements the following methods.
 
 | Method              | Description      |
@@ -33,7 +33,7 @@ The following dictionary is used for initializing GPIO pins and ports.
 | `edge`     | string | yes      | `"any"`       | Interrupt generation mode |
 | `state`    | string | yes      | `undefined`      | "pulldown", "pullup" |
 
-The `pin` property is either a number or string, with values defined by the OS or board documentation. The default valus is `undefined`.
+The `pin` property is either a number or string, with values defined by the OS or board documentation. The default value is `undefined`.
 
 The `mapping` property represents the pin namespace, either `"system"` or `"board"`, by default `"system"`.
 

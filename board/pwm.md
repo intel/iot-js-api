@@ -12,7 +12,7 @@ The term "channel" is used as the numeric index of a PWM pin relative to the PWM
 ### The PWM API object
 When requiring `"pwm"`, the following steps are run:
 - If there is no permission for using the functionality, throw `SecurityError`.
-- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- If the PWM functionality is not supported on the board, throw `"NotSupportedError"`.
 - Return an object that implements the following method.
 
 | Method              | Description      |

@@ -15,7 +15,7 @@ This API uses a [`Buffer`](../README.md/#buffer) object for both read and write.
 ### The I2C API object
 When requiring `"i2c"`, the following steps are run:
 - If there is no permission for using the functionality, throw `SecurityError`.
-- If the AIO functionality is not supported on the board, throw `"NotSupportedError"`.
+- If the I2C functionality is not supported on the board, throw `"NotSupportedError"`.
 - Return an object that implements the following method.
 
 | Method              | Description      |
