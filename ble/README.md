@@ -154,10 +154,8 @@ The `startadvertising()` method runs the following steps:
 <a name="stopadvertising"></a>
 ##### The `stopAdvertising()` method
 Requests the platform to stop sending advertisement packets. It runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Request from the underlying platform to stop the current advertisement.
-- If the request is unsuccessful, reject `promise` with an [`Error`](../README.md/#error) object `error` with `error.message` set to `"BluetoothStopAdvertisement"`.
-- Otherwise, if the request was successful, resolve `promise`.
+- If the request is unsuccessful, throw an [`Error`](../README.md/#error) object `error` with `error.message` set to `"BluetoothStopAdvertisement"`.
 
 <a name="addservice"></a>
 ##### The `addService(service)` method
@@ -288,17 +286,13 @@ The `needsResponse` property is a boolean that is by default `true`.
 <a name="respond"></a>
 ##### The `respond(data)` method
 Sends a response to the request. It executes the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Create a response to the request, and include `data` in the response.
 - Request from the underlying platform to send the response to the client.
-- If the request is unsuccessful, reject `promise` with an [`Error`](../README.md/#error) object `error` with `error.message` set to `"BluetoothSendResponse"`.
-- Otherwise, if the request was successful, resolve `promise`.
+- If the request is unsuccessful, throw an [`Error`](../README.md/#error) object `error` with `error.message` set to `"BluetoothSendResponse"`.
 
 <a name="errormethod"></a>
 ##### The `error(error)` method
 Sends an error response to the request. It executes the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Create an error response to the request, and include `error` in the response.
 - Request from the underlying platform to send the response to the client.
-- If the request is unsuccessful, reject `promise` with an [`Error`](../README.md/#error) object `error` with `error.message` set to `"BluetoothSendErrorResponse"`.
-- Otherwise, if the request was successful, resolve `promise`.
+- If the request is unsuccessful, throw an [`Error`](../README.md/#error) object `error` with `error.message` set to `"BluetoothSendErrorResponse"`.

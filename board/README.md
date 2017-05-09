@@ -37,7 +37,7 @@ If the functionality is not supported by the platform, `require` should throw `N
 
 <a name="board"></a>
 ### The `Board` interface
-Represents a hardware  circuit board such as Arduino 101.
+Represents a hardware circuit board such as Arduino 101.
 
 | Property          | Type   | Optional | Default value | Represents |
 | ---               | ---    | ---      | ---           | ---        |
