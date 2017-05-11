@@ -9,9 +9,11 @@ The [Board](#board) API provides low level interfaces for I/O operations:
   - [SPI - Serial Peripheral Interface](./spi.md)
   - [UART - Universal Asynchronous Receiver/Transmitter](./uart.md).
 
-Hardware pin names are usually marked on the circuit boards. However, operating systems, such as [Zephyr](https://www.zephyrproject.org/doc/) define a pin name mapping that is consistent across the boards supported by the OS. This API supports both board and OS defined namespaces. In this API, [`Pin`](#pin) names are opaque to the application. Applications can open a given pin with a pin name that is either a string or a number, in either board or OS namespace. Implementations encapsulate the pin mapping. Also, the API exposes board name, OS name (including OS version) and API version for all board APIs.
+Hardware pin names are usually marked on the circuit boards, that defines a board namespace for pins. However, operating systems, such as Linux, or [Zephyr](https://www.zephyrproject.org/doc/) define a pin name mapping that is consistent across the boards supported by the OS. This API supports both board and OS (system) defined namespaces. Pin names are opaque to the application, either strings or numbers that gain meaning in either the board or OS namespace. Also, the API exposes board name, OS name (including OS version) and API version for all board APIs.
 
-The supported board namespaces are listed in [this directory](./):
+Since it is generally easier for developers to just look at a given board and use the names printed there in the API, by default the board namespace is used, but developers can specify to use the system namespace as well. If a given pin value is not found in the default (or provided) namespace, an error is thrown: there is no fallback search in the other namespace.
+
+Examples for the supported board namespaces are listed in [this directory](./):
 - [arduino101.md](./arduino101.md)
 - [frdm_k64f.md](./frdm_k64f.md).
 

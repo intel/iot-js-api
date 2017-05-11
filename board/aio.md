@@ -25,7 +25,7 @@ Configures an AIO pin using data provided by the `options` argument. It involves
 - Otherwise if `options` is a number, create a dictionary 'init' and let `init.pin` be `options`.
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`AIO`](#aio) properties, where at least `pin` MUST be specified:
   * `pin` for board pin name with the valid values defined by the board, or for the numeric index of the analog pin;
-  * `mapping` to specify if OS or board namespace is to be used with the pin (by default `"system"`).
+  * `mapping` to specify if OS or board namespace is to be used with the pin (by default `"board"`).
   * `precision` for the bit width of a sample (if the board supports setting the sampling rate).
 - If any property of `init` is specified and has an invalid value,  throw `TypeError`.
 - Request the underlying platform to initialize AIO on the pin identified by `init.pin` in the namespace specified by `init.mapping` if that is defined. If not found, throw `InvalidAccessError`. If `init.mapping is not defined, then search `init.pin` first in the OS namespace, then in board namespace. In case of failure, throw `InvalidAccessError`.
@@ -40,7 +40,7 @@ Configures an AIO pin using data provided by the `options` argument. It involves
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
 | `pin`      | String or Number | no | `undefined`  | pin name |
-| `mapping`   | enum | no | `"system"`  | pin mapping, `"system"` or `"board"` |
+| `mapping`   | enum | no | `"board"`  | pin mapping, `"system"` or `"board"` |
 | `precision` | unsigned long | yes | `undefined` | bit length of digital sample |
 
 | Method              | Description      |
@@ -65,12 +65,12 @@ Called when the application is no longer interested in the pin. Until the next [
 try {
   var aio = require("aio");  // initialize AIO on the board
 
-  var a1 = aio.open(1);  // pin 1 in OS namespace
+  var a1 = aio.open("A1");  // pin 1 in board namespace
   console.log(board.name + " AIO pin 1 value: " + a1.read());
   a1.close();
 
-  // Open pin A4 in board namespace, i.e. the value printed on the board
-  var a4 = aio.open({pin: "A4", mapping: "board", precision: 12 });
+  // Open pin A4 in system namespace
+  var a4 = aio.open({pin: "ADC4", mapping: "system", precision: 12 });
 
   setTimeout(function() {
     a4.close();

@@ -24,7 +24,7 @@ interface AIOObject {
 
 dictionary AIOOptions {
   PinName pin;
-  PinMapping mapping = "system";
+  PinMapping mapping = "board";
   unsigned long precision = 10;
 };
 
@@ -56,7 +56,7 @@ GPIO implements EventEmitter;
 
 dictionary GPIOOptions {
   PinName pin;
-  PinMapping mapping = "system";
+  PinMapping mapping = "board";
   GPIOMode mode = "out";
   boolean activeLow = false;
   GPIOEdge edge = "none";
@@ -74,7 +74,7 @@ interface PWMObject {
 
 dictionary PWMOptions {
   PinName pin;
-  PinMapping mapping = "system";
+  PinMapping mapping = "board";
   boolean reversePolarity = false;
   double period;
   double pulseWidth;

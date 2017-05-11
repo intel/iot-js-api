@@ -27,7 +27,7 @@ The following dictionary is used for initializing GPIO pins and ports.
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
 | `pin `     | String or Number | no | `undefined`   | pin name |
-| `mapping`  | String | no | `"system"`   | pin mapping |
+| `mapping`  | String | no | `"board"`   | pin mapping |
 | `mode`     | String | no       | `undefined`   | I/O mode |
 | `activeLow` | boolean | yes   | `false` | whether the pin is active on logical low |
 | `edge`     | string | yes      | `"any"`       | Interrupt generation mode |
@@ -35,7 +35,7 @@ The following dictionary is used for initializing GPIO pins and ports.
 
 The `pin` property is either a number or string, with values defined by the OS or board documentation. The default value is `undefined`.
 
-The `mapping` property represents the pin namespace, either `"system"` or `"board"`, by default `"system"`.
+The `mapping` property represents the pin namespace, either `"system"` or `"board"`, by default `"board"`.
 
 The `mode` property MUST take the value `"in"` or `"out"`. The default value is `"out"`.
 

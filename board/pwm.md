@@ -27,7 +27,7 @@ Configures a PWM pin using data provided by the `options` argument. It runs the 
 - If `options` is a string or number, create a dictionary `init` and use the value of `options` to initialize the `init.pin` property.
 - Otherwise if `options` is a dictionary, let `init` be `options`. It may contain the following [`PWM`](#pwm) properties, but at least `name`
   * `pin` for pin name
-  * `mapping` for pin mapping, either `"system"` or `"board"`, by default `"system"`
+  * `mapping` for pin mapping, either `"system"` or `"board"`, by default `"board"`
   * `reversePolarity`, by default `false`.
 - If any of the `init` properties is specified, but has invalid value on the board, throw `InvalidAccessError`.
 - Let `mapping` be `init.mapping`.
@@ -43,7 +43,7 @@ Represents the properties and methods that expose PWM functionality.
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
 | `pin`      | String or Number | no | `undefined`   | pin name |
-| `mapping`  | String | no | `"system"`   | pin mapping |
+| `mapping`  | String | no | `"board"`   | pin mapping |
 | `reversePolarity` | boolean | yes |   `false`   | PWM polarity |
 | `write()`  | function | no | defined by implementation | set and enable PWM signal |
 | `stop()`   | function | no | defined by implementation | stop the PWM signal |
