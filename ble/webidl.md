@@ -19,7 +19,7 @@ interface BluetoothPeripheralDevice {
 
     Promise<AdvertisingOptions> startAdvertising(Advertisement advertisement,
                                            optional AdvertisingOptions options);
-    Promise stopAdvertising();
+    void stopAdvertising();  // Promise?
 
     readonly attribute boolean enabled;
     attribute EventHandler onenabledchange;
@@ -125,8 +125,8 @@ interface Request {
     readonly attribute Buffer? data = null;
     readonly attribute boolean needsResponse;
 
-    Promise respond(optional Buffer data);
-    Promise respondWithError(Error error);
+    void respond(optional Buffer data);  // Promise?
+    void respondWithError(Error error);  // Promise?
 };
 
 enum RequestType { "read", "write", "notify", "subscribe", "unsubscribe"};

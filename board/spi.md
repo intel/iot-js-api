@@ -11,9 +11,34 @@ Since the SS pins may be connected to slave chip select through a demultiplexer 
 
 This API uses a [`Buffer`](../README.md/#buffer) object for both read and write data.
 
-The API object
---------------
-SPI functionality is exposed by the [`SPI`](#spi) object that can be obtained by using the [spi() method of the `Board` API](./README.md/#spi). See also the [Web IDL](./webidl.md).
+<a name="apiobject"></a>
+### The SPI API object
+When requiring `"spi"`, the following steps are run:
+- If there is no permission for using the functionality, throw `SecurityError`.
+- If the SPI functionality is not supported on the board, throw `"NotSupportedError"`.
+- Return an object that implements the following method.
+
+| Method              | Description      |
+| ---                 | ---              |
+| [`open()`](#open)   | synchronous open |
+
+See also the [Web IDL](./webidl.md) definition.
+
+<a name="open"></a>
+#### The `SPI open(options)` method
+Configures an SPI bus using data provided by the `options` argument. It runs the following steps:
+- Let `spi` be an [`SPI`](#spi) object.
+- If `options` is a dictionary and the `options.bus` property is a number between 0 and 127, let `spi.bus` be `options.bus`, otherwise select the platform default value, and if that is not available, set the value to 0.
+- If `options.speed` is not a number, let `spi.speed` be 10. Otherwise, set `spi.speed` to the closest matching value that is lower than `options.speed` and is supported by the platform.
+- If `options.msbFirst` is `false`, set `spi.msbFirst` to `false`, otherwise set it to `true`.
+- If `options.bits` is in the set {1, 2, 4, 8, 16 }, then set `spi.bits` to `option.bits`, otherwise set it to the value 4.
+- If `options.polarity` is 0, then set `spi.polarity` to 0, otherwise set `spi.polarity` to 2.
+- If `options.phase` is 0, then set `spi.phase` to 0, otherwise set `spi.phase` to 1.
+- Request the underlying platform to initialize the SPI `spi.bus` with `spi.speed` on the board. The implementation will use the board mapping from the value of `bus` to the set of physical pins used for the bus.
+- In case of failure in any of the steps above, return `null`.
+- Set `spi.frameGap` to 0. Request the underlying platform to provide the SPI inter-frame delay value expressed in nanoseconds and if the request successfully completes, then set `spi.frameGap` to that value.
+- Set `spi.topology` to `"full-duplex"`. Request the underlying platform to provide the SPI transfer mode and if the request successfully completes, then set `spi.topology` to the corresponding value.
+- Return `spi`.
 
 <a name="spi"></a>
 ### The `SPI` interface
@@ -64,58 +89,35 @@ The `topology` property describes the SPI master-slave connection type. This val
 - `"multiplexed"`: 4 SS lines are connected to a decoder that can activate up to 15 slave devices. This works as full-duplex.
 - `"daisy-chain"`: the master uses one SS and one SCLK (clock) line for all slaves. The MOSI line from the master goes to the first slave's MOSI pin, the MISO line of that slave goes to the MOSI pin of the next slave, and so forth. The last slave's MISO line is connected to the master's MISO pin.
 
-<a name="init"></a>
-#### SPI initialization
-This internal algorithm is used by the [`Board.spi()`](./README.md/#spi) method. It configures the SPI bus and bus speed provided by the `options` dictionary argument.
-- Let `spi` be an [`SPI`](#spi) object.
-- If `options` is a dictionary and the `options.bus` property is a number between 0 and 127, let `spi.bus` be `options.bus`, otherwise select the platform default value, and if that is not available, set the value to 0.
-- If `options.speed` is not a number, let `spi.speed` be 10. Otherwise, set `spi.speed` to the closest matching value that is lower than `options.speed` and is supported by the platform.
-- If `options.msbFirst` is `false`, set `spi.msbFirst` to `false`, otherwise set it to `true`.
-- If `options.bits` is in the set {1, 2, 4, 8, 16 }, then set `spi.bits` to `option.bits`, otherwise set it to the value 4.
-- If `options.polarity` is 0, then set `spi.polarity` to 0, otherwise set `spi.polarity` to 2.
-- If `options.phase` is 0, then set `spi.phase` to 0, otherwise set `spi.phase` to 1.
-- Request the underlying platform to initialize the SPI `spi.bus` with `spi.speed` on the board. The implementation will use the board mapping from the value of `bus` to the set of physical pins used for the bus.
-- In case of failure in any of the steps above, return `null`.
-- Set `spi.frameGap` to 0. Request the underlying platform to provide the SPI inter-frame delay value expressed in nanoseconds and if the request successfully completes, then set `spi.frameGap` to that value.
-- Set `spi.topology` to `"full-duplex"`. Request the underlying platform to provide the SPI transfer mode and if the request successfully completes, then set `spi.topology` to the corresponding value.
-- Return `spi`.
-
 <a name="transceive"></a>
 #### The `transceive(device, buffer)` method
 Writes a [`Buffer`](../README.md/#buffer) `buffer` using SPI to the slave identified by the `device` argument, and reads another [`Buffer`](../README.md/#buffer) from the slave device that is returned. The method runs the following steps:
-- Return a [`Promise`](../README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- If `device` is not a number between 0 and 127, reject `promise` with `TypeError` and terminate these steps.
-- Create a [`Buffer`](../README.md/#buffer) from `buffer` (may be empty). If that fails, reject `promise` with `TypeError` and terminate these steps.
-- Request the underlying platform to write the specified `buffer` to the specified device and read another [`Buffer`](../README.md/#buffer) `readBuffer`. The implementation maps the value of `device` to the physical SS (slave select) pins on the board.
-If the operation fails, reject `promise`.
-- Otherwise, resolve `promise` with `readBuffer`.
+- If `device` is not a number between 0 and 127, Throw `TypeError` and terminate these steps.
+- Request the underlying platform to write the bytes specified in `buffer` to the specified device and read another [`Buffer`](../README.md/#buffer) `readBuffer`. The implementation maps the value of `device` to the physical SS (slave select) pins on the board. If the operation fails, throw `SystemError` and abort these steps.
+- Return `readBuffer`.
 
 <a name="close"></a>
 #### The `close()` method
-Closes the current [`SPI`](#spi) bus and interrupts all pending operations.
+Closes the current [`SPI`](#spi) bus and cancels all pending operations.
 
 ### Examples
 
 ```javascript
 try {
-  var board = require("board");
+  var spi = require("spi").open();  // open the default SPI bus
 
-  board.spi().then(function(spi) {
-    console.log("SPI bus " + spi.bus + " opened with bus speed " + spi.speed);
-    console.log("SPI mode: " + spi.mode);
-    console.log("Data bits: " + spi.bits);
-    console.log("Speed [MHz]: " + spi.speed);
-    console.log("MSB first: " + (spi.msbFirst ?  "true" : "false"));
+  console.log("SPI bus " + spi.bus + " opened with bus speed " + spi.speed);
+  console.log("SPI mode: " + spi.mode);
+  console.log("Data bits: " + spi.bits);
+  console.log("Speed [MHz]: " + spi.speed);
+  console.log("MSB first: " + (spi.msbFirst ?  "true" : "false"));
 
-    spi.transceive(0, [1, 2, 3]).then(function(buffer) {
-        // Buffer object
-        console.log("From SPI device 0: " + buffer.toString());
-        spi.close();
-      });
-    });
-  }).catch(function(err) {
-    console.log("SPI error: " + err.message);
-  });
+  var buffer = spi.transceive(0, [1, 2, 3]);
+  console.log("From SPI device 0: " + buffer.toString());
+
+  spi.close();
+} catch (err) {
+  console.log("SPI error: " + err.message);
 }
 ```
 
