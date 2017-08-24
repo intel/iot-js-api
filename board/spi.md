@@ -9,7 +9,13 @@ When a slave device's chip select is 0 (low), then it communicates with the mast
 
 Since the SS pins may be connected to slave chip select through a demultiplexer and thereby work as an address bus, slave devices are identified by an index in this API, rather than by SS pins. Also, since multiple SPI buses may be present on a board, these are identified by an index in this API. Implementations SHOULD encapsulate the mapping from SPI bus number and device number to the physical SPI pins.
 
-This API uses a [`Buffer`](../README.md/#buffer) object for both read and write data.
+Commmunication with SPI devices is defined in the terms of SPI transactions:
+- configure SPI
+- start the transaction
+- data transfer (one or more times)
+- close the transaction.
+
+This API uses a [`Buffer`](../README.md/#buffer) object for both read and write data. An SPI transaction is started by invoking the [`open()`](#open) method that configures and starts SPI and returns a control object on which applications can invoke the [`transceive()`](#transceive) method multiple times, then are supposed to invoke [`close()`](#close) in order to close the SPI transaction.
 
 <a name="apiobject"></a>
 ### The SPI API object
@@ -26,23 +32,7 @@ See also the [Web IDL](./webidl.md) definition.
 
 <a name="open"></a>
 #### The `SPI open(options)` method
-Configures an SPI bus using data provided by the `options` argument. It runs the following steps:
-- Let `spi` be an [`SPI`](#spi) object.
-- If `options` is a dictionary and the `options.bus` property is a number between 0 and 127, let `spi.bus` be `options.bus`, otherwise select the platform default value, and if that is not available, set the value to 0.
-- If `options.speed` is not a number, let `spi.speed` be 10. Otherwise, set `spi.speed` to the closest matching value that is lower than `options.speed` and is supported by the platform.
-- If `options.msbFirst` is `false`, set `spi.msbFirst` to `false`, otherwise set it to `true`.
-- If `options.bits` is in the set {1, 2, 4, 8, 16 }, then set `spi.bits` to `option.bits`, otherwise set it to the value 4.
-- If `options.polarity` is 0, then set `spi.polarity` to 0, otherwise set `spi.polarity` to 2.
-- If `options.phase` is 0, then set `spi.phase` to 0, otherwise set `spi.phase` to 1.
-- Request the underlying platform to initialize the SPI `spi.bus` with `spi.speed` on the board. The implementation will use the board mapping from the value of `bus` to the set of physical pins used for the bus.
-- In case of failure in any of the steps above, return `null`.
-- Set `spi.frameGap` to 0. Request the underlying platform to provide the SPI inter-frame delay value expressed in nanoseconds and if the request successfully completes, then set `spi.frameGap` to that value.
-- Set `spi.topology` to `"full-duplex"`. Request the underlying platform to provide the SPI transfer mode and if the request successfully completes, then set `spi.topology` to the corresponding value.
-- Return `spi`.
-
-<a name="spi"></a>
-### The `SPI` interface
-Represents the properties and methods that expose SPI functionality. The `SPI` object has the following read-only properties:
+Configures an SPI bus using data provided by the `options` argument.
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---        |
@@ -53,11 +43,30 @@ Represents the properties and methods that expose SPI functionality. The `SPI` o
 | `polarity` | long   | yes      | 0             | clock polarity, 0 or 2 |
 | `phase`    | long   | yes      | 0             | clock phase, 0 or 1 |
 | `frameGap` | unsigned long | yes | `undefined` | inter-frame gap in nanoseconds |
-| `topology` | string | yes      | `undefined` | SPI master-slave transfer topology |
+| `topology` | string | yes      |`"full-duplex"`| SPI master-slave topology |
 
-| Method signature  | Description            |
+The `open()` method runs the following steps:
+- If `options` is a dictionary and the `options.bus` property is `undefined`, then set `options.bus` to 0.
+- Otherwise if `options.bus` is not a number between 0 and 127, throw `TypeError` and abort these steps.
+- If `options.speed` is `undefined`, let `options.speed` be 10. Otherwise, set `options.speed` to the closest matching value that is lower than `options.speed` and is supported by the platform.
+- If `options.msbFirst` is `undefined`, set it to `true`.
+- If `options.bits` is not in the set {1, 2, 4, 8, 16 }, then set it to the value 4.
+- If `options.polarity` is `undefined`, set it to 0. If it is not 0, set it to 2.
+- If `options.phase` is `undefined`, set it to 0. If it is not 0, set it to 1.
+- If `spi.frameGap` is defined, request the underlying platform to set the SPI inter-frame delay value expressed in nanoseconds. If the request fails or it is not supported, set `spi.frameGap` to `undefined`.
+- If `spi.topology` is defined, use its value to initialize SPI on the underlying platform. If that fails, or it is not supported, set `spi.topology` to the default value `"full-duplex"`. This will define the behaviour of [`transceive()`](#transceive).
+- Request the underlying platform to initialize SPI with `options`. The implementation will use the board mapping from the value of `options.bus` to the set of physical pins used for the bus.
+- In case of failure in any of the steps above, throw `SystemError`.
+- Let `spi` be an [`SPI`](#spi) object that controls the initialized SPI bus.
+- Return `spi`.
+
+<a name="spi"></a>
+### The `SPI` interface
+Exposes SPI functionality and represents one SPI transaction that has begun by calling [`open()`](#open). Applications can invoke the [`transceive()`](#transceive) method multiple times, then are supposed to invoke [`close()`](#close) in order to release the SPI bus.
+
+| Method            | Description            |
 | ---               | ---                    |
-| [`transceive(device, buffer)`](#transceive) | read or write device(s) |
+| [`transceive()`](#transceive) | read or write device(s) |
 | [`close()`](#close) | close the SPI bus |
 
 The `bus` property denotes the SPI bus number between 0 and 127.
@@ -82,23 +91,35 @@ The sum of the `polarity` and `phase` property values provides the SPI mode (thi
 
 The `frameGap` property denotes the inter-frame gap in milliseconds on the platforms this is supported. The default value is 0.
 
-The `topology` property describes the SPI master-slave connection type. This value may be provided by implementations that support the feature, but it is not mandatory. Applications can check whether the property is defined. The values can be the following:
+The `topology` property describes the SPI master-slave connection type. The values can be the following:
 - `"full-duplex"`: the slave devices are connected to the master via separate SS (Slave Select) lines that each activate one slave device. Prior to communication, the master must activate one device by driving the corresponding SS to 0, then data transfer is bidirectional. This is the default value.
-- `"single-read"`: the slaves are connected to the master as above. When a slave is activated, the data is read by the master.
-- `"single-write"`: the slaves are connected to the master as above. The master can activate any number of SS lines and the data is read by all activated slaves.
-- `"multiplexed"`: 4 SS lines are connected to a decoder that can activate up to 15 slave devices. This works as full-duplex.
-- `"daisy-chain"`: the master uses one SS and one SCLK (clock) line for all slaves. The MOSI line from the master goes to the first slave's MOSI pin, the MISO line of that slave goes to the MOSI pin of the next slave, and so forth. The last slave's MISO line is connected to the master's MISO pin.
+- `"read"`: the slaves are connected to the master as above. When a slave is activated, the data is read by the master.
+- `"write"`: the slaves are connected to the master as above. The master can activate any number of SS lines and the data is written to all activated slaves.
+- `"multiplexed"`: a number`n` of SS lines are connected to a decoder that can activate up to `2^n - 1` number of slave devices. This works as full-duplex.
+- `"daisy-chain"`: the master uses one SS and one SCLK (clock) line for all slaves. The MOSI line from the master goes to the first slave's MOSI pin, the MISO line of that slave goes to the MOSI pin of the next slave, and so forth. The last slave's MISO line is connected to the master's MISO pin. This is also bidirectional.
 
 <a name="transceive"></a>
-#### The `transceive(device, buffer)` method
-Writes a [`Buffer`](../README.md/#buffer) `buffer` using SPI to the slave identified by the `device` argument, and reads another [`Buffer`](../README.md/#buffer) from the slave device that is returned. The method runs the following steps:
-- If `device` is not a number between 0 and 127, Throw `TypeError` and terminate these steps.
-- Request the underlying platform to write the bytes specified in `buffer` to the specified device and read another [`Buffer`](../README.md/#buffer) `readBuffer`. The implementation maps the value of `device` to the physical SS (slave select) pins on the board. If the operation fails, throw `SystemError` and abort these steps.
+#### The `transceive(target, buffer, direction)` method
+Writes [`buffer`](../README.md/#buffer) `buffer` using SPI to the slave identified by the `target` argument, and reads from the slave device into a [`readBuffer`](../README.md/#buffer) that is returned. The method runs the following steps:
+- If `target` is not a number between 0 and 127, throw `TypeError` and abort these steps. Depending on SPI topology, multiple slave devices may be possible to select. The value of `target` may denote one single address, or an index of a device, or a multicast address (e.g. `0b110` could enable slaves 2 and 1 and leave slave 0 off).
+- Check the valid combinations of `this.topology` and `direction` values from the following table. If `direction` is `undefined` or `null`, let it take the default value.
+
+| `this.topology` | `direction` |
+| ---             | ---         |
+| `"read"`        | `"read"` (default)  |
+| `"write"`       | `"write"` (default) |
+| `"full-duplex"` | `"read-write"` (default), `"read"`, `"write"` |
+| `"multiplexed"` | `"read-write"` (default), `"read"`, `"write"` |
+| `"daisy-chain"` | `"read-write"` (default), `"read"`, `"write"` |
+
+In any other case, throw `SystemError` and abort these steps.
+- If `direction` allows reading, let `readBuffer` be a new [`Buffer`](../README.md/#buffer), otherwise let `readBuffer` be `null`.
+- Request the underlying platform to perform the data transfer, i.e. write the bytes specified in `writeBuffer` to the specified target if `direction` allows writing and read another [`Buffer`](../README.md/#buffer) `readBuffer` if `direction` allows reading. The implementation maps the value of `target` to the physical SS (slave select) pins on the board. If the operation fails, throw `SystemError` and abort these steps.
 - Return `readBuffer`.
 
 <a name="close"></a>
 #### The `close()` method
-Closes the current [`SPI`](#spi) bus and cancels all pending operations.
+Closes the current [`SPI`](#spi) transaction and cancels all pending operations. The implementation SHOULD NOT explicitly reset or change the existing SPI configuration.
 
 ### Examples
 
