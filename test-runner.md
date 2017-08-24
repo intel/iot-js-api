@@ -156,15 +156,16 @@ A string which will be passed to `require()` in order to load the OCF device.
 #### `preamble( uuid )`
 A function which returns a string and receives as its argument the uuid that the child process(es) in the test instance will be given. When `preamble()` is given, for each child process a temporary file is created consisting of the string returned by `preamble()` followed by the body of the test. This file is then launched in a child process.
 
-The tests make two assumptions about the environment in which they run:
+The tests make the following assumptions about the environment in which they run:
 
   0. `console.log()` is a function that writes to standard output.
+  0. `require()` is a function that can load a JavaScript module.
   0. `process.argv[]` is an array containing the command line arguments passed by the suite. These are:
       <dl>
       <dt><code>process.argv[ 0 ]</code></dt><dd>The interpreter</dd>
       <dt><code>process.argv[ 1 ]</code></dt><dd>The filename of the test</dd>
       <dt><code>process.argv[ 2 ]</code></dt><dd>A UUID that helps a client distinguish its server counterpart from other devices that may be present on the network.</dd>
-      <dt><code>process.argv[ 3 ]</code></dt><dd>The argument the test file should pass to ```require()``` (the <code>location</code> option).</dd>
+      <dt><code>process.argv[ 3 ]</code></dt><dd>The argument the test file should pass to `require()` (the <code>location</code> option).</dd>
       </dl>
 
 Thus, if the environment in which you wish to run the tests does not provide these values, you can use the `preamble()` option to prepend code to the file. For example:
