@@ -105,7 +105,7 @@ Promise.all( [
 						return result;
 					} )( resource, [
 						"resourcePath", "resourceTypes", "interfaces", "slow", "discoverable",
-						"observable", "secure", "active", "properties"
+						"observable", "active", "properties"
 					] ),
 					{
 						resourcePath: "/a/something",
@@ -114,7 +114,6 @@ Promise.all( [
 						slow: false,
 						discoverable: false,
 						observable: false,
-						secure: false,
 						active: true,
 						properties: {}
 					}, "Legitimate resource creation successful with correct result"
