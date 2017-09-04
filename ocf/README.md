@@ -46,7 +46,7 @@ If the functionality is not supported by the platform, `require` should throw `N
 When `require` is successful, it MUST return an object with the following properties and methods.
 
 |Property    |Type     |Optional |Default value | Represents  |
-| ---        | ---     | ---     | ---          |
+| ---        | ---     | ---     | ---          | ---         |
 | `version`  | string  | no      | `versions.ocf` in [`package.json`](../package.json) | API version |
 
 | Method signature                | Description                |
