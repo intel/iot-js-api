@@ -34,7 +34,7 @@ console.log( JSON.stringify( { assertionCount: 20 } ) );
 
 function doOneRetrieveAndObserve( prefix, resource ) {
 	client
-		.retrieve( resource )
+		.retrieve( { deviceId: resource.deviceId, resourcePath: resource.resourcePath } )
 		.then( function( resource ) {
 			resource.on( "update", Listener( prefix, 10 ) );
 		} )
