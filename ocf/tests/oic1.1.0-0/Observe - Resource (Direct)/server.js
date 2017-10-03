@@ -24,17 +24,6 @@ ocf.device.name = "test-device-" + process.argv[ 2 ];
 
 console.log( JSON.stringify( { assertionCount: 3 } ) );
 
-// Multiply a value by a scale given in the options
-function transformSensorData( options ) {
-	var scale = ( options && "scale" in options ) ? ( +options.scale ) : 1;
-
-	if ( isNaN( scale ) ) {
-		scale = 1;
-	}
-
-	return { value: this.properties.value * scale };
-}
-
 function fakeSensorLoop( resource ) {
 	var notificationCount = 0;
 	function timeout() {
@@ -74,7 +63,7 @@ server
 	} )
 	.then(
 		function( resource ) {
-			resource.ontranslate( transformSensorData ).onretrieve( function( request ) {
+			resource.onretrieve( function( request ) {
 				oldObserverCount = observerCount;
 				observerCount += ( "observe" in request ) ? ( request.observe ? 1 : -1 ) : 0;
 
@@ -95,7 +84,7 @@ server
 									arguments: [
 										timeoutId === 0,
 										"Server: Timeout was removed by the time the last " +
-											"observer has signed off"
+											"observer signed off"
 									] } ) );
 								console.log( JSON.stringify( { finished: 0 } ) );
 							}
