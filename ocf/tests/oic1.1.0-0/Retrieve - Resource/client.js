@@ -27,7 +27,7 @@ function resourcefound( resource ) {
 					"Client: Retrieved resource is the discovered resource"
 				] } ) );
 				console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
-					retrievedResource.properties, { value: 42 },
+					retrievedResource.properties, { value: 42, arrayValue: [ 4, 5, 6 ] },
 					"Client: Retrieved resource properties are as expected"
 				] } ) );
 			},
@@ -45,7 +45,7 @@ function resourcefound( resource ) {
 		.then(
 			function( retrievedResource ) {
 				console.log( JSON.stringify( { assertion: "deepEqual", arguments: [
-					retrievedResource.properties, { value: -42 },
+					retrievedResource.properties, { value: -42, arrayValue: [ 4, 5, 6 ] },
 					"Client: Retrieved resouce properties change based on query options"
 				] } ) );
 			},

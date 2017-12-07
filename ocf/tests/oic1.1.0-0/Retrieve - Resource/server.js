@@ -24,7 +24,7 @@ function transformSensorData( options ) {
 		scale = 1;
 	}
 
-	return { value: this.properties.value * scale };
+	return { value: this.properties.value * scale, arrayValue: this.properties.arrayValue };
 }
 
 server
@@ -39,7 +39,8 @@ server
 			var requestCount = 0;
 
 			resource.properties = {
-				value: 42
+				value: 42,
+				arrayValue: [ 4, 5, 6 ]
 			};
 			resource.ontranslate( transformSensorData ).onretrieve( function( request ) {
 				if ( requestCount++ > 1 ) {
