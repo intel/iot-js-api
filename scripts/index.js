@@ -26,9 +26,12 @@ function identityLineFilter( value ) {
 	return value;
 }
 
-function spawn( interpreter, commandLine ) {
+function spawn( interpreter, commandLine, name ) {
 	return childProcess.spawn( interpreter, commandLine, {
-		stdio: [ process.stdin, "pipe", process.stderr ]
+		stdio: [ process.stdin, "pipe", process.stderr ],
+		env: _.extend( {}, process.env, {
+			LOG_PREFIX: name
+		} )
 	} );
 }
 
@@ -62,7 +65,7 @@ function spawnOne( assert, options ) {
 		commandLine[ 0 ] = temporary.name;
 	}
 
-	theChild = options.spawn( options.interpreter, commandLine );
+	theChild = options.spawn( options.interpreter, commandLine, options.name );
 	theChild.path = options.path;
 
 	runningProcesses.push( theChild );
