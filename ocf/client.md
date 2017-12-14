@@ -74,6 +74,7 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
 | `mediaTypes`    | array of strings | no    | `[]` | List of supported Internet media types |
 | `discoverable`  | boolean | no    | `true` | Whether the resource is discoverable |
 | `observable`    | boolean | no    | `true` | Whether the resource is observable |
+| `endpoints`     | array of strings | no    | `[endpoint]` | List of resource endpoints |
 | `links`         | array of ResourceLink | no    | `undefined` | Collection of links |
 | `secure`        | boolean | no    | `true` | Whether the resource is secure |
 | `slow`          | boolean | yes   | `false` | Whether the resource is constrained |
@@ -86,6 +87,8 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
  Either the `properties` or the `links` property MUST be defined.
 
  The `interfaces` property MUST at least contain `"oic.if.baseline"`.
+
+ The `endpoints` property is an array of strings. Each string is a URI consisting of an origin (scheme and authority). It MUST contain at least one endpoint.
 
 <a name="clientresource"></a>
 ### 1.3. The `ClientResource` object
@@ -252,11 +255,12 @@ The method runs the following steps:
 <a name="client-methods"></a>
 ## 4. Client methods
 <a name="create"></a>
-##### 4.1. The `create(resource, target)` method
+##### 4.1. The `create(resource, target, endpoint)` method
 - Creates a remote resource on a given device, and optionally specifies a target resource that is supposed to create the new resource. The device's [`oncreate`](./server.md/#oncreate) event handler takes care of dispatching the request to the target resource that will handle creating the resource, and responds with the created resource, or with an error.
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
 - The optional `target` argument is a [ResourceId](#resourceid) object that contains at least a device UUID and a resource path that identifies the target resource responsible for creating the requested resource.
 - The `resource` argument is a [Resource](#resource) object. It should contain at least the properties that don't have default values in the [resource registration steps](./server.md/#register): `resourcePath` and `resourceTypes`.
+- The `endpoint` argument is a string holding a valid URI consisting of the origin (scheme and authority) of the endpoint which receives the request.
 
 The method sends a request to the device specified in `target` and the device's `create` event handler takes care of creating the resource and replying with the created resource, or with an error.
 
@@ -268,7 +272,7 @@ The method runs the following steps:
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="retrieve"></a>
-##### 4.2. The `retrieve(resourceId, options, listener)` method
+##### 4.2. The `retrieve(resourceId, options, listener, endpoint)` method
 - Retrieves a resource based on resource id by sending a request to the device specified in `resourceId.deviceId`. The device's [`retrieve`](./server.md/#onretrieve) event handler takes care of fetching the resource representation and replying with the created resource, or with an error.
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
 - The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path. Note that any [`Resource`](#resource) object can also be provided.
@@ -276,6 +280,7 @@ The method runs the following steps:
 - The `listener` argument is optional, and is an event listener for the `ClientResource` [`update`](#onresourceupdate) event that is added on the returned [`ClientResource`](#resource) object.
 In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that resource (and get a retrieve response with a resource representation for each resource change).
 If a listener is provided, the OCF observe flag is turned on, otherwise it is turned off. If implementations need to make internal retrieve requests, the value of the OCF observe flag SHOULD be preserved unless there have been errors and observing is turned off.
+- The `endpoint` argument is a string holding a valid URI consisting of the origin (scheme and authority) of the endpoint which receives the request.
 
 The `options` argument usually contains the interface the retrieve method if called on, denoted by the `if` property.
 For instance,
@@ -296,10 +301,11 @@ The method runs the following steps:
 - If there is an OCF protocol error during observation, fire an [`error`](#onerror) event with a new [`OcfObserveError`](../README.md/#ocferror) object `error` with `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.resourcePath`.
 
 <a name="update"></a>
-##### 4.3. The `update(resource)` method
+##### 4.3. The `update(resource, endpoint)` method
 - Updates a resource on the network by sending a request to the device specified by `resource.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource` is updated.
 - Returns: a [`Promise`](./README.md/#promise) object.
 - The `resource` argument is a [Resource](#resource) object.
+- The `endpoint` argument is a string holding a valid URI consisting of the origin (scheme and authority) of the endpoint which receives the request.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
@@ -307,10 +313,11 @@ The method runs the following steps:
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="delete"></a>
-##### 4.4. The `delete(resourceId)` method
+##### 4.4. The `delete(resourceId, endpoint)` method
 - Deletes a resource from the network by sending a request to the device specified in `resourceId.deviceId`. The device's [`delete`](./server.md/#ondelete) event handler takes care of deleting (unregistering) the resource and reporting success or error.
 - Returns: a [`Promise`](./README.md/#promise) object.
 - The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path that identifies the resource to be deleted.
+- The `endpoint` argument is a string holding a valid URI consisting of the origin (scheme and authority) of the endpoint which receives the request.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
