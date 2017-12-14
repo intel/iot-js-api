@@ -2,7 +2,7 @@ Client API
 ==========
 
 - The [OcfClient](#ocfclient) object
-  * The [ResourceId](#resourceid) dictionary
+  * The [Destination](#destination) dictionary
   * The [Resource](#resource) dictionary
   * The [ClientResource](#clientresource) interface
 
@@ -34,24 +34,34 @@ The OCF Client API implements CRUDN (Create, Retrieve, Update, Delete, Notify) f
 | Client method signature              | Description                |
 | ---                                  | ---                        |
 | [`create(target, resource)`](#create)                  | create a resource |
-| [`retrieve(resourceId, options, listener)`](#retrieve) | retrieve/observe a resource |
+| [`retrieve(destination, options, listener)`](#retrieve) | retrieve/observe a resource |
 | [`update(resource)`](#update)                          | update a resource |
-| [`delete(resourceId)`](#delete)                        | delete a resource |
-| [`configure(deviceId, options)`](#configure)           | configure a remote device |
+| [`delete(destination)`](#delete)                        | delete a resource |
+| [`configure(destination, options)`](#configure)           | configure a remote device |
 
 ## Structures
-<a name="resourceid"></a>
-### 1.1. The `ResourceId` dictionary
+<a name="endpoint"></a>
+### 1.1. The `Endpoint` dictionary
+Identifies an endpoint of an OCF resource. This is the address of the resource on the local network given as an [origin](https://url.spec.whatwg.org/#origin) string, and a priority value.
+
+| Property | Type | Optional | Default value | Represents |
+| ---   |---    |---   |---   |---   |
+| `origin` | string | no | "" | origin of the resource |
+| `priority` | number | no | 1 | priority of the endpoint |
+
+<a name="destination"></a>
+### 1.2. The `Destination` dictionary
 Identifies an OCF resource by the UUID of the device that hosts the resource, and the URI path of the resource that uniquely identifies the resource inside a device.
 
 | Property   | Type   | Optional | Default value | Represents |
 | ---        | ---    | ---      | ---           | ---     |
 | `deviceId` | string | no       | `undefined`   | UUID of the device |
 | `resourcePath` | string | no       | `undefined`   | URI path of the resource |
+| `destination` | Endpoint | yes | `undefined` | endpoint to use for request |
 
 <a name="resourcelink"></a>
-### 1.2. The `ResourceLink` dictionary
-Extends `ResourceId`. Represents an OCF resource Link used in Collections.
+### 1.3. The `ResourceLink` dictionary
+Extends `Destination`. Represents an OCF resource Link used in Collections.
 
 | Property        | Type    | Optional | Default value | Represents |
 | ---             | ---     | ---      | ---           | ---     |
@@ -64,8 +74,8 @@ Extends `ResourceId`. Represents an OCF resource Link used in Collections.
 The `discoverable` and `observable` properties come from the `p` (policy) property of a Web Link.
 
 <a name="resource"></a>
-### 1.3. The `Resource` dictionary
-Extends `ResourceId`. Used for creating and registering resources, exposes the properties of an OCF resource. All properties are read-write.
+### 1.4. The `Resource` dictionary
+Extends `Destination`. Used for creating and registering resources, exposes the properties of an OCF resource. All properties are read-write.
 
 | Property        | Type    | Optional | Default value | Represents |
 | ---             | ---     | ---      | ---           | ---     |
@@ -74,6 +84,7 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
 | `mediaTypes`    | array of strings | no    | `[]` | List of supported Internet media types |
 | `discoverable`  | boolean | no    | `true` | Whether the resource is discoverable |
 | `observable`    | boolean | no    | `true` | Whether the resource is observable |
+| `endpoints`     | array of strings | no    | `[endpoint]` | List of resource [endpoints](#endpoint) |
 | `links`         | array of ResourceLink | no    | `undefined` | Collection of links |
 | `secure`        | boolean | no    | `true` | Whether the resource is secure |
 | `slow`          | boolean | yes   | `false` | Whether the resource is constrained |
@@ -87,12 +98,14 @@ Extends `ResourceId`. Used for creating and registering resources, exposes the p
 
  The `interfaces` property MUST at least contain `"oic.if.baseline"`.
 
+ The `endpoints` property is an array of strings. Each string is a URI consisting of an origin (scheme and authority). It MUST contain at least one [endpoint](#endpoint).
+
 <a name="clientresource"></a>
-### 1.3. The `ClientResource` object
+### 1.5. The `ClientResource` object
 #### `ClientResource` properties
 `ClientResource` extends `Resource`. It has all the properties of [`Resource`](#resource), and in addition it has events.
 
-Note that applications should not create `ClientResource` objects, as they are created and tracked by implementations. Applications can create and use `ResourceId` and `Resource` objects as method arguments, but client-created `ClientResource` objects are not tracked by implementations and will not receive events.
+Note that applications should not create `ClientResource` objects, as they are created and tracked by implementations. Applications can create and use `Destination` and `Resource` objects as method arguments, but client-created `ClientResource` objects are not tracked by implementations and will not receive events.
 
 #### `ClientResource` events
 `ClientResource` objects support the following events:
@@ -100,7 +113,7 @@ Note that applications should not create `ClientResource` objects, as they are c
 | Event name | Event callback argument |
 | -----------| ----------------------- |
 | `update`   | partial `Resource` dictionary |
-| `delete`   | `ResourceId` dictionary |
+| `delete`   | `Destination` dictionary |
 
 <a name="onresourceupdate"></a>
 The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
@@ -252,10 +265,10 @@ The method runs the following steps:
 <a name="client-methods"></a>
 ## 4. Client methods
 <a name="create"></a>
-##### 4.1. The `create(resource, target)` method
+##### 4.1. The `create(target, resource)` method
 - Creates a remote resource on a given device, and optionally specifies a target resource that is supposed to create the new resource. The device's [`oncreate`](./server.md/#oncreate) event handler takes care of dispatching the request to the target resource that will handle creating the resource, and responds with the created resource, or with an error.
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
-- The optional `target` argument is a [ResourceId](#resourceid) object that contains at least a device UUID and a resource path that identifies the target resource responsible for creating the requested resource.
+- The optional `target` argument is a [Destination](#destination) object that contains at least a device UUID and a resource path that identifies the target resource responsible for creating the requested resource.
 - The `resource` argument is a [Resource](#resource) object. It should contain at least the properties that don't have default values in the [resource registration steps](./server.md/#register): `resourcePath` and `resourceTypes`.
 
 The method sends a request to the device specified in `target` and the device's `create` event handler takes care of creating the resource and replying with the created resource, or with an error.
@@ -268,10 +281,10 @@ The method runs the following steps:
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="retrieve"></a>
-##### 4.2. The `retrieve(resourceId, options, listener)` method
-- Retrieves a resource based on resource id by sending a request to the device specified in `resourceId.deviceId`. The device's [`retrieve`](./server.md/#onretrieve) event handler takes care of fetching the resource representation and replying with the created resource, or with an error.
+##### 4.2. The `retrieve(destination, options, listener)` method
+- Retrieves a resource based on resource id by sending a request to the destination specified in `destination`. The device's [`retrieve`](./server.md/#onretrieve) event handler takes care of fetching the resource representation and replying with the created resource, or with an error.
 - Returns a [`Promise`](./README.md/#promise) object which resolves with a [Resource](#resource) object.
-- The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path. Note that any [`Resource`](#resource) object can also be provided.
+- The `destination` argument is a [Destination](#destination) object that contains a device UUID, a resource path, and an optional [endpoint](#endpoint). Note that any [`Resource`](#resource) object can also be provided.
 - The `options` argument is optional, and it is an object whose properties represent the `REST` query parameters passed along with the `GET` request as a JSON-serializable dictionary. Implementations SHOULD validate this client input to fit OCF requirements. The semantics of the parameters are application-specific (e.g. requesting a resource representation in metric or imperial units). Similarly, the properties of an OIC resource representation are application-specific and are represented as a JSON-serializable dictionary.
 - The `listener` argument is optional, and is an event listener for the `ClientResource` [`update`](#onresourceupdate) event that is added on the returned [`ClientResource`](#resource) object.
 In the OCF retrieve request it is possible to set an `observe` flag if the client wants to observe changes to that resource (and get a retrieve response with a resource representation for each resource change).
@@ -288,16 +301,16 @@ The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
 - Let `observe` be `null`.
 - If the `listener` argument is specified, add it as a listener to the `ClientResource` [`update`](#onresourceupdate) event, and set `observe` to `true`.
-- Let `resource` be the resource identified by `resourceId`.
-- Send a request to retrieve the resource specified by `resourceId` with the OCF `observe` flag set to the value of `observe`, and wait for the answer.
+- Let `resource` be the resource identified by `destination`.
+- Send a request to retrieve the resource specified by `destination` with the OCF `observe` flag set to the value of `observe`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error.
 - If `observe` is `false`, resolve `promise` with `resource` updated from the retrieve response.
 - Otherwise, if `observe` is `true`, for each OCF retrieve response received for resource representation change while `resource` is being observed, update `resource` with the new values, and fire the `ClientResource` [`update`](#onresourceupdate) event on `resource`, providing the event listener an object that contains the resource properties that have changed, in addition to `resourcePath` and `deviceId`.
-- If there is an OCF protocol error during observation, fire an [`error`](#onerror) event with a new [`OcfObserveError`](../README.md/#ocferror) object `error` with `error.deviceId` set to the value of `resourceId.deviceId` and `resourcePath` set to the value of `resourceId.resourcePath`.
+- If there is an OCF protocol error during observation, fire an [`error`](#onerror) event with a new [`OcfObserveError`](../README.md/#ocferror) object `error` with `error.deviceId` set to the value of `destination.deviceId`, `resourcePath` set to the value of `destination.resourcePath`, and, if `destination.endpoint` was set, then `endpoint` set to `destination.endpoint`.
 
 <a name="update"></a>
 ##### 4.3. The `update(resource)` method
-- Updates a resource on the network by sending a request to the device specified by `resource.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource` is updated.
+- Updates a resource on the network by sending a request to the device specified by `resource.deviceId`. The device's [`update`](./server.md/#onupdate) event handler takes care of updating the resource and replying with the updated resource, or with an error. The resource identified by `resource` is updated. The `resource` may be augmented with the optional `endpoint` property to provide a destination to which the request is to be addressed.
 - Returns: a [`Promise`](./README.md/#promise) object.
 - The `resource` argument is a [Resource](#resource) object.
 
@@ -307,18 +320,18 @@ The method runs the following steps:
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="delete"></a>
-##### 4.4. The `delete(resourceId)` method
-- Deletes a resource from the network by sending a request to the device specified in `resourceId.deviceId`. The device's [`delete`](./server.md/#ondelete) event handler takes care of deleting (unregistering) the resource and reporting success or error.
+##### 4.4. The `delete(destination)` method
+- Deletes a resource from the network by sending a request to the destination specified in `destination`. The device's [`delete`](./server.md/#ondelete) event handler takes care of deleting (unregistering) the resource and reporting success or error.
 - Returns: a [`Promise`](./README.md/#promise) object.
-- The `resourceId` argument is a [ResourceId](#resourceid) object that contains a device UUID and a resource path that identifies the resource to be deleted.
+- The `destination` argument is a [Destination](#destination) object that contains a device UUID, a resource path that identifies the resource to be deleted, and an optional [endpoint](#endpoint) to which the request will be directed.
 
 The method runs the following steps:
 - Return a [`Promise`](./README.md/#promise) object `promise` and continue [in parallel](https://html.spec.whatwg.org/#in-parallel).
-- Send a request to delete the resource specified by `resourceId`, and wait for the answer.
+- Send a request to delete the resource specified by `destination`, and wait for the answer.
 - If there is an error during the request, reject `promise` with that error, otherwise resolve `promise`.
 
 <a name="configure"></a>
-##### 4.4. The `configure(deviceId, options)` method
+##### 4.5. The `configure(deviceId, options)` method
 Configures a remote device using its `/oic/con` resource with the properties defined by the `options` argument. The following properties are supported:
 
 |Property            |Type     |Optional |Default value |Represents |
