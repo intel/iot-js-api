@@ -4,23 +4,19 @@
   "main": "scripts/index.js",
   "version": "1.0.0",
   "versions": {
-    "ocf": "oic1.1.0-0",
+    "ocf": "oic1.1.0-1",
     "ble": "1.0",
     "board": "1.0",
     "sensor": "1.0"
   },
-
   "license": "Apache-2.0",
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/01org/iot-js-api.git"
   },
-
   "bugs": {
     "url": "https://github.com/01org/iot-js-api/issues"
   },
-
   "devDependencies": {
     "eslint-config-jquery": "0.1.2",
     "grunt": "^0.4.5",
@@ -36,6 +32,5 @@
     "tmp": "0.0.28",
     "uuid": "^2.0.2"
   },
-
   "homepage": "https://github.com/01org/iot-js-api#readme"
 }

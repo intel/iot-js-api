@@ -79,10 +79,13 @@ testSuite( {
 		/* spawn: function not provided, meaning spawn the endpoint in the default fashion */
 	},
 	api: "ocf",
-	apiVersion: "oic1.1.0-0"
+	apiVersion: "oic1.1.0-0",
+	secure: false,
 	/* tests: array not provided, meaning run all available tests */
 } );
 ```
+
+`secure` is a boolean flag which determines whether the test servers will create secure resources.
 
 `api` is a string that informs the test runner of the API for which to run the tests. The keys specified under the [package.json](./package.json) `versions` property are possible values for this option. The `api` property must be provided.
 

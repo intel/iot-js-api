@@ -50,7 +50,7 @@ var QUnit,
 // Spawn a single child and process its stdout.
 function spawnOne( assert, options ) {
 	var temporary;
-	var commandLine = [ options.path, options.uuid, options.location ];
+	var commandLine = [ options.path, options.uuid, options.location, options.secure ];
 	var theChild;
 	var accumulator;
 
@@ -176,7 +176,8 @@ var actualOptions = {
 		_.map( options.tests, function( item ) {
 			return path.join( testsBasePath, item );
 		} ) :
-		( glob.sync( path.join( testsBasePath, "*" ) ) ) ).map( path.normalize )
+		( glob.sync( path.join( testsBasePath, "*" ) ) ) ).map( path.normalize ),
+	secure: !!options.secure
 };
 
 if ( actualOptions.tests.length === 0 ) {
@@ -218,6 +219,7 @@ _.each( actualOptions.tests, function( item ) {
 							children.pop();
 							done();
 						},
+						secure: actualOptions.secure,
 						reportAssertions: _.bind( assert.expect, assert )
 					} ) ) );
 			} );
@@ -253,6 +255,7 @@ _.each( actualOptions.tests, function( item ) {
 			childrenAssertionsReported = 0,
 
 			commonOptions = {
+				secure: actualOptions.secure,
 				uuid: uuid.v4(),
 				teardown: function( error ) {
 					var index,
