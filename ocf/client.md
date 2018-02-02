@@ -57,7 +57,7 @@ Identifies an OCF resource by the UUID of the device that hosts the resource, an
 | ---        | ---    | ---      | ---           | ---     |
 | `deviceId` | string | no       | `undefined`   | UUID of the device |
 | `resourcePath` | string | no       | `undefined`   | URI path of the resource |
-| `destination` | Endpoint | yes | `undefined` | endpoint to use for request |
+| `endpoint` | Endpoint | yes | `undefined` | endpoint to use for request |
 
 <a name="resourcelink"></a>
 ### 1.3. The `ResourceLink` dictionary
@@ -74,7 +74,7 @@ Extends `Destination`. Represents an OCF resource Link used in Collections.
 The `discoverable` and `observable` properties come from the `p` (policy) property of a Web Link.
 
 <a name="resource"></a>
-### 1.4. The `Resource` dictionary
+### 1.4. The `Resource` dictionarydestination
 Extends `Destination`. Used for creating and registering resources, exposes the properties of an OCF resource. All properties are read-write.
 
 | Property        | Type    | Optional | Default value | Represents |
@@ -112,16 +112,10 @@ Note that applications should not create `ClientResource` objects, as they are c
 
 | Event name | Event callback argument |
 | -----------| ----------------------- |
-| `update`   | partial `Resource` dictionary |
 | `delete`   | `Destination` dictionary |
 
-<a name="onresourceupdate"></a>
-The `update` event is fired on a `ClientResource` object when the implementation receives an OCF resource update notification because the resource representation has changed. The event listener receives a dictionary object that contains the resource properties that have changed. In addition, the resource property values are already updated to the new values when the event is fired.
-
-The recommended way to observe and unobserve resources from applications is by using the [`retrieve()`](#retrieve) method, in order to be able to specify OCF retrieve options. However, for convenience, when the first listener function `listener` is added to the `update` event of `resource`, implementations SHOULD call [`retrieve(resource, null, listener)`](#retrieve). When the last listener is removed, the implementations SHOULD call [`retrieve(resource)`](#retrieve), i.e. make an OCF retrieve request with the observe flag off.
-
 <a name="onresourcelost"></a>
-The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a dictionary object that contains the `deviceId` and `resourcePath` of the deleted resource.
+The `delete` event is fired on a `ClientResource` object when the implementation gets notified about the resource being deleted or unregistered from the OCF network. The event listener receives a `Destination` dictionary object.
 
 ## 2. Events
 The Client API supports the following events.
