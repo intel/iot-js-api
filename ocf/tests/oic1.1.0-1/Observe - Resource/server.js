@@ -45,7 +45,7 @@ function fakeSensorLoop( resource ) {
 			.then(
 				function() {
 					console.log( JSON.stringify( { assertion: "ok", arguments: [
-						true, "Server: Notification successful"
+						true, "Server: Notification " + notificationCount + " successful"
 					] } ) );
 				},
 				function( error ) {

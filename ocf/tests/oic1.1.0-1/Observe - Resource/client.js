@@ -45,9 +45,10 @@ function pickEndpoint( endpoints ) {
 function secondPositiveListener( resource ) {
 	secondPositiveCount++;
 	console.log( JSON.stringify( { assertion: "ok", arguments: [
-		resource.properties.value > 0, "Client: Second listener: sensor value is positive"
+		resource.properties.value > 0,
+		"Client: Second listener: sensor value is positive at observation " + secondPositiveCount
 	] } ) );
-	if ( secondNegativeCount >= 4 ) {
+	if ( secondPositiveCount >= 4 ) {
 		resource.removeListener( "update", secondPositiveListener );
 	}
 }
@@ -55,7 +56,8 @@ function secondPositiveListener( resource ) {
 function positiveListener( resource ) {
 	positiveCount++;
 	console.log( JSON.stringify( { assertion: "ok", arguments: [
-		resource.properties.value > 0, "Client: sensor value is positive"
+		resource.properties.value > 0,
+		"Client: sensor value is positive at observation " + positiveCount
 	] } ) );
 
 	// After three notifications, hand over to the second listener, with two notifications where
@@ -86,7 +88,8 @@ function positiveListener( resource ) {
 function secondNegativeListener( resource ) {
 	secondNegativeCount++;
 	console.log( JSON.stringify( { assertion: "ok", arguments: [
-		resource.properties.value < 0, "Client: Second listener: sensor value is negative"
+		resource.properties.value < 0,
+		"Client: Second listener: sensor value is negative at observation " + secondNegativeCount
 	] } ) );
 	if ( secondNegativeCount >= 5 ) {
 		resource.removeListener( "update", secondNegativeListener );
@@ -96,13 +99,15 @@ function secondNegativeListener( resource ) {
 function negativeListener( resource ) {
 	negativeCount++;
 	console.log( JSON.stringify( { assertion: "ok", arguments: [
-		resource.properties.value < 0, "Client: sensor value is negative"
+		resource.properties.value < 0,
+		"Client: sensor value is negative at observation " + negativeCount
 	] } ) );
 
 	// After two notifications, hand over to the second listener, with three notifications where
 	// both listeners are attached
 	if ( negativeCount > 1 && addSecondNegativeListener ) {
 		addSecondNegativeListener = false;
+		resource.endpoint = pickEndpoint( resource.endpoints );
 		client.retrieve( resource, { scale: -1 }, secondNegativeListener )
 			.then(
 				function( secondResource ) {
@@ -123,6 +128,7 @@ function negativeListener( resource ) {
 }
 
 function performObservation( resource ) {
+	resource.endpoint = pickEndpoint( resource.endpoints );
 	resource.on( "update", positiveListener );
 
 	client

@@ -16,6 +16,19 @@ var client = require( process.argv[ 3 ] ).client;
 
 console.log( JSON.stringify( { assertionCount: 2 } ) );
 
+function pickEndpoint( endpoints ) {
+	var index, isSecureEndpoint;
+
+	for ( index in endpoints ) {
+		isSecureEndpoint = endpoints[ index ].origin.substr( 0, 5 ) === "coaps";
+		if ( isSecureEndpoint && process.argv[ 4 ] === "true" ) {
+			return endpoints[ index ];
+		} else if ( !isSecureEndpoint && process.argv[ 4 ] === "false" ) {
+			return endpoints[ index ];
+		}
+	}
+}
+
 function observeResource( resource ) {
 	return new Promise( function( fulfill ) {
 		var updateCount = 0;
@@ -28,6 +41,7 @@ function observeResource( resource ) {
 				fulfill();
 			}
 		}
+		resource.endpoint = pickEndpoint( resource.endpoints );
 		resource.on( "update", update );
 	} );
 }
