@@ -24,19 +24,21 @@ function maybeQuit() {
 }
 
 ocf.client
-	.on( "platformfound", function( platform ) {
+	.on( "platformfound", function platformFoundViaOn( platform ) {
 		if ( platform.supportURL === "ocf://test-device-" + process.argv[ 2 ] ) {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [
 				true, "Client: Found platform via .on()"
 			] } ) );
+			ocf.client.removeListener( "platformfound", platformFoundViaOn );
 			maybeQuit();
 		}
 	} )
-	.findPlatforms( function( platform ) {
+	.findPlatforms( function platformFoundViaConvenienceHandler( platform ) {
 		if ( platform.supportURL === "ocf://test-device-" + process.argv[ 2 ] ) {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [
 				true, "Client: Found platform via convenience handler"
 			] } ) );
+			ocf.client.removeListener( "platformfound", platformFoundViaConvenienceHandler );
 			maybeQuit();
 		}
 	} ).then(
