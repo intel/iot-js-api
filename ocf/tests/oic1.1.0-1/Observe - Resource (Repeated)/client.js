@@ -37,12 +37,11 @@ function observeResource( resource ) {
 				console.log( JSON.stringify( { assertion: "ok", arguments: [
 					true, "Client: Observation sequence complete"
 				] } ) );
-				resource.removeListener( "update", update );
-				fulfill();
+				client.retrieve( resource, update, true ).then( fulfill );
 			}
 		}
 		resource.endpoint = pickEndpoint( resource.endpoints );
-		resource.on( "update", update );
+		client.retrieve( resource, update );
 	} );
 }
 

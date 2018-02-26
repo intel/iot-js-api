@@ -30,7 +30,7 @@ function devicefound( device ) {
 	}, listener )
 		.then(
 			function( resource ) {
-				resource.removeListener( "update", listener );
+				client.retrieve( resource, listener, true );
 				console.log( JSON.stringify( { finished: 0 } ) );
 			},
 			function( error ) {

@@ -23,7 +23,14 @@ var Listener = function Listener( prefix, desiredNotificationCount ) {
 				countSoFar + " of " + desiredNotificationCount
 		] } ) );
 		if ( countSoFar >= desiredNotificationCount ) {
-			resource.removeListener( "update", listener );
+			client
+				.retrieve( resource, listener, true )
+				.catch( function( error ) {
+					console.log( JSON.stringify( { assertion: "ok", arguments: [
+						false, "Unexpected error detaching listener: " +
+							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+					] } ) );
+				} );
 		}
 	};
 
@@ -36,7 +43,7 @@ function doOneRetrieveAndObserve( prefix, resource ) {
 	client
 		.retrieve( { deviceId: resource.deviceId, resourcePath: resource.resourcePath } )
 		.then( function( resource ) {
-			resource.on( "update", Listener( prefix, 10 ) );
+			return client.retrieve( resource, Listener( prefix, 10 ) );
 		} )
 		.catch( function( error ) {
 			console.log( JSON.stringify( { assertion: "ok", arguments: [

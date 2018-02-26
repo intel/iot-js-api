@@ -24,7 +24,7 @@ function listener( resource ) {
 		console.log( JSON.stringify( { assertion: "ok", arguments: [
 			true, "Client: Performed three observations"
 		] } ) );
-		resource.removeListener( "update", listener );
+		client.retrieve( resource, listener, true );
 	}
 }
 

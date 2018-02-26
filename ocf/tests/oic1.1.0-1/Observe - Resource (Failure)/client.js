@@ -40,8 +40,8 @@ function performObservation( resource ) {
 				"Client: Failure to observe resulted in expected error"
 			] } ) );
 			console.log( JSON.stringify( { finished: 0 } ) );
-		} )
-		.on( "update", dummyListener );
+		} );
+	client.retrieve( resource, dummyListener );
 	client.removeListener( "resourcefound", performObservation );
 }
 

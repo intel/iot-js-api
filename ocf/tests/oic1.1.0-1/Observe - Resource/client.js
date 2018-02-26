@@ -49,7 +49,7 @@ function secondPositiveListener( resource ) {
 		"Client: Second listener: sensor value is positive at observation " + secondPositiveCount
 	] } ) );
 	if ( secondPositiveCount >= 4 ) {
-		resource.removeListener( "update", secondPositiveListener );
+		client.retrieve( resource, secondPositiveListener, true );
 	}
 }
 
@@ -81,7 +81,7 @@ function positiveListener( resource ) {
 	}
 
 	if ( positiveCount >= 5 ) {
-		resource.removeListener( "update", positiveListener );
+		client.retrieve( resource, positiveListener, true );
 	}
 }
 
@@ -92,7 +92,7 @@ function secondNegativeListener( resource ) {
 		"Client: Second listener: sensor value is negative at observation " + secondNegativeCount
 	] } ) );
 	if ( secondNegativeCount >= 5 ) {
-		resource.removeListener( "update", secondNegativeListener );
+		client.retrieve( resource, { scale: -1 }, secondNegativeListener, true );
 	}
 }
 
@@ -123,21 +123,24 @@ function negativeListener( resource ) {
 				} );
 	}
 	if ( negativeCount >= 5 ) {
-		resource.removeListener( "update", negativeListener );
+		client.retrieve( resource, { scale: -1 }, negativeListener, true );
 	}
 }
 
 function performObservation( resource ) {
 	resource.endpoint = pickEndpoint( resource.endpoints );
-	resource.on( "update", positiveListener );
 
 	client
 		.removeListener( "resourcefound", performObservation )
-		.retrieve( resource, { scale: -1 }, negativeListener ).catch( function( error ) {
-			console.log( JSON.stringify( { assertion: "ok", arguments: [
-				false, "Unexpected error attaching negative listener: " +
-					( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
-			] } ) );
+		.retrieve( resource, positiveListener )
+		.then( function() {
+			return client.retrieve( resource, { scale: -1 }, negativeListener )
+				.catch( function( error ) {
+					console.log( JSON.stringify( { assertion: "ok", arguments: [
+						false, "Unexpected error attaching negative listener: " +
+							( "" + error ) + "\n" + JSON.stringify( error, null, 4 )
+					] } ) );
+				} );
 		} );
 }
 
