@@ -177,6 +177,7 @@ var actualOptions = {
 			return path.join( testsBasePath, item );
 		} ) :
 		( glob.sync( path.join( testsBasePath, "*" ) ) ) ).map( path.normalize ),
+	globalPreamble: options.globalPreamble,
 	secure: !!options.secure
 };
 
@@ -199,6 +200,7 @@ getQUnit().module( "OCF tests", {
 
 _.each( actualOptions.tests, function( item ) {
 	var clientPathIndex,
+		testName = path.basename( item ),
 		clientPaths = glob.sync( path.join( item, "client*.js" ) ).map( path.normalize ),
 		serverPath = path.join( item, "server.js" );
 
@@ -240,7 +242,7 @@ _.each( actualOptions.tests, function( item ) {
 		throw new Error( "Cannot find server at " + serverPath );
 	}
 
-	getQUnit().test( path.basename( item ), function( assert ) {
+	getQUnit().test( testName, function( assert ) {
 		var totalChildren = clientPaths.length + 1,
 
 			// Track the child processes involved in this test in this array
@@ -290,6 +292,11 @@ _.each( actualOptions.tests, function( item ) {
 					}
 				}
 			};
+
+		if ( actualOptions.globalPreamble ) {
+			actualOptions.globalPreamble( testName, clientPaths, [ serverPath ],
+					commonOptions.uuid );
+		}
 
 		// We run the server first, because the server has to be there before the clients
 		// can run. OTOH, the clients may initiate the termination of the test via a non-error

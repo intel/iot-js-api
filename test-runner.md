@@ -82,10 +82,13 @@ testSuite( {
 	apiVersion: "oic1.1.0-0",
 	secure: false,
 	/* tests: array not provided, meaning run all available tests */
+	/* globalPreamble: function not provided, meaning there is no global preamble */
 } );
 ```
 
 `secure` is a boolean flag which determines whether the test servers will create secure resources.
+
+`globalPreamble` is an optional function which, if provided, receives the array of client paths, the array of server paths, and the UUID which will be used to generate the resource under test. It may perform some actions which require awareness of all the scripts participating in the test.
 
 `api` is a string that informs the test runner of the API for which to run the tests. The keys specified under the [package.json](./package.json) `versions` property are possible values for this option. The `api` property must be provided.
 
